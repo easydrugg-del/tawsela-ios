@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+  <!-- خلفية شفافة + دبوس برتقالي (مسار فقط) -->
+  <path
+      android:fillColor="#FF6A00"
+      android:pathData="M24,5 C16.3,5 10,11.3 10,19 C10,28 24,43 24,43 C24,43 38,28 38,19 C38,11.3 31.7,5 24,5 Z" />
+  <!-- النقطة البيضاء الداخلية (دائرة عبر مسار) -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M18.5,19 a5.5,5.5 0 1,0 11,0 a5.5,5.5 0 1,0 -11,0 Z" />
+  <!-- القاعدة البيضاء -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M17,30 L31,30 L28,36 L20,36 Z" />
+</vector>

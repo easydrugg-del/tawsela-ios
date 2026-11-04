@@ -114,17 +114,20 @@ jobs:
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" "$APP"
           mkdir -p screenshots
+          IOS_APP="com.tawsela.app"
 
           # 1) أول تشغيل طبيعي → شاشة Intro
-          xcrun simctl launch "$UDID" com.tawsela.app > screenshots/launch1.txt 2>&1 || true
+          xcrun simctl launch "$UDID" "$IOS_APP" > screenshots/launch1.txt 2>&1 || true
           sleep 8
           xcrun simctl io "$UDID" screenshot screenshots/01-intro.png || true
-          xcrun simctl terminate "$UDID" com.tawsela.app || true
+          xcrun simctl terminate "$UDID" "$IOS_APP" || true
 
-          # 2) تخطي Intro عبر تفضيلات التطبيق نفسها (بدون أي تعديل في الكود) → شاشة الدخول
-          xcrun simctl spawn "$UDID" defaults write com.tawsela.app tawsela.intro_seen -bool true || true
+          # 2) منع تقديم طلب إذن الإشعارات أصلاً — يغطي شاشة الدخول ويبتلع اللمسات
+          xcrun simctl privacy "$UDID" grant notifications "$IOS_APP" || true
 
-          IOS_APP="com.tawsela.app"
+          # 3) تخطي Intro عبر تفضيلات التطبيق نفسها (بدون أي تعديل في الكود) → شاشة الدخول
+          xcrun simctl spawn "$UDID" defaults write "$IOS_APP" tawsela.intro_seen -bool true || true
+
           if xcrun simctl io help 2>&1 | grep -q "sendkeys"; then
             echo "sendkeys: supported"
           else
@@ -134,24 +137,29 @@ jobs:
           tap() { xcrun simctl io "$UDID" tap "$1" "$2" || true; }
 
           xcrun simctl launch "$UDID" "$IOS_APP" > screenshots/launch2.txt 2>&1 || true
-          sleep 12
+          sleep 10
           shoot 02-login
 
-          # 3) تعبئة الحساب والدخول — إحداثيات منطقية (نقاط) وليست بكسل
-          tap 201 372; sleep 1
+          # 4) إغلاق بيلوك الإذن الذي يغطي شاشة الدخول ويبتلع اللمسات
+          tap 201 810; sleep 3
+          xcrun simctl privacy "$UDID" grant notifications "$IOS_APP" || true
+          shoot 03-after-permission
+
+          # 5) تعبئة الحساب والدخول — إحداثيات منطقية (نقاط) وليست بكسل
+          tap 201 372; sleep 2
           xcrun simctl io "$UDID" sendkeys "customer1" || true
-          sleep 1
-          shoot 03-typed-user
+          sleep 2
+          shoot 04-typed-user
 
-          tap 201 432; sleep 1
+          tap 201 432; sleep 2
           xcrun simctl io "$UDID" sendkeys "123456" || true
-          sleep 1
-          shoot 04-typed-pass
+          sleep 2
+          shoot 05-typed-pass
 
-          tap 201 520; sleep 8
-          shoot 05-after-login
-          sleep 8
-          shoot 06-home
+          tap 201 520; sleep 10
+          shoot 06-after-login
+          sleep 10
+          shoot 07-home
 
           # هل العملية لسه شغالة؟
           xcrun simctl spawn "$UDID" launchctl list > screenshots/launchctl.txt 2>&1 || true
