@@ -116,15 +116,17 @@ dotnet build Tawsela.iOS/Tawsela.iOS.csproj \
 
 ---
 
-## 4. بدون Mac خالص: GitHub Actions
+## 4. بدون Mac خالص: GitHub Actions (مُجرَّب ✅)
 
-الملف **`.github/workflows/ios-build.yml`** جاهز داخل المشروع. ارفع المشروع إلى GitHub ثم:
+المستودع جاهز ومرفوع: **https://github.com/easydrugg-del/tawsela-ios** (private)
 
-1. `Actions` → `ios-build` → **Run workflow**.
-2. انتظر ~10–15 دقيقة.
-3. نزّل الـ Artifact `Tawsela-simulator-NNN` → بداخله `Tawsela.app`.
+### التشغيل
 
-ثم على أي Mac (أو خدمة Mac سحابية) ثبّته على المحاكي:
+1. `Actions` → `ios-build` → **Run workflow** (أو ادفع أي تغيير في `Tawsela.iOS/`).
+2. المدة الفعلية: **~2.5 دقيقة**.
+3. نزّل الـ Artifact `Tawsela-simulator-N` → بداخله مجلد **`Tawsela.app`** جاهز.
+
+### التثبيت على أي محاكي iOS (على Mac)
 
 ```bash
 xcrun simctl boot "iPhone 16" 2>/dev/null || true
@@ -133,10 +135,17 @@ xcrun simctl install booted Tawsela.app
 xcrun simctl launch booted com.tawsela.app
 ```
 
-> الـ Workflow يتجاوز `global.json` تلقائيًا (لأنه يثبّت SDK 11 preview) ويستخدم .NET 10 المستقر.
-> لبناء نسخة جهاز حقيقي (`.ipa`) تحتاج شهادات Apple — لا يمكن لـ CI فعل ذلك بدونها.
+### إعدادات الـ Workflow التي كانت ضرورية (لا تغيّرها)
 
-بديل آخر: خدمة Mac سحابية (MacinCloud / Scaleway / AWS EC2 mac) بنفس خطوات القسم 2.
+| الإعداد | السبب |
+|---|---|
+| `runs-on: xcode-27` | حزمة .NET iOS 27.1 **تشترط Xcode 27.1** بالحرف؛ صورة `macos-15` فيها Xcode 26.3 فتفشل البناء |
+| `sudo xcode-select -s /Applications/Xcode_27.1.app` | الصورة فيها 27.1 و27.2 RC — لا نختار الأحدث تلقائيًا |
+| حذف `global.json` **قبل** أي أمر dotnet | الملف يثبّت SDK 11 preview وهذا يفشل حتى في `workload install` |
+| `-p:EnableCodeSigning=false` | بدونها يطلب شهادة توقيع حتى لبناء المحاكي (`No valid iOS code signing keys found`) |
+| `path: .../*.app` (بنجمة) | بدون النجمة يفقد الـ Artifact اسم مجلد `Tawsela.app` |
+
+> لبناء نسخة جهاز حقيقي (`.ipa`) تحتاج شهادات Apple + Provisioning Profile — لا يمكن لـ CI فعل ذلك بدونها.
 
 ---
 
