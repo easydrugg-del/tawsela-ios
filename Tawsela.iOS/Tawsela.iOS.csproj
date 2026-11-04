@@ -41,8 +41,13 @@
 
   <!-- بديل keystore أندرويد: شهادة Apple + Provisioning Profile -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <CodesignKey Condition="'$(CodesignKey)' == ''">Apple Development</CodesignKey>
-    <CodesignProvision Condition="'$(CodesignProvision)' == ''"></CodesignProvision>
+    <!--
+      TawselaCodesign=false يتخطى هوية التوقيع الافتراضية.
+      لازم لبناء المحاكي على CI: تمرير CodesignKey فارغ لا يكفي لأن الشرط
+      '$(CodesignKey)' == '' يعيد تعيين "Apple Development" من جديد.
+    -->
+    <CodesignKey Condition="'$(CodesignKey)' == '' AND '$(TawselaCodesign)' != 'false'">Apple Development</CodesignKey>
+    <CodesignProvision Condition="'$(CodesignProvision)' == '' AND '$(TawselaCodesign)' != 'false'"></CodesignProvision>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <CodesignKey></CodesignKey>
