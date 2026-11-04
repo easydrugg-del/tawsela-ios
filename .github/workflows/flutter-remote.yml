@@ -192,6 +192,8 @@ jobs:
       - name: Start serve-sim
         id: serve_sim
         timeout-minutes: 10
+        env:
+          GATE_TOKEN: ${{ inputs.gate_token }}
         run: |
           set -euo pipefail
 
@@ -207,6 +209,8 @@ jobs:
             --panes none
             --port "$PREVIEW_PORT"
             --codec "$CODEC"
+            # serve-sim يمنع الوصول البعيد افتراضيًا؛ نمرّر رمزًا حتى يقبل الوصول عبر النفق
+            --auth-token "$GATE_TOKEN"
           )
 
           echo "Starting serve-sim with codec=$CODEC args: ${ARGS[*]}"
