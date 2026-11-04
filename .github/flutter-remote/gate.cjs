@@ -210,6 +210,103 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ★ مشاهدة مبسّطة: /live/<TOKEN> — إطارات JPEG متتالية في أي متصفح، بلا WebRTC
+  if ((req.url || '').startsWith('/live/')) {
+    const liveToken = decodeURIComponent((req.url.split('?')[0].slice('/live/'.length)));
+    if (!timingSafeEqual(liveToken, TOKEN)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('bad token');
+      return;
+    }
+
+    const mjpegPath = process.env.LIVE_MJPEG_PATH || '';
+
+    if (req.headers['x-live-frame'] === '1') {
+      if (!mjpegPath) {
+        res.writeHead(503, { 'Content-Type': 'text/plain' });
+        res.end('LIVE_MJPEG_PATH not set');
+        return;
+      }
+      const upstream = http.get(
+        { host: TARGET_HOST, port: TARGET_PORT, path: mjpegPath, timeout: 20000 },
+        (r2) => {
+          let buf = Buffer.alloc(0);
+          let done = false;
+          const finish = () => {
+            if (done) return;
+            done = true;
+            const start = buf.indexOf(Buffer.from([0xFF, 0xD8]));
+            const end = buf.indexOf(Buffer.from([0xFF, 0xD9]), start + 2);
+            if (start >= 0 && end > start) {
+              const jpg = buf.subarray(start, end + 2);
+              res.writeHead(200, {
+                'Content-Type': 'image/jpeg',
+                'Cache-Control': 'no-store',
+                'Content-Length': jpg.length
+              });
+              res.end(jpg);
+            } else {
+              res.writeHead(503, { 'Content-Type': 'text/plain' });
+              res.end('no frame');
+            }
+            try { r2.destroy(); } catch {}
+          };
+          r2.on('data', (chunk) => {
+            buf = Buffer.concat([buf, chunk]);
+            if (buf.length > 16 * 1024 * 1024) buf = buf.subarray(buf.length - 4 * 1024 * 1024);
+            const tailStart = Math.max(0, buf.length - 2 * 1024 * 1024);
+            if (buf.indexOf(Buffer.from([0xFF, 0xD9]), tailStart) >= 0) finish();
+          });
+          r2.on('end', finish);
+          r2.on('error', () => {
+            if (done) return;
+            done = true;
+            if (!res.headersSent) { res.writeHead(502, { 'Content-Type': 'text/plain' }); res.end('stream error'); }
+          });
+          setTimeout(finish, 8000);
+        }
+      );
+      upstream.on('error', () => {
+        if (!res.headersSent) { res.writeHead(502, { 'Content-Type': 'text/plain' }); res.end('upstream error'); }
+      });
+      return;
+    }
+
+    const liveTokenJs = JSON.stringify(liveToken);
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end(`<!doctype html><meta charset="utf-8"><title>Tawsela — iOS</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;background:#111;color:#ddd;font:14px/1.5 system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;height:100vh}
+header{padding:10px;width:100%;box-sizing:border-box;display:flex;gap:10px;align-items:center;justify-content:center}
+img{max-height:calc(100vh - 60px);max-width:100vw;border-radius:12px;background:#000;object-fit:contain}
+button{font-size:14px;padding:6px 14px;border-radius:8px;border:0;background:#FF6A00;color:#fff;cursor:pointer}
+#s{opacity:.7;font-size:12px;font-variant-numeric:tabular-nums}
+</style>
+<header><button id="b">إيقاف</button><span id="s">جارٍ التحميل…</span></header>
+<img id="i" alt="">
+<script>
+const T=${liveTokenJs};
+const i=document.getElementById('i'),s=document.getElementById('s'),b=document.getElementById('b');
+let on=true,n=0,e=0;
+async function tick(){
+  if(!on){setTimeout(tick,700);return;}
+  try{
+    const r=await fetch('/live/'+encodeURIComponent(T),{headers:{'x-live-frame':'1'},cache:'no-store'});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const blob=await r.blob();
+    if(i.src)URL.revokeObjectURL(i.src);
+    i.src=URL.createObjectURL(blob);
+    n++;e=0;s.textContent='إطار '+n;
+  }catch(err){e++;s.textContent='تعذر إحضار إطار ('+err.message+')';}
+  setTimeout(tick,900);
+}
+b.onclick=()=>{on=!on;b.textContent=on?'إيقاف':'تشغيل';};
+tick();
+</script>`);
+    return;
+  }
+
   const auth = authorize(req);
   if (!auth) {
     res.writeHead(403, {
