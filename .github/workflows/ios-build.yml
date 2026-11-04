@@ -115,15 +115,21 @@ jobs:
           xcrun simctl install "$UDID" "$APP"
           mkdir -p screenshots
 
-          # تشغيل مع التقاط stdout/stderr (فيه أي استثناء مُدار)
+          # 1) أول تشغيل طبيعي → شاشة Intro
+          xcrun simctl launch "$UDID" com.tawsela.app > screenshots/launch1.txt 2>&1 || true
+          sleep 8
+          xcrun simctl io "$UDID" screenshot screenshots/01-intro.png || true
+          xcrun simctl terminate "$UDID" com.tawsela.app || true
+
+          # 2) تخطي Intro عبر تفضيلات التطبيق نفسها (بدون أي تعديل في الكود) → شاشة الدخول
+          xcrun simctl spawn "$UDID" defaults write com.tawsela.app tawsela.intro_seen -bool true || true
+
           xcrun simctl launch --console "$UDID" com.tawsela.app > screenshots/console.txt 2>&1 &
           LAUNCH_PID=$!
-
-          # نصوّر قبل إنهاء عملية الـ console، وإلا نقتل التطبيق نفسه
-          sleep 15
-          xcrun simctl io "$UDID" screenshot screenshots/01-splash.png || true
-          sleep 10
-          xcrun simctl io "$UDID" screenshot screenshots/02-after.png || true
+          sleep 12
+          xcrun simctl io "$UDID" screenshot screenshots/02-login.png || true
+          sleep 6
+          xcrun simctl io "$UDID" screenshot screenshots/03-login.png || true
 
           # هل العملية لسه شغالة؟
           xcrun simctl spawn "$UDID" launchctl list > screenshots/launchctl.txt 2>&1 || true
