@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       runner:
-        description: 'صورة macOS (macos-15 أو macos-26)'
+        description: 'صورة macOS (xcode-27 لأن .NET iOS 27.1 يتطلب Xcode 27.1)'
         required: false
-        default: 'macos-15'
+        default: 'xcode-27'
       dotnet:
         description: 'إصدار .NET SDK'
         required: false
@@ -30,7 +30,7 @@ env:
 jobs:
   simulator:
     name: Build for iOS Simulator
-    runs-on: ${{ inputs.runner || 'macos-15' }}
+    runs-on: ${{ inputs.runner || 'xcode-27' }}
     timeout-minutes: 45
 
     steps:
@@ -40,8 +40,13 @@ jobs:
       - name: Select Xcode
         run: |
           echo "Available Xcode:"
-          ls /Applications | grep -i xcode || true
-          sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+          ls -d /Applications/Xcode*.app || true
+          # .NET iOS 27.1 يتطلب Xcode 27.1 بالتحديد — لا نختار الأحدث تلقائيًا
+          if [ -d /Applications/Xcode_27.1.app ]; then
+            sudo xcode-select -s /Applications/Xcode_27.1.app
+          elif [ -d /Applications/Xcode.app ]; then
+            sudo xcode-select -s /Applications/Xcode.app
+          fi
           xcodebuild -version
 
       # global.json في المستودع يثبّت SDK 11 preview (للتطوير المحلي على ويندوز)،
