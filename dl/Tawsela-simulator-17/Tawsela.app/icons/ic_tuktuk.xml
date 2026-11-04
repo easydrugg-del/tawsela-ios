@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="32dp"
+    android:viewportWidth="64"
+    android:viewportHeight="36">
+  <!-- توكتوك مصري - أسود مع شريط أصفر وزخرفة -->
+  <!-- السقف الأصفر الشهير -->
+  <path android:fillColor="#FFC107" android:pathData="M10,8 L38,8 L42,12 L6,12 Z"/>
+  <path android:fillColor="#FFA000" android:pathData="M10,8 L38,8 L36,10 L12,10 Z"/>
+  <!-- الجسم الأسود -->
+  <path android:fillColor="#212121" android:pathData="M6,12 L42,12 L44,24 L4,24 Z"/>
+  <!-- الشريط الأصفر الجانبي المميز للتوكتوك المصري -->
+  <path android:fillColor="#FFEB3B" android:pathData="M6,16 L44,16 L44,18 L6,18 Z"/>
+  <!-- زجاج أمامي -->
+  <path android:fillColor="#81D4FA" android:pathData="M12,12 L18,12 L18,16 L12,16 Z M20,12 L26,12 L26,16 L20,16 Z"/>
+  <!-- فتحة جانبية -->
+  <path android:fillColor="#424242" android:pathData="M28,14 L36,14 L36,20 L28,20 Z"/>
+  <!-- مقعد -->
+  <path android:fillColor="#5D4037" android:pathData="M14,20 L24,20 L24,24 L14,24 Z"/>
+  <!-- عجلات -->
+  <path android:fillColor="#111111" android:pathData="M12,24 A6,6 0 1 0 24,24 A6,6 0 1 0 12,24 Z M32,24 A6,6 0 1 0 44,24 A6,6 0 1 0 32,24 Z"/>
+  <path android:fillColor="#757575" android:pathData="M14.5,24 A3.5,3.5 0 1 0 21.5,24 A3.5,3.5 0 1 0 14.5,24 Z M34.5,24 A3.5,3.5 0 1 0 41.5,24 A3.5,3.5 0 1 0 34.5,24 Z"/>
+  <path android:fillColor="#BDBDBD" android:pathData="M16,24 A2,2 0 1 0 20,24 A2,2 0 1 0 16,24 Z M36,24 A2,2 0 1 0 40,24 A2,2 0 1 0 36,24 Z"/>
+  <!-- فانوس -->
+  <path android:fillColor="#FFF9C4" android:pathData="M44,14 L46,14 L46,18 L44,18 Z"/>
+  <!-- زخرفة مصرية على الجانب -->
+  <path android:fillColor="#E53935" android:pathData="M8,19 L10,19 L10,21 L8,21 Z M11,19 L13,19 L13,21 L11,21 Z"/>
+</vector>
