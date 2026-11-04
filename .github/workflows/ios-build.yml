@@ -85,6 +85,13 @@ jobs:
           test -d "$APP"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist"
+          echo "Device family (1=iPhone, 2=iPad):"
+          /usr/libexec/PlistBuddy -c 'Print :UIDeviceFamily' "$APP/Info.plist" || true
+          echo "ATS keys (يجب ألا يظهر NSAllowsArbitraryLoads):"
+          /usr/libexec/PlistBuddy -c 'Print :NSAppTransportSecurity' "$APP/Info.plist" || echo "none"
+          echo "App icon has alpha channel?"
+          ICON="$(find "$APP" -name 'AppIcon60x60@2x.png' | head -1)"
+          if [ -n "$ICON" ]; then sips -g hasAlpha "$ICON"; fi
           du -sh "$APP"
 
       - name: Upload simulator app

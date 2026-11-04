@@ -111,16 +111,14 @@
 	<string>نستخدم التعرف على الكلام لتحويل صوتك إلى عنوان وجهة.</string>
 
 	<!--
-	  بديل android:usesCleartextTraffic="false" + الشهادة الذاتية:
-	  الخادم الحالي https://116.202.66.142:5001 بشهادة ذاتية، وتثبيت الشهادة
-	  يتم داخل Api.cs (بصمة). أزل هذا القسم بعد الانتقال إلى نطاق + Let's Encrypt
-	  قبل رفع التطبيق لمراجعة App Store.
+	  ATS: لا نحتاج أي استثناء.
+	  - نداءات الـ API تمر عبر SocketsHttpHandler (لأن UseNativeHttpHandler=false)
+	    وهو لا يخضع لـ ATS إطلاقًا.
+	  - بلاطات الخرائط في WKWebView كلها https بشهادات صحيحة (OSM / CARTO / OpenTopoMap).
+	  - الصفحات القانونية تُفتح في Safari خارجي.
+	  ⚠️ لو أعدت تفعيل NSUrlSessionHandler (UseNativeHttpHandler=true) فسيفشل الاتصال
+	     بالسيرفر ذي الشهادة الذاتية، وساعتها فقط تحتاج إضافة NSAllowsArbitraryLoads.
 	-->
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
 
 	<!-- بديل FCM في الخلفية -->
 	<key>UIBackgroundModes</key>
