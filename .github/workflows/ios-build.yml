@@ -124,12 +124,34 @@ jobs:
           # 2) تخطي Intro عبر تفضيلات التطبيق نفسها (بدون أي تعديل في الكود) → شاشة الدخول
           xcrun simctl spawn "$UDID" defaults write com.tawsela.app tawsela.intro_seen -bool true || true
 
-          xcrun simctl launch --console "$UDID" com.tawsela.app > screenshots/console.txt 2>&1 &
-          LAUNCH_PID=$!
+          IOS_APP="com.tawsela.app"
+          if xcrun simctl io help 2>&1 | grep -q "sendkeys"; then
+            echo "sendkeys: supported"
+          else
+            echo "sendkeys: NOT supported by this Xcode" | tee screenshots/no-sendkeys.txt
+          fi
+          shoot() { sleep 2; xcrun simctl io "$UDID" screenshot "screenshots/$1.png" || true; echo "shot: $1"; }
+          tap() { xcrun simctl io "$UDID" tap "$1" "$2" || true; }
+
+          xcrun simctl launch "$UDID" "$IOS_APP" > screenshots/launch2.txt 2>&1 || true
           sleep 12
-          xcrun simctl io "$UDID" screenshot screenshots/02-login.png || true
-          sleep 6
-          xcrun simctl io "$UDID" screenshot screenshots/03-login.png || true
+          shoot 02-login
+
+          # 3) تعبئة الحساب والدخول — إحداثيات منطقية (نقاط) وليست بكسل
+          tap 201 372; sleep 1
+          xcrun simctl io "$UDID" sendkeys "customer1" || true
+          sleep 1
+          shoot 03-typed-user
+
+          tap 201 432; sleep 1
+          xcrun simctl io "$UDID" sendkeys "123456" || true
+          sleep 1
+          shoot 04-typed-pass
+
+          tap 201 520; sleep 8
+          shoot 05-after-login
+          sleep 8
+          shoot 06-home
 
           # هل العملية لسه شغالة؟
           xcrun simctl spawn "$UDID" launchctl list > screenshots/launchctl.txt 2>&1 || true
@@ -138,8 +160,6 @@ jobs:
           else
             echo "APP NOT RUNNING (crashed or exited)" | tee screenshots/app-crashed.txt
           fi
-
-          kill $LAUNCH_PID 2>/dev/null || true
 
           # سجلات النظام + تقارير الانهيار
           xcrun simctl spawn "$UDID" log show --last 4m --style compact \
