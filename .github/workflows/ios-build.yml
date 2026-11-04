@@ -44,18 +44,22 @@ jobs:
           sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
           xcodebuild -version
 
+      # global.json في المستودع يثبّت SDK 11 preview (للتطوير المحلي على ويندوز)،
+      # وهذا الـ runner يثبّت .NET 10 المستقر — لذلك نتجاوزه في CI فقط.
+      # يجب أن يكون هذا قبل أي أمر dotnet (بما فيه workload install).
+      - name: Use the runner SDK
+        run: rm -f global.json
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ inputs.dotnet || '10.0.x' }}
 
+      - name: Show SDK
+        run: dotnet --version
+
       - name: Install iOS workload
         run: dotnet workload install ios
-
-      # global.json في المستودع يثبّت SDK 11 preview (للتطوير المحلي على ويندوز)،
-      # وهذا الـ runner يثبّت .NET 10 المستقر — لذلك نتجاوزه في CI فقط.
-      - name: Use the runner SDK
-        run: rm -f global.json
 
       - name: Restore
         run: dotnet restore Tawsela.iOS/Tawsela.iOS.csproj -r iossimulator-arm64
