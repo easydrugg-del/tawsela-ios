@@ -90,6 +90,8 @@ jobs:
     timeout-minutes: 360
     env:
       GH_TOKEN: ${{ github.token }}
+      # gh يحتاج معرفة المستودع لأن خطوة تثبيت الـ .app تعمل داخل مجلد مؤقت بدون git
+      GH_REPO: ${{ github.repository }}
       STATUS_CONTEXT: flutter-remote/${{ inputs.session }}
       GATE_PORT: "3199"
       PREVIEW_PORT: "3200"
