@@ -20,3 +20,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# CI artifacts downloaded locally
+artifacts/

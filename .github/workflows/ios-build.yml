@@ -91,7 +91,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Tawsela-simulator-${{ github.run_number }}
-          path: Tawsela.iOS/bin/Release/net10.0-ios/iossimulator-arm64/Tawsela.app
+          # النجمة ضرورية: بدونها يفقد الـ Artifact اسم مجلد Tawsela.app
+          path: Tawsela.iOS/bin/Release/net10.0-ios/iossimulator-arm64/*.app
           if-no-files-found: error
           retention-days: 14
 
