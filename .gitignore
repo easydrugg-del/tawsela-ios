@@ -30,3 +30,6 @@ shots/
 # CI download folders
 shots*/
 out*/
+
+# Prebuilt simulator app used for remote streaming
+Tawsela-sim.zip
