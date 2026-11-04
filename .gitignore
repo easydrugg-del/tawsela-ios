@@ -26,3 +26,7 @@ artifacts/
 
 # Screenshots downloaded locally from CI
 shots/
+
+# CI download folders
+shots*/
+out*/

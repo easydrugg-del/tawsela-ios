@@ -118,8 +118,12 @@ jobs:
           # تشغيل مع التقاط stdout/stderr (فيه أي استثناء مُدار)
           xcrun simctl launch --console "$UDID" com.tawsela.app > screenshots/console.txt 2>&1 &
           LAUNCH_PID=$!
-          sleep 20
-          kill $LAUNCH_PID 2>/dev/null || true
+
+          # نصوّر قبل إنهاء عملية الـ console، وإلا نقتل التطبيق نفسه
+          sleep 15
+          xcrun simctl io "$UDID" screenshot screenshots/01-splash.png || true
+          sleep 10
+          xcrun simctl io "$UDID" screenshot screenshots/02-after.png || true
 
           # هل العملية لسه شغالة؟
           xcrun simctl spawn "$UDID" launchctl list > screenshots/launchctl.txt 2>&1 || true
@@ -129,9 +133,7 @@ jobs:
             echo "APP NOT RUNNING (crashed or exited)" | tee screenshots/app-crashed.txt
           fi
 
-          xcrun simctl io "$UDID" screenshot screenshots/01-splash.png || true
-          sleep 10
-          xcrun simctl io "$UDID" screenshot screenshots/02-after.png || true
+          kill $LAUNCH_PID 2>/dev/null || true
 
           # سجلات النظام + تقارير الانهيار
           xcrun simctl spawn "$UDID" log show --last 4m --style compact \
