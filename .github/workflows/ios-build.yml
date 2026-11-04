@@ -69,14 +69,14 @@ jobs:
       - name: Restore
         run: dotnet restore Tawsela.iOS/Tawsela.iOS.csproj -r iossimulator-arm64
 
-      - name: Build (simulator, unsigned)
+      - name: Build (simulator, ad-hoc signed)
         run: |
           dotnet build Tawsela.iOS/Tawsela.iOS.csproj \
             -c Release \
             -f net10.0-ios \
             -r iossimulator-arm64 \
             -m:1 -nr:false \
-            -p:EnableCodeSigning=false \
+            -p:CodesignKey=- \
             -p:EnableFirebase=false
 
       - name: Verify app bundle

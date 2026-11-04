@@ -41,7 +41,12 @@
 
   <!-- بديل keystore أندرويد: شهادة Apple + Provisioning Profile -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <CodesignKey Condition="'$(CodesignKey)' == ''">Apple Development</CodesignKey>
+    <!--
+      لا نضع هوية توقيع لبناء المحاكي: iOS 17+ (و27 خصوصًا) يقتل التطبيق
+      غير الموقّع بـ "Code Signature Invalid". الافتراضي الصحيح للمحاكي هو
+      توقيع ad-hoc (-)، وهو ما يفعله الـ SDK تلقائيًا عندما تكون القيمة فارغة.
+    -->
+    <CodesignKey Condition="'$(CodesignKey)' == '' And !$(RuntimeIdentifier.Contains('iossimulator'))">Apple Development</CodesignKey>
     <CodesignProvision Condition="'$(CodesignProvision)' == ''"></CodesignProvision>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
