@@ -285,13 +285,15 @@ dotnet build Tawsela.iOS/Tawsela.iOS.csproj -c Release \
 | **شعار شاشة الإقلاع** | 176×123 بنسبة 1.43 بينما الأصل 1077×992 بنسبة 1.09 → الشعار مضغوط أفقيًا | أُعيد توليده من الأصل بنسبة صحيحة (134×123 / 268×246 / 402×369) |
 | **أصول Leaflet** | النسخ إلى `Library/leaflet` كان غير متكرر → مجلد `images/` لا يُنسخ → **علامات الخريطة مكسورة** | نسخ متكرر مع إنشاء المجلدات الفرعية |
 | **`Entitlements.plist`** | موجود لكن **غير مرتبط** بالمشروع → `aps-environment` لا يُطبَّق أصلًا | `<CodesignEntitlements>` يُفعَّل عند `EnableFirebase=true` |
-| **بناء بدون Mac** | غير متاح | `.github/workflows/ios-build.yml` ينتج `Tawsela.app` للمحاكي كـ Artifact |
+| **بناء بدون Mac** | غير متاح | `.github/workflows/ios-build.yml` — **مُجرَّب**: ينتج `Tawsela.app` في ~2.5 دقيقة على `xcode-27` |
 | **فتح المشروع** | لا Solution | `Tawsela.iOS.sln` يضم `Tawsela.Core` + `Tawsela.iOS` |
 | **مشاركة على iPad** | `ReferralViewController` و`ReceiptViewController` تعرضان `UIActivityViewController` بدون Popover → **Crash على iPad** | أُضيف نفس حارس `SourceView`/`SourceRect` المستخدم في `TrackOrderViewController` |
 
 ---
 
 ## 7. ما تبقّى بصراحة (قائمة صغيرة ومقصودة)
+
+> 📋 مراجعة الامتثال الكاملة للمتجرين (بند بند + المخاطر + ما يجب فعله قبل الرفع): **`STORE_COMPLIANCE.md`**
 
 1. **`Api.DriverBonus`** — لم يُنقل عن قصد: كود أندرويد يمنح 50 ج.م **كل مرة** تُفتح فيها شاشة الإحصائيات وعدد رحلات اليوم = 10. الأصح منحها من الخادم.
 2. **`Api.WalletTransfer`** — معطّل في المشروع الأصلي (`ReleaseConfig.WalletTransferEnabled = false`).
