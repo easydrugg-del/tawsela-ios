@@ -17,6 +17,8 @@ const fs = require('node:fs');
 const http = require('node:http');
 const net = require('node:net');
 const path = require('node:path');
+// WebSocket مدمج وقت التشغيل (Node 22+) — نستخدمه لإرسال اللمس إلى serve-sim
+const { WebSocket } = globalThis;
 
 const { config, installCrashGuards } = require('./runtime.cjs');
 const { MjpegRelay, relayConfigFromEnv, isMjpegStreamPath } = require('./stream-relay.cjs');
@@ -220,6 +222,47 @@ const server = http.createServer((req, res) => {
     }
 
     const mjpegPath = process.env.LIVE_MJPEG_PATH || '';
+    const inputPath = process.env.LIVE_INPUT_PATH || '';
+
+    // ★ لمس: نبني اتصال WebSocket واحد بـ serve-sim ونرسل عليه أحداث المؤشر
+    if (req.url.startsWith('/live-tap/')) {
+      const ip = (req.url.split('?')[0].slice('/live-tap/'.length));
+      const [nx, ny] = ip.split(',').map(Number);
+      if (!inputPath) {
+        res.writeHead(503, { 'Content-Type': 'text/plain' });
+        res.end('LIVE_INPUT_PATH not set');
+        return;
+      }
+      if (!isFinite(nx) || !isFinite(ny) || nx < 0 || nx > 1 || ny < 0 || ny > 1) {
+        res.writeHead(400, { 'Content-Type': 'text/plain' });
+        res.end('bad coords');
+        return;
+      }
+
+      const ws = new WebSocket('ws://127.0.0.1:' + TARGET_PORT + inputPath);
+      let seq = 1;
+      const send = (event) => ws.send(JSON.stringify({
+        v: 2, type: 'pointer', seq: seq++, ts: Date.now(),
+        event, pointerId: 1, isPrimary: true,
+        x: Number(nx.toFixed(5)), y: Number(ny.toFixed(5)),
+        button: 0, buttons: event === 'up' ? 0 : 1
+      }));
+
+      const fail = (msg) => {
+        if (!res.headersSent) { res.writeHead(502, { 'Content-Type': 'text/plain' }); res.end(msg); }
+        try { ws.close(); } catch {}
+      };
+
+      ws.onopen = () => {
+        send('down');
+        setTimeout(() => { send('up'); setTimeout(() => { try { ws.close(); } catch {} }, 60); }, 90);
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ ok: true, x: nx, y: ny }));
+      };
+      ws.onerror = () => fail('ws error');
+      setTimeout(() => fail('ws timeout'), 5000);
+      return;
+    }
 
     if (req.headers['x-live-frame'] === '1') {
       if (!mjpegPath) {
@@ -278,13 +321,15 @@ const server = http.createServer((req, res) => {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 body{margin:0;background:#111;color:#ddd;font:14px/1.5 system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;height:100vh}
-header{padding:10px;width:100%;box-sizing:border-box;display:flex;gap:10px;align-items:center;justify-content:center}
-img{max-height:calc(100vh - 60px);max-width:100vw;border-radius:12px;background:#000;object-fit:contain}
+header{padding:10px;width:100%;box-sizing:border-box;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+#wrap{position:relative;display:inline-block}
+img{max-height:calc(100vh - 60px);max-width:100vw;border-radius:12px;background:#000;object-fit:contain;display:block;touch-action:none}
 button{font-size:14px;padding:6px 14px;border-radius:8px;border:0;background:#FF6A00;color:#fff;cursor:pointer}
+button.sec{background:#333;color:#ccc}
 #s{opacity:.7;font-size:12px;font-variant-numeric:tabular-nums}
 </style>
 <header><button id="b">إيقاف</button><span id="s">جارٍ التحميل…</span></header>
-<img id="i" alt="">
+<div id="wrap"><img id="i" alt=""></div>
 <script>
 const T=${liveTokenJs};
 const i=document.getElementById('i'),s=document.getElementById('s'),b=document.getElementById('b');
@@ -297,11 +342,23 @@ async function tick(){
     const blob=await r.blob();
     if(i.src)URL.revokeObjectURL(i.src);
     i.src=URL.createObjectURL(blob);
-    n++;e=0;s.textContent='إطار '+n;
+    n++;e=0;s.textContent='إطار '+n+' — اضغط على الصورة للمس';
   }catch(err){e++;s.textContent='تعذر إحضار إطار ('+err.message+')';}
   setTimeout(tick,900);
 }
 b.onclick=()=>{on=!on;b.textContent=on?'إيقاف':'تشغيل';};
+
+// ★ اللمس: نحول نقطة الضغط إلى إحداثيات نسبية ونرسلها للمحاكي
+i.addEventListener('pointerdown', async (ev)=>{
+  ev.preventDefault();
+  const r=i.getBoundingClientRect();
+  const nx=Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width));
+  const ny=Math.max(0,Math.min(1,(ev.clientY-r.top)/r.height));
+  try{
+    const t=await fetch('/live-tap/'+nx.toFixed(5)+','+ny.toFixed(5));
+    if(!t.ok) s.textContent='لمس فشل ('+t.status+')';
+  }catch(err){ s.textContent='لمس فشل: '+err.message; }
+});
 tick();
 </script>`);
     return;
