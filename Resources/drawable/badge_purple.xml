@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- أيقونة بنفسجية مع توهج -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:top="-4dp" android:left="-4dp" android:right="-4dp" android:bottom="-4dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="24dp"
+                android:startColor="#778E24AA"
+                android:centerColor="#338E24AA"
+                android:endColor="#008E24AA" />
+        </shape>
+    </item>
+    <item android:top="3dp" android:left="1dp" android:right="1dp" android:bottom="1dp">
+        <shape android:shape="oval">
+            <solid android:color="#CC4A148C" />
+        </shape>
+    </item>
+    <item android:top="0dp" android:left="0dp" android:right="2dp" android:bottom="3dp">
+        <shape android:shape="oval">
+            <gradient
+                android:startColor="#CE93D8"
+                android:centerColor="#8E24AA"
+                android:endColor="#6A1B9A"
+                android:angle="315" />
+        </shape>
+    </item>
+    <item android:top="3dp" android:left="7dp" android:right="7dp" android:bottom="28dp">
+        <shape android:shape="oval">
+            <solid android:color="#45FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

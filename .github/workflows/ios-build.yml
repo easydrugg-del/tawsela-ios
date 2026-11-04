@@ -1,0 +1,99 @@
+name: ios-build
+
+# بناء نسخة iOS على Mac سحابي — يعمل بدون جهاز Mac محلي.
+# الناتج: Tawsela.app للمحاكي (غير موقّع) يمكن تثبيته على أي محاكي iOS.
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'صورة macOS (macos-15 أو macos-26)'
+        required: false
+        default: 'macos-15'
+      dotnet:
+        description: 'إصدار .NET SDK'
+        required: false
+        default: '10.0.x'
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'Tawsela.Core/**'
+      - 'Tawsela.iOS/**'
+      - 'Assets/leaflet/**'
+      - 'Resources/drawable/**'
+      - '.github/workflows/ios-build.yml'
+
+env:
+  DOTNET_NOLOGO: '1'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+
+jobs:
+  simulator:
+    name: Build for iOS Simulator
+    runs-on: ${{ inputs.runner || 'macos-15' }}
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          echo "Available Xcode:"
+          ls /Applications | grep -i xcode || true
+          sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+          xcodebuild -version
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet || '10.0.x' }}
+
+      - name: Install iOS workload
+        run: dotnet workload install ios
+
+      # global.json في المستودع يثبّت SDK 11 preview (للتطوير المحلي على ويندوز)،
+      # وهذا الـ runner يثبّت .NET 10 المستقر — لذلك نتجاوزه في CI فقط.
+      - name: Use the runner SDK
+        run: rm -f global.json
+
+      - name: Restore
+        run: dotnet restore Tawsela.iOS/Tawsela.iOS.csproj -r iossimulator-arm64
+
+      - name: Build (simulator, unsigned)
+        run: |
+          dotnet build Tawsela.iOS/Tawsela.iOS.csproj \
+            -c Release \
+            -f net10.0-ios \
+            -r iossimulator-arm64 \
+            -m:1 -nr:false \
+            -p:CodesignKey= \
+            -p:CodesignProvision= \
+            -p:EnableFirebase=false
+
+      - name: Verify app bundle
+        run: |
+          APP="Tawsela.iOS/bin/Release/net10.0-ios/iossimulator-arm64/Tawsela.app"
+          test -d "$APP"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist"
+          du -sh "$APP"
+
+      - name: Upload simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tawsela-simulator-${{ github.run_number }}
+          path: Tawsela.iOS/bin/Release/net10.0-ios/iossimulator-arm64/Tawsela.app
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-logs-${{ github.run_number }}
+          path: |
+            Tawsela.iOS/obj/**/*.log
+            Tawsela.iOS/bin/**/*.log
+          if-no-files-found: ignore
+          retention-days: 7

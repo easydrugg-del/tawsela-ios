@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    مكتبة الكود المشترك بين أندرويد و iOS.
+    لا يجوز أن تحتوي على أي مرجع لـ Android.* أو iOS APIs — كل ما هو خاص بالمنصة
+    يمر عبر Tawsela.Core.Platform (IAppPrefs / IAppSecure / IAppHost).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Tawsela</RootNamespace>
+    <AssemblyName>Tawsela.Core</AssemblyName>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- تحذيرات معروفة من كود أندرويد الأصلي (nullable/obsolete APIs) -->
+    <NoWarn>CS8632;CS0162;SYSLIB0014;SYSLIB0060</NoWarn>
+  </PropertyGroup>
+
+</Project>

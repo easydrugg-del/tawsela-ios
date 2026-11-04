@@ -1,0 +1,22 @@
+# Build output
+bin/
+obj/
+.vs/
+*.user
+
+# Signing material — never commit
+*.keystore
+*.jks
+*.pfx
+*.p12
+*.mobileprovision
+
+# Firebase config (يُضاف محليًا أو عبر GitHub Secrets عند تفعيل Push)
+GoogleService-Info.plist
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

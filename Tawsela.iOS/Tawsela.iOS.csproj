@@ -1,0 +1,99 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- بديل net10.0-android36.0 -->
+    <TargetFramework>net10.0-ios</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Tawsela.iOS</RootNamespace>
+    <AssemblyName>Tawsela</AssemblyName>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+
+    <!-- بديل SupportedOSPlatformVersion = 24 (Android API 24) -->
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+
+    <!-- بديل ApplicationId / AndroidPackageFormats -->
+    <ApplicationId>com.tawsela.app</ApplicationId>
+    <ApplicationTitle>توصيلة</ApplicationTitle>
+
+    <!-- بديل ApplicationVersion=31 / AndroidVersionName=1.3.27 -->
+    <ApplicationVersion>31</ApplicationVersion>
+    <ApplicationDisplayVersion>1.3.27</ApplicationDisplayVersion>
+
+    <!-- بديل RuntimeIdentifiers الأندرويدية -->
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">iossimulator-x64</RuntimeIdentifier>
+
+    <!--
+      🔴 إلزامي لتثبيت الشهادة: NSUrlSessionHandler (الافتراضي) يتجاهل
+      ServerCertificateCustomValidationCallback، وبالتالي تُرفض شهادة السيرفر الذاتية
+      ولا يعمل تسجيل الدخول على iOS إطلاقًا.
+    -->
+    <UseNativeHttpHandler>false</UseNativeHttpHandler>
+
+    <MtouchLink>SdkOnly</MtouchLink>
+    <!-- تحذيرات معروفة من كود مشترك موروث (nullable / APIs مهجورة) -->
+    <NoWarn>CS8632;CS0162;SYSLIB0014;SYSLIB0060;CA1422</NoWarn>
+
+    <!-- تفعيل Push عبر Firebase: مرّر -p:EnableFirebase=true بعد إضافة الحزم -->
+    <EnableFirebase Condition="'$(EnableFirebase)' == ''">false</EnableFirebase>
+  </PropertyGroup>
+
+  <!-- بديل keystore أندرويد: شهادة Apple + Provisioning Profile -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <CodesignKey Condition="'$(CodesignKey)' == ''">Apple Development</CodesignKey>
+    <CodesignProvision Condition="'$(CodesignProvision)' == ''"></CodesignProvision>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <CodesignKey></CodesignKey>
+    <CodesignProvision></CodesignProvision>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EnableFirebase)' == 'true'">
+    <DefineConstants>$(DefineConstants);FIREBASE_IOS</DefineConstants>
+  </PropertyGroup>
+
+  <!--
+    ملف Entitlements لا يُطبَّق تلقائيًا — يجب ربطه صراحةً.
+    نربطه فقط عند تفعيل Push، لأن الملف يحتوي aps-environment وتوقيع جهاز
+    بملف تعريف لا يدعم Push سيفشل. (مجموعة Keychain الافتراضية لا تحتاج إذنًا.)
+  -->
+  <PropertyGroup Condition="'$(EnableFirebase)' == 'true'">
+    <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tawsela.Core\Tawsela.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- بديل GoogleServicesJson (google-services.json) -->
+    <GoogleServiceInfoPlist Include="GoogleService-Info.plist" Condition="Exists('GoogleService-Info.plist')" />
+    <!-- بديل AndroidAsset -->
+    <BundleResource Include="..\PrivacyPolicy.html" Link="PrivacyPolicy.html" Condition="Exists('..\PrivacyPolicy.html')" />
+    <!-- بديل Assets/leaflet داخل الـ APK: تُضمَّن للخريطة -->
+    <BundleResource Include="..\Assets\leaflet\**\*" Link="leaflet\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- مطلوب من Apple (Required Reason APIs) -->
+    <BundleResource Include="PrivacyInfo.xcprivacy" />
+    <!-- أيقونات Vector الأصلية (ic_*.xml) تُقرأ وقت التشغيل وتُرسم بـ CoreGraphics -->
+    <BundleResource Include="..\Resources\drawable\ic_*.xml" Link="icons\%(Filename)%(Extension)" />
+    <!-- صور drawable النقطية (شعار السبلاش وغيره) -->
+    <BundleResource Include="..\Resources\drawable\*.png" Link="images\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ImageAsset Include="Assets.xcassets\**\*" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(EnableFirebase)' == 'true'">
+    <!-- بديل Xamarin.Firebase.Messaging (أندرويد فقط) -->
+    <PackageReference Include="Xamarin.Firebase.iOS.CloudMessaging" Version="10.29.0.1" />
+    <PackageReference Include="Xamarin.Firebase.iOS.Core" Version="10.29.0.1" />
+  </ItemGroup>
+
+  <!--
+    Xamarin.AndroidX.Biometric لا يحتاج بديلًا: Face ID / Touch ID عبر
+    LocalAuthentication المبنية في iOS (لا حزمة).
+  -->
+
+</Project>

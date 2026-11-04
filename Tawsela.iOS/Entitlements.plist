@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Push: development للتطوير، distribution للنشر على App Store -->
+	<key>aps-environment</key>
+	<string>development</string>
+
+	<!-- بديل Android Keystore: مجموعة Keychain الخاصة بالتطبيق لتخزين توكن الجلسة -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.tawsela.app</string>
+	</array>
+</dict>
+</plist>

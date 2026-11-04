@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- بديل android:label / ApplicationTitle -->
+	<key>CFBundleDisplayName</key>
+	<string>توصيلة</string>
+	<key>CFBundleName</key>
+	<string>Tawsela</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
+
+	<!-- بديل ApplicationId -->
+	<key>CFBundleIdentifier</key>
+	<string>com.tawsela.app</string>
+
+	<!-- بديل ApplicationVersion / AndroidVersionName -->
+	<key>CFBundleShortVersionString</key>
+	<string>1.3.27</string>
+	<key>CFBundleVersion</key>
+	<string>31</string>
+
+	<!-- بديل android:supportsRtl="true" — iOS يدعم العربية تلقائيًا -->
+	<key>CFBundleDevelopmentRegion</key>
+	<string>ar</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ar</string>
+		<string>en</string>
+	</array>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+
+	<!-- بديل SplashTheme: شاشة بدء بخلفية بيضاء وشعار -->
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+		<key>UIImageName</key>
+		<string>LaunchLogo</string>
+		<key>UIImageRespectsSafeAreaInsets</key>
+		<true/>
+	</dict>
+
+	<!-- بديل Theme.Material.Light.NoActionBar + values-night (منع الوضع الليلي) -->
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
+
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneConfigurationName</key>
+					<string>Default Configuration</string>
+					<key>UISceneDelegateClassName</key>
+					<string>SceneDelegate</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+
+	<!--
+	  الصلاحيات — مقابل AndroidManifest.xml
+	  (INTERNET و ACCESS_NETWORK_STATE تلقائية في iOS ولا تحتاج مفاتيح)
+	-->
+
+	<!-- ACCESS_FINE_LOCATION / ACCESS_COARSE_LOCATION -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>نحتاج موقعك لتحديد نقطة الانطلاق، وعرض السائقين القريبين، وحساب المسافة والأجرة.</string>
+
+	<!-- بديل MediaStore.ActionImageCapture في RegisterActivity -->
+	<key>NSCameraUsageDescription</key>
+	<string>نستخدم الكاميرا لتصوير إيصال الشحن أو مستندات السائق.</string>
+
+	<!-- بديل Intent.ActionGetContent (اختيار صورة) -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>نستخدم مكتبة الصور لاختيار صورة الإيصال أو مستندات السائق.</string>
+
+	<!-- لو استُخدم حفظ الصورة في المعرض لاحقًا -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>نحتاج الإذن لحفظ الصور التي تختارها من التطبيق.</string>
+
+	<!-- بديل USE_BIOMETRIC + Xamarin.AndroidX.Biometric (Face ID / Touch ID) -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>نستخدم Face ID لفتح التطبيق وحماية حسابك.</string>
+
+	<!-- تحضيراً للبحث الصوتي (queries للـ SpeechRecognizer في المانيفست) -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>نستخدم الميكروفون للبحث الصوتي عن الوجهة.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>نستخدم التعرف على الكلام لتحويل صوتك إلى عنوان وجهة.</string>
+
+	<!--
+	  بديل android:usesCleartextTraffic="false" + الشهادة الذاتية:
+	  الخادم الحالي https://116.202.66.142:5001 بشهادة ذاتية، وتثبيت الشهادة
+	  يتم داخل Api.cs (بصمة). أزل هذا القسم بعد الانتقال إلى نطاق + Let's Encrypt
+	  قبل رفع التطبيق لمراجعة App Store.
+	-->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+
+	<!-- بديل FCM في الخلفية -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+
+	<!-- Firebase يلتقط توكن APNs تلقائيًا (يُفعَّل فقط عند EnableFirebase=true) -->
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
+</dict>
+</plist>
