@@ -103,6 +103,52 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      # تشغيل التطبيق فعليًا على محاكي iOS وتصويره — أقرب بديل عن وجود Mac
+      - name: Run in simulator and capture screenshots
+        run: |
+          set -x
+          APP="Tawsela.iOS/bin/Release/net10.0-ios/iossimulator-arm64/Tawsela.app"
+          UDID=$(xcrun simctl list devices available -j | jq -r '[.devices[][] | select(.name|test("iPhone"))][0].udid')
+          echo "Simulator UDID: $UDID"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" "$APP"
+          mkdir -p screenshots
+
+          # تشغيل مع التقاط stdout/stderr (فيه أي استثناء مُدار)
+          xcrun simctl launch --console "$UDID" com.tawsela.app > screenshots/console.txt 2>&1 &
+          LAUNCH_PID=$!
+          sleep 20
+          kill $LAUNCH_PID 2>/dev/null || true
+
+          # هل العملية لسه شغالة؟
+          xcrun simctl spawn "$UDID" launchctl list > screenshots/launchctl.txt 2>&1 || true
+          if grep -qi tawsela screenshots/launchctl.txt; then
+            echo "APP STILL RUNNING"
+          else
+            echo "APP NOT RUNNING (crashed or exited)" | tee screenshots/app-crashed.txt
+          fi
+
+          xcrun simctl io "$UDID" screenshot screenshots/01-splash.png || true
+          sleep 10
+          xcrun simctl io "$UDID" screenshot screenshots/02-after.png || true
+
+          # سجلات النظام + تقارير الانهيار
+          xcrun simctl spawn "$UDID" log show --last 4m --style compact \
+            --predicate 'eventMessage CONTAINS[c] "tawsela"' > screenshots/log.txt 2>&1 || true
+          mkdir -p screenshots/crashes
+          cp ~/Library/Logs/DiagnosticReports/*.ips screenshots/crashes/ 2>/dev/null || true
+          ls -la screenshots
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tawsela-screenshots-${{ github.run_number }}
+          path: screenshots/
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4

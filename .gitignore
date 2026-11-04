@@ -23,3 +23,6 @@ Thumbs.db
 
 # CI artifacts downloaded locally
 artifacts/
+
+# Screenshots downloaded locally from CI
+shots/
