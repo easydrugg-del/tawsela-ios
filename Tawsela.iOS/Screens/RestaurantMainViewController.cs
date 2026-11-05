@@ -16,7 +16,7 @@ namespace Tawsela.iOS.Screens
     {
         private UIStackView _stack;
         private UIStackView _content;
-        private UILabel _header, _info;
+        private UILabel _header, _info, _status;
         private UIButton _newDelivery;
         private NSTimer _timer;
         private int _lastPending = -1;
@@ -55,32 +55,71 @@ namespace Tawsela.iOS.Screens
         {
             _stack = CreateScrollContent(12f, 16f);
 
-            _header = MakeLabel("جارٍ التحميل…", 16f, Theme.TextPrimary, UIFontWeight.Semibold, UITextAlignment.Right);
-            _info = MakeLabel("", 13f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
-            _stack.AddArrangedSubview(_header);
-            _stack.AddArrangedSubview(_info);
+            /* ---------- بطاقة المطعم (اسم + حالة + هاتف/عنوان) ---------- */
+            var card = Controls.Card();
+            _header = MakeLabel("جارٍ التحميل…", 17f, Theme.TextPrimary, UIFontWeight.Bold, UITextAlignment.Right);
+            _info = MakeLabel("", 12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
+            _status = MakeLabel("", 11f, Theme.Green, UIFontWeight.Semibold, UITextAlignment.Left);
 
-            var newDelivery = Controls.PrimaryButton("طلب توصيلة جديدة");
+            card.AddSubview(_header);
+            card.AddSubview(_info);
+            card.AddSubview(_status);
+            card.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(_header, NSLayoutAttribute.Top, NSLayoutRelation.Equal, card, NSLayoutAttribute.Top, 1, 12),
+                NSLayoutConstraint.Create(_header, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, card, NSLayoutAttribute.Leading, 1, 12),
+                NSLayoutConstraint.Create(_header, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -12),
+
+                NSLayoutConstraint.Create(_status, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _header, NSLayoutAttribute.Bottom, 1, 6),
+                NSLayoutConstraint.Create(_status, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, card, NSLayoutAttribute.Leading, 1, 12),
+
+                NSLayoutConstraint.Create(_info, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _header, NSLayoutAttribute.Bottom, 1, 6),
+                NSLayoutConstraint.Create(_info, NSLayoutAttribute.Leading, NSLayoutRelation.GreaterThanOrEqual, _status, NSLayoutAttribute.Trailing, 1, 8),
+                NSLayoutConstraint.Create(_info, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -12),
+                NSLayoutConstraint.Create(_info, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, card, NSLayoutAttribute.Bottom, 1, -12),
+            });
+            _stack.AddArrangedSubview(card);
+
+            /* ---------- الإجراء الأساسي ---------- */
+            var newDelivery = Controls.PrimaryButton("＋ طلب توصيلة جديدة");
             newDelivery.TouchUpInside += (s, e) => OpenNewDelivery();
             _newDelivery = newDelivery;
             _stack.AddArrangedSubview(newDelivery);
 
-            var mine = Controls.OutlineButton("توصيلات مطعمي");
-            mine.TouchUpInside += (s, e) => Push(new RestaurantDeliveryMyOrdersViewController());
-            _stack.AddArrangedSubview(mine);
+            /* ---------- شبكة الأقسام (2×2) ---------- */
+            _stack.AddArrangedSubview(Controls.SectionTitle("الأقسام"));
 
-            var profile = Controls.OutlineButton("بيانات المطعم");
-            profile.TouchUpInside += (s, e) => Push(new RestaurantProfileViewController());
-            _stack.AddArrangedSubview(profile);
+            var grid = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 12,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
 
-            var notifications = Controls.OutlineButton("الإشعارات");
-            notifications.TouchUpInside += (s, e) => Push(new NotificationsViewController());
-            _stack.AddArrangedSubview(notifications);
+            grid.AddArrangedSubview(GridRow(
+                Controls.Tile("ic_action_receipt", "توصيلاتي", Theme.Blue, Theme.PrimaryDark,
+                    () => Push(new RestaurantDeliveryMyOrdersViewController())),
+                Controls.Tile("ic_person", "بيانات المطعم", Theme.Hex(0x8E24AA), Theme.PrimaryDark,
+                    () => Push(new RestaurantProfileViewController()))));
 
-            var refresh = Controls.OutlineButton("تحديث");
-            refresh.TouchUpInside += (s, e) => Load();
-            _stack.AddArrangedSubview(refresh);
+            grid.AddArrangedSubview(GridRow(
+                Controls.Tile("ic_bell", "الإشعارات", Theme.Hex(0xEF6C00), Theme.PrimaryDark,
+                    () => Push(new NotificationsViewController())),
+                Controls.Tile("ic_replay", "تحديث", Theme.Green, Theme.PrimaryDark,
+                    () => Load())));
 
+            _stack.AddArrangedSubview(grid);
+
+            /* ---------- المحتوى المتغيّر (ملخص + آخر التوصيلات) ---------- */
+            _content = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 8,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            _stack.AddArrangedSubview(_content);
+
+            /* ---------- الخروج ---------- */
             var logout = Controls.DangerButton("تسجيل الخروج");
             logout.TouchUpInside += (s, e) =>
             {
@@ -91,15 +130,22 @@ namespace Tawsela.iOS.Screens
                 });
             };
             _stack.AddArrangedSubview(logout);
+        }
 
-            // المحتوى المتغيّر فقط (الإحصائيات والتوصيلات) — الأزرار أعلاه تبقى ثابتة
-            _content = new UIStackView
+        /// <summary>صف من بلاطتين متساويتين (بديل LinearLayout horizontal في أندرويد).</summary>
+        private static UIStackView GridRow(UIControl left, UIControl right)
+        {
+            var row = new UIStackView
             {
-                Axis = UILayoutConstraintAxis.Vertical,
-                Spacing = 8,
+                Axis = UILayoutConstraintAxis.Horizontal,
+                Spacing = 12,
+                Distribution = UIStackViewDistribution.FillEqually,
                 TranslatesAutoresizingMaskIntoConstraints = false
             };
-            _stack.AddArrangedSubview(_content);
+            row.AddArrangedSubview(left);
+            row.AddArrangedSubview(right);
+            row.HeightAnchor.ConstraintEqualTo(96).Active = true;
+            return row;
         }
 
         private void Load()
@@ -138,13 +184,17 @@ namespace Tawsela.iOS.Screens
                 var active = activeStr == "True" || activeStr == "1" ||
                              string.Equals(activeStr, "true", StringComparison.OrdinalIgnoreCase);
                 if (_newDelivery != null) _newDelivery.Enabled = active;
-                if (!active)
-                    _info.Text = "قيد مراجعة الإدارة — لن تتمكن من إنشاء توصيلات حتى اعتماد حسابك";
+                if (_status != null)
+                {
+                    _status.Text = active ? "● مفعّل" : "● قيد المراجعة";
+                    _status.TextColor = active ? Theme.Green : Theme.Accent;
+                }
             }
             else
             {
                 _header.Text = "لوحة المطعم";
                 _info.Text = "";
+                if (_status != null) _status.Text = "";
             }
 
             if (stats != null)
