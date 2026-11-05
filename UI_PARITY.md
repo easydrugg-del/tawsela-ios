@@ -81,12 +81,12 @@ toggle.Leading  == row.Leading          // ❌ في LTR = يسار، فاللي�
 
 ---
 
-## 6. شاشة توصيلة المطعم/المحل — إضافة (مش موجودة في أندرويد)
+## 6. شاشة توصيلة المطعم/المحل — إضافة (اتعملت في أندرويد كمان)
 
 `Screens/RestaurantScreens.cs` → `RestaurantNewDeliveryViewController`
+أندرويد: `Activities/RestaurantNewDeliveryActivity.cs` + `Resources/layout/activity_restaurant_new_delivery.xml`
 
-أندرويد (`activity_restaurant_new_delivery.xml`) فيه `spnDeliveryArea` بس (منطقة التسعير).
-اتضاف نفس اختيار العميل السريع:
+الاختيار السريع تحت «عنوان التسليم (العميل)» مباشرة:
 
 | العنصر | السلوك |
 |---|---|
@@ -98,4 +98,28 @@ toggle.Leading  == row.Leading          // ❌ في LTR = يسار، فاللي�
 - الضغط على شريحة → يملأ **عنوان التوصيل + الإحداثيات** (`ApplyDestination`).
 - لو اسم المنطقة/المدينة مطابق لمنطقة تسعير → **تختارها تلقائيًا** ويظهر السعر.
 - المنطقتان مختلفتان: `_areas` = مناطق التسعير (بسعر)، `Api.Areas` = مناطق جغرافية (بإحداثيات).
+
+---
+
+## 7. لوحة المطعم — شكل الزراير زي زراير قسم الإدارة
+
+- أندرويد: `Resources/layout/activity_restaurant_main.xml` → بلاطات بيضاء (`tile_card_selector`) بارتفاع 96dp،
+  إيموجي 30sp + عنوان 12sp، صفّين 2×2 + بلاطة «🚪 تسجيل الخروج» (نص أحمر) وفراغ لموازنة الصف.
+- زر «＋ طلب توصيل جديد» يفضل برتقالي عريض في الأعلى (الإجراء الأساسي الوحيد).
+- iOS: `RestaurantMainViewController` بيستخدم `Controls.Tile` — نفس بلاطات لوحة الإدارة في iOS
+  (كارت أبيض + أيقونة دائرية ملوّنة + عنوان)، فاللوحتين متسقتين.
+- الكود لازم يقرأ البلاطات كـ `LinearLayout` مش `Button` (`FindViewById<LinearLayout>`).
+
+---
+
+## 8. توجيه حساب المطعم بعد إعادة التشغيل (باج اتصلّح)
+
+- أندرويد: `SplashActivity.GoNext` كان بيروح لـ `MainActivity` (شاشة العميل) لأي جلسة محفوظة.
+- اتصلّح: `Session.IsRestaurant ? typeof(RestaurantMainActivity) : typeof(MainActivity)`.
+
+## 9. بانر «كود خصم اليوم»
+
+- اتشال من `MainActivity` (أندرويد) — بقى `ViewStates.Gone` ومفيش أي كود بيجيبه من `Api.CouponsList`.
+- iOS ما كانش فيه من الأساس.
+
 
