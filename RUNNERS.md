@@ -1,0 +1,58 @@
+# ملاحظات ماكينات GitHub Actions لهذا المستودع
+
+## الخلاصة السريعة
+
+| الاستخدام | الليبل الصحيح |
+|---|---|
+| بناء التطبيق + لقطات الشاشة | **`xcode-27`** |
+| بث المحاكي للمتصفح (`flutter-remote`) | **`xcode-27`** |
+
+---
+
+## ليه `xcode-27` بالتحديد؟
+
+| الليبل | الملاحظة |
+|---|---|
+| **`xcode-27`** | ✅ الأفضل. Xcode 27.1 موجود، المحاكي بيقلع، والسعة متاحة (4 تشغيلات ناجحة في ~5 دقايق في 4 نوفمبر 2026) |
+| `macos-26` | ⚠️ نفس الصورة تقريبًا لكن **الطابور مزدحم جدًا**. 3 محاولات فشلت بانتظار 15 دقيقة دون الحصول على ماكينة |
+| `macos-15` | ❌ الماكينة بتتوفر فورًا لكن **المحاكي لا يقلع** — جهاز يفضل `Shutdown` لأكثر من 19 دقيقة |
+| `macos-15-intel` | ❌ Intel — `serve-sim` محتاج ARM64 |
+
+---
+
+## الأخطاء المتكررة ومعناها
+
+### 1. `The job was not acquired by Runner of type hosted even after multiple attempts`
+
+مش خطأ في الكود — GitHub ماعندهاش ماكينة macOS فاضية. الحل: غيّر الليبل إلى `xcode-27`.
+
+### 2. `Simulator <UDID> never reached Booted state`
+
+الماكينة اتوفّرت لكن CoreSimulator مش قادر يقلع الجهاز. شوف `--- runtimes ---` و`--- boot attempt ---` في اللوج:
+- لو `boot` بيرجع خطأ صريح → المشكلة في الصورة.
+- لو صامت والجهاز يفضل `Shutdown` → الصورة تالفة، غيّر الليبل.
+
+### 3. `Remote access is disabled`
+
+`serve-sim` بيرفض الوصول البعيد افتراضيًا. لازم `--auth-token` (مضاف في الـ workflow).
+
+### 4. `Flutter Remote Session Locked`
+
+البوابة بتقبل التوكن من `?k=` مرة واحدة وبعدها بتخزّنه في كوكي. لو ضاع الـ `?k=`، افتح الرابط كامل من جديد.
+
+---
+
+## طريقة التشغيل
+
+```powershell
+cd 'D:\programing\CafeManagement\tawsela_ios_ci'
+flutter-remote up --app-release Tawsela-sim.zip --minutes 90 `
+  --device "iPhone 17" --runner xcode-27 `
+  --max-dimension 720 --fps 15 --no-open
+```
+
+## إيقاف الجلسة
+
+```powershell
+flutter-remote down
+```

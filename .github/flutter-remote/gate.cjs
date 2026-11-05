@@ -212,6 +212,55 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ★ لمس: /live-tap/<TOKEN>/<nx>,<ny> — نرسل حدث مؤشر إلى serve-sim عبر WebSocket
+  if ((req.url || '').startsWith('/live-tap/')) {
+    const rest = req.url.split('?')[0].slice('/live-tap/'.length).split('/');
+    const tapToken = decodeURIComponent(rest[0] || '');
+    if (!timingSafeEqual(tapToken, TOKEN)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('bad token');
+      return;
+    }
+
+    const tapInputPath = process.env.LIVE_INPUT_PATH || '';
+    if (!tapInputPath) {
+      res.writeHead(503, { 'Content-Type': 'text/plain' });
+      res.end('LIVE_INPUT_PATH not set');
+      return;
+    }
+
+    const [nx, ny] = (rest[1] || '').split(',').map(Number);
+    if (!isFinite(nx) || !isFinite(ny) || nx < 0 || nx > 1 || ny < 0 || ny > 1) {
+      res.writeHead(400, { 'Content-Type': 'text/plain' });
+      res.end('bad coords');
+      return;
+    }
+
+    const ws = new WebSocket('ws://127.0.0.1:' + TARGET_PORT + tapInputPath);
+    let seq = 1;
+    const send = (event) => ws.send(JSON.stringify({
+      v: 2, type: 'pointer', seq: seq++, ts: Date.now(),
+      event, pointerId: 1, isPrimary: true,
+      x: Number(nx.toFixed(5)), y: Number(ny.toFixed(5)),
+      button: 0, buttons: event === 'up' ? 0 : 1
+    }));
+
+    const fail = (msg) => {
+      if (!res.headersSent) { res.writeHead(502, { 'Content-Type': 'text/plain' }); res.end(msg); }
+      try { ws.close(); } catch {}
+    };
+
+    ws.onopen = () => {
+      send('down');
+      setTimeout(() => { send('up'); setTimeout(() => { try { ws.close(); } catch {} }, 60); }, 90);
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({ ok: true, x: nx, y: ny }));
+    };
+    ws.onerror = () => fail('ws error');
+    setTimeout(() => fail('ws timeout'), 5000);
+    return;
+  }
+
   // ★ مشاهدة مبسّطة: /live/<TOKEN> — إطارات JPEG متتالية في أي متصفح، بلا WebRTC
   if ((req.url || '').startsWith('/live/')) {
     const liveToken = decodeURIComponent((req.url.split('?')[0].slice('/live/'.length)));
@@ -222,47 +271,6 @@ const server = http.createServer((req, res) => {
     }
 
     const mjpegPath = process.env.LIVE_MJPEG_PATH || '';
-    const inputPath = process.env.LIVE_INPUT_PATH || '';
-
-    // ★ لمس: نبني اتصال WebSocket واحد بـ serve-sim ونرسل عليه أحداث المؤشر
-    if (req.url.startsWith('/live-tap/')) {
-      const ip = (req.url.split('?')[0].slice('/live-tap/'.length));
-      const [nx, ny] = ip.split(',').map(Number);
-      if (!inputPath) {
-        res.writeHead(503, { 'Content-Type': 'text/plain' });
-        res.end('LIVE_INPUT_PATH not set');
-        return;
-      }
-      if (!isFinite(nx) || !isFinite(ny) || nx < 0 || nx > 1 || ny < 0 || ny > 1) {
-        res.writeHead(400, { 'Content-Type': 'text/plain' });
-        res.end('bad coords');
-        return;
-      }
-
-      const ws = new WebSocket('ws://127.0.0.1:' + TARGET_PORT + inputPath);
-      let seq = 1;
-      const send = (event) => ws.send(JSON.stringify({
-        v: 2, type: 'pointer', seq: seq++, ts: Date.now(),
-        event, pointerId: 1, isPrimary: true,
-        x: Number(nx.toFixed(5)), y: Number(ny.toFixed(5)),
-        button: 0, buttons: event === 'up' ? 0 : 1
-      }));
-
-      const fail = (msg) => {
-        if (!res.headersSent) { res.writeHead(502, { 'Content-Type': 'text/plain' }); res.end(msg); }
-        try { ws.close(); } catch {}
-      };
-
-      ws.onopen = () => {
-        send('down');
-        setTimeout(() => { send('up'); setTimeout(() => { try { ws.close(); } catch {} }, 60); }, 90);
-        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-        res.end(JSON.stringify({ ok: true, x: nx, y: ny }));
-      };
-      ws.onerror = () => fail('ws error');
-      setTimeout(() => fail('ws timeout'), 5000);
-      return;
-    }
 
     if (req.headers['x-live-frame'] === '1') {
       if (!mjpegPath) {
@@ -355,7 +363,7 @@ i.addEventListener('pointerdown', async (ev)=>{
   const nx=Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width));
   const ny=Math.max(0,Math.min(1,(ev.clientY-r.top)/r.height));
   try{
-    const t=await fetch('/live-tap/'+nx.toFixed(5)+','+ny.toFixed(5));
+    const t=await fetch('/live-tap/'+encodeURIComponent(T)+'/'+nx.toFixed(5)+','+ny.toFixed(5));
     if(!t.ok) s.textContent='لمس فشل ('+t.status+')';
   }catch(err){ s.textContent='لمس فشل: '+err.message; }
 });
