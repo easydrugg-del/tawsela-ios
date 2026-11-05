@@ -114,7 +114,9 @@ namespace Tawsela.iOS.Screens
             header.AddConstraints(new[]
             {
                 NSLayoutConstraint.Create(_greeting, NSLayoutAttribute.Top, NSLayoutRelation.Equal, header.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 16),
-                NSLayoutConstraint.Create(_greeting, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, _bell, NSLayoutAttribute.Leading, 1, -14),
+                // العنوان على اليمين والجرس على الشمال (زي الأندرويد)
+                NSLayoutConstraint.Create(_greeting, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, header, NSLayoutAttribute.Trailing, 1, -18),
+                NSLayoutConstraint.Create(_greeting, NSLayoutAttribute.Leading, NSLayoutRelation.GreaterThanOrEqual, _bell, NSLayoutAttribute.Trailing, 1, 14),
 
                 NSLayoutConstraint.Create(_roleBadge, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _greeting, NSLayoutAttribute.Bottom, 1, 4),
                 NSLayoutConstraint.Create(_roleBadge, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, _greeting, NSLayoutAttribute.Trailing, 1, 0),

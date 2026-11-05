@@ -142,28 +142,24 @@ namespace Tawsela.iOS.Screens
 
         private UIView MakeSwitchRow(string text, out UISwitch toggle, bool rightAligned = false)
         {
-            var row = new UIView { TranslatesAutoresizingMaskIntoConstraints = false };
-            var label = MakeLabel(text, 14f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
-
             toggle = new UISwitch
             {
                 OnTintColor = Theme.Primary,
                 TranslatesAutoresizingMaskIntoConstraints = false
             };
 
-            row.AddSubview(label);
-            row.AddSubview(toggle);
-            row.AddConstraints(new[]
-            {
-                NSLayoutConstraint.Create(label, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, row, NSLayoutAttribute.CenterY, 1, 0),
-                NSLayoutConstraint.Create(label, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, toggle, NSLayoutAttribute.Leading, 1, -10),
-                NSLayoutConstraint.Create(label, NSLayoutAttribute.Leading, NSLayoutRelation.GreaterThanOrEqual, row, NSLayoutAttribute.Leading, 1, 0),
-                NSLayoutConstraint.Create(toggle, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, row, NSLayoutAttribute.CenterY, 1, 0),
-                NSLayoutConstraint.Create(row, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 34),
-            });
+            var label = MakeLabel(text, 14f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
+            label.SetContentHuggingPriority(249f, UILayoutConstraintAxis.Horizontal);
 
             // في RTL: المفتاح على اليسار والنص على اليمين
-            row.AddConstraint(NSLayoutConstraint.Create(toggle, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, row, NSLayoutAttribute.Leading, 1, 0));
+            var row = new UIStackView(new UIView[] { label, toggle })
+            {
+                Axis = UILayoutConstraintAxis.Horizontal,
+                Spacing = 10,
+                Alignment = UIStackViewAlignment.Center,
+                TranslatesAutoresizingMaskIntoConstraints = false,
+                SemanticContentAttribute = UISemanticContentAttribute.ForceRightToLeft
+            };
 
             return row;
         }

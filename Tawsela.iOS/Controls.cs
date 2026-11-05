@@ -72,8 +72,9 @@ namespace Tawsela.iOS
             if (img != null)
             {
                 b.SetImage(img.ImageWithRenderingMode(UIImageRenderingMode.AlwaysOriginal), UIControlState.Normal);
-                b.ImageEdgeInsets = new UIEdgeInsets(0, 0, 0, 10);
-                b.TitleEdgeInsets = new UIEdgeInsets(0, 10, 0, 0);
+                // في RTL الأيقونة تبقى على يمين النص (بديل drawableStart)
+                b.ImageEdgeInsets = new UIEdgeInsets(0, 10, 0, 0);
+                b.TitleEdgeInsets = new UIEdgeInsets(0, 0, 0, 10);
             }
             return b;
         }
