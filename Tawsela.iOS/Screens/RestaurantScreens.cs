@@ -121,14 +121,18 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(12f, 16f);
 
-            stack.AddArrangedSubview(Controls.SectionTitle("بيانات العميل"));
-            _customerName = Controls.TextField("اسم العميل");
-            _customerPhone = Controls.TextField("رقم الهاتف");
-            _customerPhone.KeyboardType = UIKeyboardType.PhonePad;
-            _customerPhone.SemanticContentAttribute = UISemanticContentAttribute.ForceLeftToRight;
-            stack.AddArrangedSubview(_customerName);
-            stack.AddArrangedSubview(_customerPhone);
+            /* ---------- المنطقة والسعر (أعلى الشاشة زي أندرويد) ---------- */
+            stack.AddArrangedSubview(Controls.SectionTitle("المنطقة والسعر"));
 
+            _areaValue = MakeLabel("اختر المنطقة", 15f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
+            _areaValue.UserInteractionEnabled = true;
+            _areaValue.AddGestureRecognizer(new UITapGestureRecognizer(() => PickArea()));
+            stack.AddArrangedSubview(_areaValue);
+
+            _fareValue = MakeLabel("—", 20f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
+            stack.AddArrangedSubview(_fareValue);
+
+            /* ---------- العناوين ---------- */
             stack.AddArrangedSubview(Controls.SectionTitle("العناوين"));
 
             _pickup = Controls.TextField("عنوان الاستلام (المطعم)");
@@ -184,15 +188,14 @@ namespace Tawsela.iOS.Screens
             };
             stack.AddArrangedSubview(_streetChipsRow);
 
-            stack.AddArrangedSubview(Controls.SectionTitle("المنطقة والسعر"));
-
-            _areaValue = MakeLabel("اختر المنطقة", 15f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
-            _areaValue.UserInteractionEnabled = true;
-            _areaValue.AddGestureRecognizer(new UITapGestureRecognizer(() => PickArea()));
-            stack.AddArrangedSubview(_areaValue);
-
-            _fareValue = MakeLabel("—", 20f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
-            stack.AddArrangedSubview(_fareValue);
+            /* ---------- بيانات العميل ---------- */
+            stack.AddArrangedSubview(Controls.SectionTitle("بيانات العميل"));
+            _customerName = Controls.TextField("اسم العميل");
+            _customerPhone = Controls.TextField("رقم الهاتف");
+            _customerPhone.KeyboardType = UIKeyboardType.PhonePad;
+            _customerPhone.SemanticContentAttribute = UISemanticContentAttribute.ForceLeftToRight;
+            stack.AddArrangedSubview(_customerName);
+            stack.AddArrangedSubview(_customerPhone);
 
             var submit = Controls.PrimaryButton("إرسال طلب التوصيل");
             submit.TouchUpInside += (s, e) => Submit();
