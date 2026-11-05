@@ -157,7 +157,17 @@ namespace Tawsela.iOS.Screens
                 ShowCoords();
 
                 _governorate = Tawsela.Data.Row.Str(rest, "Governorate");
+                if (string.IsNullOrWhiteSpace(_governorate)) _governorate = Session.Governorate;
+
                 _city = Tawsela.Data.Row.Str(rest, "City");
+                if (string.IsNullOrWhiteSpace(_city)) _city = Session.City;
+
+                // محافظة بمدينة واحدة (زي الغربية → زفتى): اختَرها تلقائيًا
+                if (string.IsNullOrWhiteSpace(_city) && !string.IsNullOrWhiteSpace(_governorate))
+                {
+                    var cities = EgyptPlaces.CitiesOf(_governorate);
+                    if (cities != null && cities.Count == 1) _city = cities[0];
+                }
                 _govValue.Text = string.IsNullOrEmpty(_governorate) ? "اختر المحافظة" : _governorate;
                 _govValue.TextColor = string.IsNullOrEmpty(_governorate) ? Theme.TextSecondary : Theme.TextPrimary;
                 _cityValue.Text = string.IsNullOrEmpty(_city) ? "اختر المدينة" : _city;

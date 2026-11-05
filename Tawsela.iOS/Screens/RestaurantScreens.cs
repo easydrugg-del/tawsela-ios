@@ -25,7 +25,11 @@ namespace Tawsela.iOS.Screens
         /* اختيار سريع للوجهة: محافظة ← مدينة ← مناطق ← شوارع */
         private string _governorate = "", _city = "";
         private UILabel _govValue, _cityValue;
-        private UIStackView _areaChipsRow, _streetChipsRow;
+        private UIStackView _areaChipsRow, _streetGrid;
+        private UITextField _streetSearch;
+        private UILabel _areasTitle, _streetsTitle;
+        private readonly List<Street> _streets = new List<Street>();
+        private bool _showAllStreets;
         private int _areaSeq, _streetSeq;
 
         public RestaurantNewDeliveryViewController(List<Dictionary<string, object>> areas)
@@ -99,7 +103,17 @@ namespace Tawsela.iOS.Screens
 
                     // نبدأ من محافظة/مدينة المطعم — أغلب التوصيلات في نفس المدينة
                     var gov = Row.Str(rest, "Governorate");
+                    if (string.IsNullOrEmpty(gov)) gov = Session.Governorate;
                     var city = Row.Str(rest, "City");
+                    if (string.IsNullOrEmpty(city)) city = Session.City;
+
+                    // محافظة بمدينة واحدة (زي الغربية → زفتى): اختَرها تلقائيًا
+                    if (string.IsNullOrEmpty(city) && !string.IsNullOrEmpty(gov))
+                    {
+                        var cities = EgyptPlaces.CitiesOf(gov);
+                        if (cities != null && cities.Count == 1) city = cities[0];
+                    }
+
                     if (!string.IsNullOrEmpty(gov))
                     {
                         _governorate = gov;
@@ -170,7 +184,8 @@ namespace Tawsela.iOS.Screens
             var cityCard = MakeSelectorCard("المدينة", out _cityValue, () => PickCity());
             stack.AddArrangedSubview(cityCard);
 
-            stack.AddArrangedSubview(Controls.SectionTitle("المناطق"));
+            _areasTitle = Controls.SectionTitle("المناطق");
+            stack.AddArrangedSubview(_areasTitle);
             _areaChipsRow = new UIStackView
             {
                 Axis = UILayoutConstraintAxis.Horizontal,
@@ -179,14 +194,25 @@ namespace Tawsela.iOS.Screens
             };
             stack.AddArrangedSubview(_areaChipsRow);
 
-            stack.AddArrangedSubview(Controls.SectionTitle("أهم الشوارع"));
-            _streetChipsRow = new UIStackView
+            _streetsTitle = Controls.SectionTitle("أهم الشوارع");
+            stack.AddArrangedSubview(_streetsTitle);
+
+            _streetSearch = Controls.TextField("ابحث عن شارع (جزء من الاسم)");
+            _streetSearch.TextAlignment = UITextAlignment.Right;
+            _streetSearch.EditingChanged += (s, e) =>
             {
-                Axis = UILayoutConstraintAxis.Horizontal,
+                _showAllStreets = false;
+                BuildStreetGrid(_streetSearch.Text);
+            };
+            stack.AddArrangedSubview(_streetSearch);
+
+            _streetGrid = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
                 Spacing = 8,
                 TranslatesAutoresizingMaskIntoConstraints = false
             };
-            stack.AddArrangedSubview(_streetChipsRow);
+            stack.AddArrangedSubview(_streetGrid);
 
             /* ---------- بيانات العميل ---------- */
             stack.AddArrangedSubview(Controls.SectionTitle("بيانات العميل"));
@@ -242,7 +268,7 @@ namespace Tawsela.iOS.Screens
                 _cityValue.Text = "اختر المدينة";
                 _cityValue.TextColor = Theme.TextSecondary;
                 ClearChips(_areaChipsRow);
-                ClearChips(_streetChipsRow);
+                ClearStreetGrid();
             });
         }
 
@@ -320,6 +346,8 @@ namespace Tawsela.iOS.Screens
         private void RenderAreas(List<Area> areas)
         {
             ClearChips(_areaChipsRow);
+            if (_areasTitle != null && !string.IsNullOrEmpty(_city))
+                _areasTitle.Text = "مناطق " + _city;
             if (areas == null || areas.Count == 0)
             {
                 _areaChipsRow.AddArrangedSubview(MakeLabel("لا توجد مناطق مسجلة لهذه المدينة",
@@ -353,76 +381,93 @@ namespace Tawsela.iOS.Screens
 
         private void RenderStreets(List<Street> streets)
         {
-            ClearChips(_streetChipsRow);
-            if (streets == null || streets.Count == 0)
+            _streets.Clear();
+            if (streets != null) _streets.AddRange(streets);
+
+            _showAllStreets = false;
+            if (_streetsTitle != null && !string.IsNullOrEmpty(_city))
+                _streetsTitle.Text = "أهم شوارع " + _city;
+
+            BuildStreetGrid(_streetSearch != null ? _streetSearch.Text : null);
+        }
+
+        /// <summary>شبكة الشوارع: 3 في السطر + فلترة فورية + «عرض كل الشوارع» (بديل BuildStreetGrid في أندرويد).</summary>
+        private void BuildStreetGrid(string filter)
+        {
+            if (_streetGrid == null) return;
+            ClearStreetGrid();
+
+            var q = (filter ?? "").Trim();
+            var list = new List<Street>();
+            foreach (var s in _streets)
             {
-                _streetChipsRow.AddArrangedSubview(MakeLabel("لا توجد شوارع مسجلة لهذه المدينة",
+                if (string.IsNullOrWhiteSpace(s.Name)) continue;
+                if (q.Length > 0 && s.Name.IndexOf(q, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                list.Add(s);
+            }
+
+            if (list.Count == 0)
+            {
+                _streetGrid.AddArrangedSubview(MakeLabel(
+                    q.Length > 0 ? "لا يوجد شارع بهذا الاسم" : "لا توجد شوارع مسجلة لهذه المدينة",
                     12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right));
                 return;
             }
 
-            var count = Math.Min(3, streets.Count);
-            for (int i = 0; i < count; i++)
-            {
-                var s = streets[i];
-                var chip = Controls.StreetChip(s.Name, () => ApplyDestination(s.Name, s.Lat, s.Lng, s.City));
-                _streetChipsRow.AddArrangedSubview(chip);
-            }
+            var max = _showAllStreets ? int.MaxValue : 18;
+            var shown = list.Count > max ? list.GetRange(0, max) : list;
 
-            if (streets.Count > 3)
+            UIStackView row = null;
+            var inRow = 0;
+            foreach (var s in shown)
             {
-                var more = Controls.StreetChip("الكل ▾", () =>
+                if (row == null)
                 {
-                    var names = new List<string>();
-                    foreach (var s in streets) names.Add(s.Name);
-                    Ui.Choose("كل الشوارع", names, index =>
+                    row = new UIStackView
                     {
-                        var s = streets[index];
-                        ApplyDestination(s.Name, s.Lat, s.Lng, s.City);
-                    });
-                });
-                _streetChipsRow.AddArrangedSubview(more);
+                        Axis = UILayoutConstraintAxis.Horizontal,
+                        Distribution = UIStackViewDistribution.FillEqually,
+                        Spacing = 8,
+                        TranslatesAutoresizingMaskIntoConstraints = false
+                    };
+                    _streetGrid.AddArrangedSubview(row);
+                    inRow = 0;
+                }
+
+                var st = s;
+                var chip = Controls.StreetChip(st.Name, () => ApplyDestination(st.Name, st.Lat, st.Lng, st.City));
+                chip.TitleLabel.LineBreakMode = UILineBreakMode.WordWrap;
+                chip.TitleLabel.Lines = 2;
+                chip.TitleLabel.TextAlignment = UITextAlignment.Center;
+                chip.TitleLabel.Font = Theme.FontBold(11);
+                chip.HeightAnchor.ConstraintEqualTo(46f).Active = true;
+                row.AddArrangedSubview(chip);
+
+                inRow++;
+                if (inRow >= 3) row = null;
             }
 
-            // بحث بالاسم في كل شوارع المدينة
-            _streetChipsRow.AddArrangedSubview(Controls.StreetChip("🔍 بحث", () => SearchStreet(streets)));
+            if (shown.Count < list.Count)
+            {
+                var more = Controls.OutlineButton("عرض كل الشوارع (" + list.Count + ")", Theme.Red, 40f);
+                more.TouchUpInside += (s, e) =>
+                {
+                    _showAllStreets = true;
+                    BuildStreetGrid(_streetSearch != null ? _streetSearch.Text : null);
+                };
+                _streetGrid.AddArrangedSubview(more);
+            }
         }
 
-        /// <summary>بحث بالاسم في الشوارع المسجلة (مطابقة كاملة أو جزئية).</summary>
-        private void SearchStreet(List<Street> streets)
+        private void ClearStreetGrid()
         {
-            if (streets == null || streets.Count == 0) { Ui.Toast("لا توجد شوارع مسجلة"); return; }
-
-            Ui.Prompt("بحث في الشوارع", "اكتب اسم الشارع أو جزء منه", "", "مثال: السوق", text =>
+            if (_streetGrid == null) return;
+            for (int i = _streetGrid.ArrangedSubviews.Length - 1; i >= 0; i--)
             {
-                var q = (text ?? "").Trim();
-                if (q.Length == 0) return;
-
-                var exact = streets.Find(s => string.Equals(s.Name, q, StringComparison.OrdinalIgnoreCase));
-                if (exact != null)
-                {
-                    ApplyDestination(exact.Name, exact.Lat, exact.Lng, exact.City);
-                    return;
-                }
-
-                var matches = streets.FindAll(s => s.Name != null &&
-                    s.Name.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0);
-
-                if (matches.Count == 0) { Ui.Toast("الشارع غير مسجل — حدده على الخريطة"); return; }
-                if (matches.Count == 1)
-                {
-                    var one = matches[0];
-                    ApplyDestination(one.Name, one.Lat, one.Lng, one.City);
-                    return;
-                }
-
-                var names = matches.ConvertAll(s => s.Name);
-                Ui.Choose("نتائج البحث", names, index =>
-                {
-                    var s = matches[index];
-                    ApplyDestination(s.Name, s.Lat, s.Lng, s.City);
-                });
-            });
+                var v = _streetGrid.ArrangedSubviews[i];
+                _streetGrid.RemoveArrangedSubview(v);
+                v.RemoveFromSuperview();
+            }
         }
 
         private static string Coords(double lat, double lng)
