@@ -214,7 +214,7 @@ namespace Tawsela.iOS.Screens
                 _lastPending = pending;
             }
 
-            _content.AddArrangedSubview(Controls.SectionTitle("توصيلاتي"));
+            _content.AddArrangedSubview(Controls.SectionTitle("آخر التوصيلات"));
 
             if (orders == null || orders.Count == 0)
             {
