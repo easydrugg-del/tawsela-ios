@@ -212,52 +212,231 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // ★ لمس: /live-tap/<TOKEN>/<nx>,<ny> — نرسل حدث مؤشر إلى serve-sim عبر WebSocket
-  if ((req.url || '').startsWith('/live-tap/')) {
-    const rest = req.url.split('?')[0].slice('/live-tap/'.length).split('/');
-    const tapToken = decodeURIComponent(rest[0] || '');
-    if (!timingSafeEqual(tapToken, TOKEN)) {
-      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('bad token');
-      return;
-    }
+  // ── إدخال إلى serve-sim ────────────────────────────────────────────
+  // بروتوكول serve-sim: كل رسالة إطار ثنائي = [tag] + JSON(utf8)
+  //   3 = لمس   {type: begin|move|end, x, y}   (x,y من 0 إلى 1)
+  //   6 = مفتاح {type: down|up, usage}         (USB HID page 0x07)
+  const TAG_TOUCH = 3;
+  const TAG_KEY = 6;
 
-    const tapInputPath = process.env.LIVE_INPUT_PATH || '';
-    if (!tapInputPath) {
+  const frameOf = (tag, payload) =>
+    Buffer.concat([Buffer.from([tag]), Buffer.from(JSON.stringify(payload), 'utf8')]);
+
+  // خريطة US layout — نفس ما يستخدمه serve-sim في أمر type
+  const HID = (() => {
+    const m = {};
+    for (let i = 0; i < 26; i++) {
+      m[String.fromCharCode(97 + i)] = { usage: 4 + i, shift: false };
+      m[String.fromCharCode(65 + i)] = { usage: 4 + i, shift: true };
+    }
+    const digits = '1234567890';
+    const shifted = '!@#$%^&*()';
+    for (let i = 0; i < 10; i++) {
+      m[digits[i]] = { usage: 30 + i, shift: false };
+      m[shifted[i]] = { usage: 30 + i, shift: true };
+    }
+    for (const [plain, shift, usage] of [
+      ['-', '_', 45], ['=', '+', 46], ['[', '{', 47], [']', '}', 48], ['\\', '|', 49],
+      [';', ':', 51], ["'", '"', 52], ['`', '~', 53], [',', '<', 54], ['.', '>', 55], ['/', '?', 56],
+    ]) {
+      m[plain] = { usage, shift: false };
+      m[shift] = { usage, shift: true };
+    }
+    m[' '] = { usage: 44, shift: false };
+    m['\n'] = { usage: 40, shift: false };
+    m['\t'] = { usage: 43, shift: false };
+    return m;
+  })();
+
+  const SHIFT_USAGE = 225;
+
+  function textFrames(text) {
+    const out = [];
+    for (const ch of String(text)) {
+      if (ch === '\r') continue;
+      const k = HID[ch];
+      if (!k) continue; // لوحة serve-sim أمريكية فقط — نتخطى ما لا تستطيع كتابته
+      if (k.shift) out.push(frameOf(TAG_KEY, { type: 'down', usage: SHIFT_USAGE }));
+      out.push(frameOf(TAG_KEY, { type: 'down', usage: k.usage }));
+      out.push(frameOf(TAG_KEY, { type: 'up', usage: k.usage }));
+      if (k.shift) out.push(frameOf(TAG_KEY, { type: 'up', usage: SHIFT_USAGE }));
+    }
+    return out;
+  }
+
+  // يفتح مقبس serve-sim، يرسل الإطارات بالترتيب، ثم يرد على المتصفح
+  function runInputFrames(frames, res, gapMs) {
+    const stepMs = gapMs || 25;
+    const inputPath = process.env.LIVE_INPUT_PATH || '';
+    if (!inputPath) {
       res.writeHead(503, { 'Content-Type': 'text/plain' });
       res.end('LIVE_INPUT_PATH not set');
       return;
     }
 
+    let WS = null;
+    try { WS = require('ws'); } catch { WS = globalThis.WebSocket; }
+    if (!WS) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('no websocket implementation');
+      return;
+    }
+
+    const url = 'ws://127.0.0.1:' + TARGET_PORT + inputPath;
+    let ws;
+    try {
+      ws = new WS(url);
+    } catch (e) {
+      res.writeHead(502, { 'Content-Type': 'text/plain' });
+      res.end('ws create failed: ' + (e && e.message ? e.message : e));
+      return;
+    }
+
+    let settled = false;
+    const reply = (code, body) => {
+      if (settled) return;
+      settled = true;
+      if (!res.headersSent) {
+        res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+        res.end(body);
+      }
+      try { ws.close(); } catch {}
+    };
+
+    const start = () => {
+      let idx = 0;
+      const next = () => {
+        if (idx >= frames.length) {
+          setTimeout(() => reply(200, JSON.stringify({ ok: true, sent: frames.length })), 150);
+          return;
+        }
+        const f = frames[idx++];
+        try { ws.send(f, { binary: true }); } catch { try { ws.send(f); } catch {} }
+        setTimeout(next, stepMs);
+      };
+      next();
+    };
+
+    if (typeof ws.on === 'function') {
+      ws.on('open', start);
+      ws.on('error', (e) => reply(502, JSON.stringify({ error: String(e && e.message ? e.message : e) })));
+    } else {
+      ws.onopen = start;
+      ws.onerror = () => reply(502, JSON.stringify({ error: 'ws error' }));
+    }
+    setTimeout(() => reply(504, JSON.stringify({ error: 'timeout' })), 10000);
+  }
+
+  // ★ تشخيص: /live-diag/<TOKEN> — يفحص مسار البث ومقبس اللمس فعليًا
+  if ((req.url || '').startsWith('/live-diag/')) {
+    const diagToken = decodeURIComponent(req.url.split('?')[0].slice('/live-diag/'.length));
+    if (!timingSafeEqual(diagToken, TOKEN)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('bad token');
+      return;
+    }
+
+    let WS = null;
+    let wsPackage = false;
+    try { WS = require('ws'); wsPackage = true; } catch { WS = globalThis.WebSocket; }
+
+    const result = {
+      mjpegPath: process.env.LIVE_MJPEG_PATH || '',
+      inputPath: process.env.LIVE_INPUT_PATH || '',
+      hasWebSocket: !!WS,
+      wsPackage,
+      globalWebSocket: !!globalThis.WebSocket,
+      node: process.version,
+    };
+
+    const finish = (ok, message) => {
+      if (res.headersSent) return;
+      result.ok = ok;
+      result.message = message;
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify(result));
+      try { if (diagWs) diagWs.close(); } catch {}
+    };
+
+    let diagWs = null;
+    if (!WS || !result.inputPath) {
+      finish(false, !result.inputPath ? 'LIVE_INPUT_PATH not set' : 'no websocket implementation');
+      return;
+    }
+
+    const ws = new WS('ws://127.0.0.1:' + TARGET_PORT + result.inputPath);
+    diagWs = ws;
+    if (typeof ws.on === 'function') {
+      ws.on('open', () => finish(true, 'connected'));
+      ws.on('error', (e) => finish(false, String(e && e.message ? e.message : e)));
+    } else {
+      ws.onopen = () => finish(true, 'connected');
+      ws.onerror = () => finish(false, 'ws error');
+    }
+    setTimeout(() => finish(false, 'timeout'), 6000);
+    return;
+  }
+
+  // ★ لمس: /live-tap/<TOKEN>/<nx>,<ny>
+  if ((req.url || '').startsWith('/live-tap/')) {
+    const rest = req.url.split('?')[0].slice('/live-tap/'.length).split('/');
+    if (!timingSafeEqual(decodeURIComponent(rest[0] || ''), TOKEN)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('bad token');
+      return;
+    }
     const [nx, ny] = (rest[1] || '').split(',').map(Number);
     if (!isFinite(nx) || !isFinite(ny) || nx < 0 || nx > 1 || ny < 0 || ny > 1) {
       res.writeHead(400, { 'Content-Type': 'text/plain' });
       res.end('bad coords');
       return;
     }
+    const x = Number(nx.toFixed(5));
+    const y = Number(ny.toFixed(5));
+    runInputFrames([
+      frameOf(TAG_TOUCH, { type: 'begin', x, y }),
+      frameOf(TAG_TOUCH, { type: 'end', x, y }),
+    ], res, 90);
+    return;
+  }
 
-    const ws = new WebSocket('ws://127.0.0.1:' + TARGET_PORT + tapInputPath);
-    let seq = 1;
-    const send = (event) => ws.send(JSON.stringify({
-      v: 2, type: 'pointer', seq: seq++, ts: Date.now(),
-      event, pointerId: 1, isPrimary: true,
-      x: Number(nx.toFixed(5)), y: Number(ny.toFixed(5)),
-      button: 0, buttons: event === 'up' ? 0 : 1
-    }));
+  // ★ كتابة نص: /live-type/<TOKEN>/<text>
+  if ((req.url || '').startsWith('/live-type/')) {
+    const rest = req.url.split('?')[0].slice('/live-type/'.length).split('/');
+    if (!timingSafeEqual(decodeURIComponent(rest[0] || ''), TOKEN)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('bad token');
+      return;
+    }
+    const text = decodeURIComponent(rest.slice(1).join('/') || '');
+    const frames = textFrames(text);
+    if (!frames.length) {
+      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('nothing typable (ASCII only)');
+      return;
+    }
+    runInputFrames(frames, res);
+    return;
+  }
 
-    const fail = (msg) => {
-      if (!res.headersSent) { res.writeHead(502, { 'Content-Type': 'text/plain' }); res.end(msg); }
-      try { ws.close(); } catch {}
-    };
-
-    ws.onopen = () => {
-      send('down');
-      setTimeout(() => { send('up'); setTimeout(() => { try { ws.close(); } catch {} }, 60); }, 90);
-      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-      res.end(JSON.stringify({ ok: true, x: nx, y: ny }));
-    };
-    ws.onerror = () => fail('ws error');
-    setTimeout(() => fail('ws timeout'), 5000);
+  // ★ مفتاح مفرد: /live-key/<TOKEN>/<usage>   (40=Enter 42=Backspace 43=Tab 44=Space)
+  if ((req.url || '').startsWith('/live-key/')) {
+    const rest = req.url.split('?')[0].slice('/live-key/'.length).split('/');
+    if (!timingSafeEqual(decodeURIComponent(rest[0] || ''), TOKEN)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('bad token');
+      return;
+    }
+    const usage = Number(rest[1]);
+    if (!isFinite(usage) || usage < 1 || usage > 255) {
+      res.writeHead(400, { 'Content-Type': 'text/plain' });
+      res.end('bad usage');
+      return;
+    }
+    runInputFrames([
+      frameOf(TAG_KEY, { type: 'down', usage }),
+      frameOf(TAG_KEY, { type: 'up', usage }),
+    ], res);
     return;
   }
 
@@ -328,20 +507,40 @@ const server = http.createServer((req, res) => {
     res.end(`<!doctype html><meta charset="utf-8"><title>Tawsela — iOS</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-body{margin:0;background:#111;color:#ddd;font:14px/1.5 system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;height:100vh}
-header{padding:10px;width:100%;box-sizing:border-box;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
-#wrap{position:relative;display:inline-block}
-img{max-height:calc(100vh - 60px);max-width:100vw;border-radius:12px;background:#000;object-fit:contain;display:block;touch-action:none}
-button{font-size:14px;padding:6px 14px;border-radius:8px;border:0;background:#FF6A00;color:#fff;cursor:pointer}
+*{box-sizing:border-box}
+body{margin:0;background:#111;color:#ddd;font:14px/1.5 system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px;min-height:100vh}
+header{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;width:100%}
+#wrap{position:relative;display:inline-block;line-height:0}
+img{max-height:calc(100vh - 150px);max-width:100vw;border-radius:12px;background:#000;object-fit:contain;display:block;touch-action:none;cursor:crosshair}
+#dot{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border:2px solid #FF6A00;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .35s}
+#bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;width:100%;max-width:720px}
+input{flex:1;min-width:130px;padding:8px 10px;border-radius:8px;border:1px solid #444;background:#1b1b1b;color:#eee;font-size:14px}
+button{font-size:14px;padding:7px 12px;border-radius:8px;border:0;background:#FF6A00;color:#fff;cursor:pointer}
 button.sec{background:#333;color:#ccc}
-#s{opacity:.7;font-size:12px;font-variant-numeric:tabular-nums}
+#s{opacity:.75;font-size:12px;font-variant-numeric:tabular-nums;width:100%;text-align:center;min-height:18px}
 </style>
 <header><button id="b">إيقاف</button><span id="s">جارٍ التحميل…</span></header>
-<div id="wrap"><img id="i" alt=""></div>
+<div id="wrap"><img id="i" alt=""><div id="dot"></div></div>
+<div id="bar">
+  <input id="txt" placeholder="اكتب هنا (إنجليزي/أرقام)" autocomplete="off" autocapitalize="off" spellcheck="false">
+  <button id="send">إرسال</button>
+  <button class="sec" id="bs" title="Backspace">⌫</button>
+  <button class="sec" id="en" title="Enter">⏎</button>
+  <button class="sec" id="tb" title="Tab">⇥</button>
+</div>
 <script>
 const T=${liveTokenJs};
-const i=document.getElementById('i'),s=document.getElementById('s'),b=document.getElementById('b');
+const i=document.getElementById('i'),s=document.getElementById('s'),b=document.getElementById('b'),dot=document.getElementById('dot'),txt=document.getElementById('txt');
 let on=true,n=0,e=0;
+
+async function call(path){
+  const r=await fetch(path,{cache:'no-store'});
+  let j={};
+  try{ j=await r.json(); }catch{}
+  if(!r.ok) throw new Error(j.error||('HTTP '+r.status));
+  return j;
+}
+
 async function tick(){
   if(!on){setTimeout(tick,700);return;}
   try{
@@ -350,23 +549,38 @@ async function tick(){
     const blob=await r.blob();
     if(i.src)URL.revokeObjectURL(i.src);
     i.src=URL.createObjectURL(blob);
-    n++;e=0;s.textContent='إطار '+n+' — اضغط على الصورة للمس';
+    n++;e=0;s.textContent='إطار '+n+' — دوس على الصورة للمس';
   }catch(err){e++;s.textContent='تعذر إحضار إطار ('+err.message+')';}
   setTimeout(tick,900);
 }
+
 b.onclick=()=>{on=!on;b.textContent=on?'إيقاف':'تشغيل';};
 
-// ★ اللمس: نحول نقطة الضغط إلى إحداثيات نسبية ونرسلها للمحاكي
-i.addEventListener('pointerdown', async (ev)=>{
+// اللمس: نحول نقطة الضغط إلى إحداثيات نسبية (0..1) ونرسلها للمحاكي
+i.addEventListener('pointerdown',(ev)=>{
   ev.preventDefault();
   const r=i.getBoundingClientRect();
   const nx=Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width));
   const ny=Math.max(0,Math.min(1,(ev.clientY-r.top)/r.height));
-  try{
-    const t=await fetch('/live-tap/'+encodeURIComponent(T)+'/'+nx.toFixed(5)+','+ny.toFixed(5));
-    if(!t.ok) s.textContent='لمس فشل ('+t.status+')';
-  }catch(err){ s.textContent='لمس فشل: '+err.message; }
+  dot.style.left=(nx*100)+'%';dot.style.top=(ny*100)+'%';dot.style.opacity='1';
+  setTimeout(()=>{dot.style.opacity='0';},400);
+  call('/live-tap/'+encodeURIComponent(T)+'/'+nx.toFixed(5)+','+ny.toFixed(5))
+    .catch(err=>{s.textContent='لمس فشل: '+err.message;});
 });
+
+document.getElementById('send').onclick=async ()=>{
+  const v=txt.value;
+  if(!v) return;
+  try{
+    await call('/live-type/'+encodeURIComponent(T)+'/'+encodeURIComponent(v));
+    s.textContent='تم إرسال '+v.length+' حرف';
+  }catch(err){ s.textContent='كتابة فشلت: '+err.message; }
+};
+const key=(u)=>call('/live-key/'+encodeURIComponent(T)+'/'+u).catch(err=>{s.textContent='فشل: '+err.message;});
+document.getElementById('bs').onclick=()=>key(42);
+document.getElementById('en').onclick=()=>key(40);
+document.getElementById('tb').onclick=()=>key(43);
+
 tick();
 </script>`);
     return;
