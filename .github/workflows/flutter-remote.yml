@@ -161,7 +161,7 @@ jobs:
 
       - name: Boot iOS Simulator
         id: sim
-        timeout-minutes: 10
+        timeout-minutes: 30
         run: |
           set -euo pipefail
           DEVICE='${{ inputs.device }}'
@@ -185,7 +185,17 @@ jobs:
 
           echo "Booting iOS Simulator UDID: $UDID"
           xcrun simctl boot "$UDID" || true
-          xcrun simctl bootstatus "$UDID" -b
+
+          # بعض صور macOS تكون بطيئة جدًا في أول إقلاع؛ نستطلع الحالة بدل التعليق للأبد
+          BOOTED=0
+          for i in $(seq 1 160); do
+            if xcrun simctl list devices | grep -q "$UDID (Booted)"; then BOOTED=1; break; fi
+            sleep 5
+          done
+          [ "$BOOTED" = "1" ] || { echo "::error::Simulator $UDID never reached Booted state"; exit 1; }
+
+          # مهلة قصيرة إضافية حتى تجهز واجهة النظام قبل تشغيل البث
+          sleep 20
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
           echo "iOS Simulator is booted and ready."
 
