@@ -206,11 +206,39 @@ jobs:
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
           echo "iOS Simulator is booted and ready."
 
+      - name: Repair Device Hub input (Xcode 27)
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          UDID='${{ steps.sim.outputs.udid }}'
+          FLAG='com.apple.coredevice.dtuhidd.active'
+
+          # Xcode 27's Device Hub قد يفصل خدمات الإدخال القديمة (لمس/كيبورد)
+          # فيصبح الإرسال إلى serve-sim بلا أثر. نتحقق ونصلح قبل تشغيل البث.
+          BEFORE=$(xcrun simctl spawn "$UDID" notifyutil -g "$FLAG" 2>/dev/null || true)
+          echo "Device Hub input flag before: ${BEFORE:-<unreadable>}"
+
+          if [ "$BEFORE" = "$FLAG 1" ]; then
+            echo "::warning::Device Hub shadowed legacy input; running serve-sim repair-input"
+            npx --yes serve-sim repair-input -d "$UDID" 2>&1 || echo "::warning::repair-input returned non-zero"
+            sleep 10
+            AFTER=$(xcrun simctl spawn "$UDID" notifyutil -g "$FLAG" 2>/dev/null || true)
+            echo "Device Hub input flag after: ${AFTER:-<unreadable>}"
+            if [ "$AFTER" = "$FLAG 1" ]; then
+              echo "::error::Legacy simulator input is still shadowed by Device Hub"
+              exit 1
+            fi
+          else
+            echo "Legacy input is not shadowed."
+          fi
+
       - name: Start serve-sim
         id: serve_sim
         timeout-minutes: 10
         env:
           GATE_TOKEN: ${{ inputs.gate_token }}
+          # نُبقي الكيبورد على مسار HID القديم (نفس مسار اللمس الذي أصلحناه)
+          SERVE_SIM_DISABLE_DEVICE_HUB_KEYBOARD: "1"
         run: |
           set -euo pipefail
 

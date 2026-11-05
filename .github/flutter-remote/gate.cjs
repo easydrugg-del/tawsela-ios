@@ -349,6 +349,23 @@ const server = http.createServer((req, res) => {
       node: process.version,
     };
 
+    // هل Device Hub عطّل الإدخال القديم؟ لو "1" فاللمس بيتم بصمت
+    const udidMatch = /\/helper\/([^/]+)\//.exec(result.inputPath);
+    result.udid = udidMatch ? udidMatch[1] : null;
+    if (result.udid) {
+      try {
+        const { execFileSync } = require('node:child_process');
+        result.deviceHubInput = execFileSync(
+          'xcrun',
+          ['simctl', 'spawn', result.udid, 'notifyutil', '-g', 'com.apple.coredevice.dtuhidd.active'],
+          { encoding: 'utf8', timeout: 5000 }
+        ).trim();
+      } catch (e) {
+        result.deviceHubInput = 'error: ' + (e && e.message ? e.message : e);
+      }
+      result.inputShadowed = result.deviceHubInput === 'com.apple.coredevice.dtuhidd.active 1';
+    }
+
     const finish = (ok, message) => {
       if (res.headersSent) return;
       result.ok = ok;
