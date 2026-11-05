@@ -383,6 +383,46 @@ namespace Tawsela.iOS.Screens
                 });
                 _streetChipsRow.AddArrangedSubview(more);
             }
+
+            // بحث بالاسم في كل شوارع المدينة
+            _streetChipsRow.AddArrangedSubview(Controls.StreetChip("🔍 بحث", () => SearchStreet(streets)));
+        }
+
+        /// <summary>بحث بالاسم في الشوارع المسجلة (مطابقة كاملة أو جزئية).</summary>
+        private void SearchStreet(List<Street> streets)
+        {
+            if (streets == null || streets.Count == 0) { Ui.Toast("لا توجد شوارع مسجلة"); return; }
+
+            Ui.Prompt("بحث في الشوارع", "اكتب اسم الشارع أو جزء منه", "", "مثال: السوق", text =>
+            {
+                var q = (text ?? "").Trim();
+                if (q.Length == 0) return;
+
+                var exact = streets.Find(s => string.Equals(s.Name, q, StringComparison.OrdinalIgnoreCase));
+                if (exact != null)
+                {
+                    ApplyDestination(exact.Name, exact.Lat, exact.Lng, exact.City);
+                    return;
+                }
+
+                var matches = streets.FindAll(s => s.Name != null &&
+                    s.Name.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0);
+
+                if (matches.Count == 0) { Ui.Toast("الشارع غير مسجل — حدده على الخريطة"); return; }
+                if (matches.Count == 1)
+                {
+                    var one = matches[0];
+                    ApplyDestination(one.Name, one.Lat, one.Lng, one.City);
+                    return;
+                }
+
+                var names = matches.ConvertAll(s => s.Name);
+                Ui.Choose("نتائج البحث", names, index =>
+                {
+                    var s = matches[index];
+                    ApplyDestination(s.Name, s.Lat, s.Lng, s.City);
+                });
+            });
         }
 
         private static string Coords(double lat, double lng)
