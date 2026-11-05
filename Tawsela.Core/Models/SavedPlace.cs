@@ -19,8 +19,9 @@ namespace Tawsela.Models
             {
                 Id = Row.Int(r, "Id"),
                 UserId = Row.Int(r, "UserId"),
-                Label = Row.Str(r, "Label"),
-                Address = Row.Str(r, "Address"),
+                // بعض الأماكن القديمة مخزّنة بترميز تالف — نصلحها عند العرض
+                Label = TextFix.Repair(Row.Str(r, "Label")),
+                Address = TextFix.Repair(Row.Str(r, "Address")),
                 Lat = Row.Dbl(r, "Lat"),
                 Lng = Row.Dbl(r, "Lng")
             };

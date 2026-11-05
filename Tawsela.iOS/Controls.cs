@@ -200,6 +200,41 @@ namespace Tawsela.iOS
             return tile;
         }
 
+        /// <summary>زر مربّع 48×48 بأيقونة — بديل زر الميكروفون بجوار الحقل في أندرويد.</summary>
+        public static UIButton SquareIconButton(string iconName, UIColor bg, Action onTap)
+        {
+            var b = new UIButton(UIButtonType.System);
+            b.BackgroundColor = bg;
+            b.Layer.CornerRadius = Theme.CornerEdit;
+            b.Layer.MasksToBounds = true;
+            b.TranslatesAutoresizingMaskIntoConstraints = false;
+            b.WidthAnchor.ConstraintEqualTo(48f).Active = true;
+            b.HeightAnchor.ConstraintEqualTo(48f).Active = true;
+
+            var img = IconFactory.Image(iconName, 22f, UIColor.White);
+            if (img != null)
+            {
+                b.SetImage(img.ImageWithRenderingMode(UIImageRenderingMode.AlwaysOriginal), UIControlState.Normal);
+            }
+            if (onTap != null) b.TouchUpInside += (s, e) => onTap();
+            return b;
+        }
+
+        /// <summary>سطر أفقي: حقل + زر (بديل LinearLayout horizontal في أندرويد).</summary>
+        public static UIStackView FieldWithAction(UIView field, UIView action, float spacing = 8f)
+        {
+            var row = new UIStackView(new[] { field, action })
+            {
+                Axis = UILayoutConstraintAxis.Horizontal,
+                Spacing = spacing,
+                Alignment = UIStackViewAlignment.Center,
+                Distribution = UIStackViewDistribution.Fill,
+                TranslatesAutoresizingMaskIntoConstraints = false,
+                SemanticContentAttribute = UISemanticContentAttribute.ForceRightToLeft
+            };
+            return row;
+        }
+
         /// <summary>شريحة (chip) بنص — بديل chip_bg / MakeChip.</summary>
         public static UIButton ChipButton(string title, Action onTap)
         {

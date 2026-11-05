@@ -105,16 +105,14 @@ namespace Tawsela.iOS.Screens
             _fromField = Controls.TextField("اكتب عنوان الانطلاق");
             _fromField.ReturnKeyType = UIReturnKeyType.Done;
             _fromField.EditingDidEnd += (s, e) => ResolveFrom();
-            stack.AddArrangedSubview(_fromField);
 
-            // إدخال صوتي للعنوان (بديل android.speech في أندرويد)
-            var fromVoice = Controls.OutlineButton("🎤 إدخال صوتي للانطلاق");
-            fromVoice.TouchUpInside += (s, e) => Voice(text =>
+            // زي الأندرويد: الحقل + زر ميكروفون مربّع 48×48 في نفس السطر
+            var fromMic = Controls.SquareIconButton("ic_mic", Theme.Primary, () => Voice(text =>
             {
                 _fromField.Text = text;
                 ResolveFrom();
-            });
-            stack.AddArrangedSubview(fromVoice);
+            }));
+            stack.AddArrangedSubview(Controls.FieldWithAction(_fromField, fromMic));
 
             _fromCoords = MakeLabel("", 11f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
             stack.AddArrangedSubview(_fromCoords);
@@ -123,7 +121,7 @@ namespace Tawsela.iOS.Screens
             useGps.TouchUpInside += (s, e) => RequestLocation(true);
             stack.AddArrangedSubview(useGps);
 
-            var pickFrom = Controls.OutlineButton("اختيار الانطلاق من الخريطة");
+            var pickFrom = Controls.IconButton("اختيار الانطلاق من الخريطة", "ic_pin", Theme.Primary);
             pickFrom.TouchUpInside += (s, e) =>
             {
                 var start = LocationService.LastKnown;
@@ -150,7 +148,7 @@ namespace Tawsela.iOS.Screens
             };
             stack.AddArrangedSubview(_savedRow);
 
-            var savePlace = Controls.OutlineButton("حفظ هذا المكان");
+            var savePlace = Controls.IconButton("حفظ الانطلاق كمكان مفضّل", "ic_save", Theme.Primary);
             savePlace.TouchUpInside += (s, e) => SaveCurrentPlace();
             stack.AddArrangedSubview(savePlace);
 
@@ -159,20 +157,18 @@ namespace Tawsela.iOS.Screens
 
             _toField = Controls.TextField("اكتب عنوان الوجهة");
             _toField.EditingDidEnd += (s, e) => ResolveTo();
-            stack.AddArrangedSubview(_toField);
 
-            var toVoice = Controls.OutlineButton("🎤 إدخال صوتي للوجهة");
-            toVoice.TouchUpInside += (s, e) => Voice(text =>
+            var toMic = Controls.SquareIconButton("ic_mic", Theme.Primary, () => Voice(text =>
             {
                 _toField.Text = text;
                 ResolveTo();
-            });
-            stack.AddArrangedSubview(toVoice);
+            }));
+            stack.AddArrangedSubview(Controls.FieldWithAction(_toField, toMic));
 
             _toCoords = MakeLabel("", 11f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
             stack.AddArrangedSubview(_toCoords);
 
-            var pickTo = Controls.OutlineButton("اختيار الوجهة من الخريطة");
+            var pickTo = Controls.IconButton("تحديد الوجهة على الخريطة", "ic_flag", Theme.Primary);
             pickTo.TouchUpInside += (s, e) =>
             {
                 Push(MapViewController.Pick(_toLat, _toLng, (plat, plng, address) =>
@@ -199,16 +195,14 @@ namespace Tawsela.iOS.Screens
             stack.AddArrangedSubview(Controls.SectionTitle("نقطة إضافية (اختياري)"));
 
             _stopField = Controls.TextField("عنوان التوقف في الطريق");
-            stack.AddArrangedSubview(_stopField);
 
-            var stopVoice = Controls.OutlineButton("🎤 إدخال صوتي لنقطة التوقف");
-            stopVoice.TouchUpInside += (s, e) => Voice(text => { _stopField.Text = text; });
-            stack.AddArrangedSubview(stopVoice);
+            var stopMic = Controls.SquareIconButton("ic_mic", Theme.Primary, () => Voice(text => { _stopField.Text = text; }));
+            stack.AddArrangedSubview(Controls.FieldWithAction(_stopField, stopMic));
 
             _stopCoords = MakeLabel("", 11f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
             stack.AddArrangedSubview(_stopCoords);
 
-            var pickStop = Controls.OutlineButton("اختيار نقطة التوقف من الخريطة");
+            var pickStop = Controls.IconButton("تحديد المحطة على الخريطة", "ic_pin", Theme.Primary);
             pickStop.TouchUpInside += (s, e) =>
             {
                 Push(MapViewController.Pick(_stopLat, _stopLng, (plat, plng, address) =>
@@ -247,11 +241,11 @@ namespace Tawsela.iOS.Screens
             stack.AddArrangedSubview(_streetRow);
 
             /* ---------- الخدمة والدفع ---------- */
-            _btnService = Controls.OutlineButton("اختر نوع الخدمة");
+            _btnService = Controls.IconButton("اختر نوع الخدمة", "ic_bell", Theme.Primary);
             _btnService.TouchUpInside += (s, e) => PickService();
             stack.AddArrangedSubview(_btnService);
 
-            _btnPayment = Controls.OutlineButton("الدفع: نقدي");
+            _btnPayment = Controls.IconButton("الدفع: نقدي", "ic_money", Theme.Primary);
             _btnPayment.TouchUpInside += (s, e) => PickPayment();
             stack.AddArrangedSubview(_btnPayment);
 
@@ -260,11 +254,11 @@ namespace Tawsela.iOS.Screens
 
             _couponField = Controls.TextField("أدخل كود الخصم");
             _couponField.AutocapitalizationType = UITextAutocapitalizationType.AllCharacters;
-            stack.AddArrangedSubview(_couponField);
 
-            var applyCoupon = Controls.OutlineButton("تطبيق الكود");
+            var applyCoupon = Controls.PrimaryButton("تطبيق", 48f);
+            applyCoupon.WidthAnchor.ConstraintEqualTo(96f).Active = true;
             applyCoupon.TouchUpInside += (s, e) => ApplyCoupon();
-            stack.AddArrangedSubview(applyCoupon);
+            stack.AddArrangedSubview(Controls.FieldWithAction(_couponField, applyCoupon));
 
             _couponInfo = MakeLabel("", 12f, Theme.Green, UIFontWeight.Medium, UITextAlignment.Right);
             stack.AddArrangedSubview(_couponInfo);
@@ -285,7 +279,7 @@ namespace Tawsela.iOS.Screens
             };
             stack.AddArrangedSubview(Row("طلب مجدول لاحقًا", _scheduledSwitch));
 
-            _btnPickTime = Controls.OutlineButton("اختيار الموعد");
+            _btnPickTime = Controls.IconButton("اختيار موعد التنفيذ", "ic_clock", Theme.Primary);
             _btnPickTime.Enabled = false;
             _btnPickTime.TouchUpInside += (s, e) => PickScheduleTime();
             stack.AddArrangedSubview(_btnPickTime);
