@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Foundation;
 using Tawsela.Core.Platform;
 using Tawsela.Data;
 using Tawsela.iOS.Platform;
@@ -9,12 +10,16 @@ namespace Tawsela.iOS.Screens
 {
     /// <summary>
     /// بديل Activities/RestaurantMainActivity.cs — لوحة المطعم:
-    /// بيانات المطعم + توصيلاته الجارية + الإجراءات (قبول/وصول/استلام/تسليم).
+    /// بيانات المطعم + ملخص الإحصائيات + توصيلاته + الإجراءات.
     /// </summary>
     public class RestaurantMainViewController : BaseViewController
     {
         private UIStackView _stack;
-        private UILabel _header;
+        private UIStackView _content;
+        private UILabel _header, _info;
+        private UIButton _newDelivery;
+        private NSTimer _timer;
+        private int _lastPending = -1;
 
         public override bool ShowNavigationBar
         {
@@ -34,25 +39,43 @@ namespace Tawsela.iOS.Screens
         {
             base.ViewWillAppear(animated);
             Load();
+            // تحديث تلقائي كل 20 ثانية حتى تظهر التوصيلات الجديدة
+            _timer?.Invalidate();
+            _timer = NSTimer.CreateRepeatingScheduledTimer(20.0, _ => Load());
+        }
+
+        public override void ViewWillDisappear(bool animated)
+        {
+            _timer?.Invalidate();
+            _timer = null;
+            base.ViewWillDisappear(animated);
         }
 
         private void BuildUi()
         {
             _stack = CreateScrollContent(12f, 16f);
+
             _header = MakeLabel("جارٍ التحميل…", 16f, Theme.TextPrimary, UIFontWeight.Semibold, UITextAlignment.Right);
+            _info = MakeLabel("", 13f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
             _stack.AddArrangedSubview(_header);
+            _stack.AddArrangedSubview(_info);
 
             var newDelivery = Controls.PrimaryButton("طلب توصيلة جديدة");
             newDelivery.TouchUpInside += (s, e) => OpenNewDelivery();
+            _newDelivery = newDelivery;
             _stack.AddArrangedSubview(newDelivery);
-
-            var available = Controls.OutlineButton("توصيلات متاحة للسائقين");
-            available.TouchUpInside += (s, e) => Push(new RestaurantRequestsViewController());
-            _stack.AddArrangedSubview(available);
 
             var mine = Controls.OutlineButton("توصيلات مطعمي");
             mine.TouchUpInside += (s, e) => Push(new RestaurantDeliveryMyOrdersViewController());
             _stack.AddArrangedSubview(mine);
+
+            var profile = Controls.OutlineButton("بيانات المطعم");
+            profile.TouchUpInside += (s, e) => Push(new RestaurantProfileViewController());
+            _stack.AddArrangedSubview(profile);
+
+            var notifications = Controls.OutlineButton("الإشعارات");
+            notifications.TouchUpInside += (s, e) => Push(new NotificationsViewController());
+            _stack.AddArrangedSubview(notifications);
 
             var refresh = Controls.OutlineButton("تحديث");
             refresh.TouchUpInside += (s, e) => Load();
@@ -68,6 +91,15 @@ namespace Tawsela.iOS.Screens
                 });
             };
             _stack.AddArrangedSubview(logout);
+
+            // المحتوى المتغيّر فقط (الإحصائيات والتوصيلات) — الأزرار أعلاه تبقى ثابتة
+            _content = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 8,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            _stack.AddArrangedSubview(_content);
         }
 
         private void Load()
@@ -76,25 +108,18 @@ namespace Tawsela.iOS.Screens
             {
                 Dictionary<string, object> restaurant = null;
                 List<Dictionary<string, object>> orders = null;
+                Dictionary<string, object> stats = null;
                 try { restaurant = Api.MyRestaurant(); } catch { }
                 try { orders = Api.GetMyRestaurantDeliveries(); } catch { }
-                Ui.BeginOnMain(() => Render(restaurant, orders));
+                try { stats = Api.RestaurantStats(); } catch { }
+                Ui.BeginOnMain(() => Render(restaurant, orders, stats));
             }, null, ex => Ui.Toast(ex.Message));
         }
 
-        private void Render(Dictionary<string, object> restaurant, List<Dictionary<string, object>> orders)
+        private void Render(Dictionary<string, object> restaurant, List<Dictionary<string, object>> orders,
+            Dictionary<string, object> stats)
         {
-            for (int i = _stack.ArrangedSubviews.Length - 1; i >= 1; i--)
-            {
-                var v = _stack.ArrangedSubviews[i];
-                _stack.RemoveArrangedSubview(v);
-                v.RemoveFromSuperview();
-            }
-
-            // أعد زر التحديث والخروج بعد إعادة البناء
-            var refresh = Controls.OutlineButton("تحديث");
-            refresh.TouchUpInside += (s, e) => Load();
-            _stack.AddArrangedSubview(refresh);
+            ClearContent();
 
             if (restaurant != null)
             {
@@ -103,26 +128,106 @@ namespace Tawsela.iOS.Screens
 
                 var phone = Tawsela.Data.Row.Str(restaurant, "Phone");
                 var address = Tawsela.Data.Row.Str(restaurant, "Address");
-                if (!string.IsNullOrEmpty(phone)) _stack.AddArrangedSubview(Controls.InfoRow("الهاتف", phone));
-                if (!string.IsNullOrEmpty(address)) _stack.AddArrangedSubview(Controls.InfoRow("العنوان", address));
+                var line = "";
+                if (!string.IsNullOrEmpty(phone)) line = phone;
+                if (!string.IsNullOrEmpty(address)) line = line == "" ? address : line + " · " + address;
+                _info.Text = line;
+
+                // المطعم المسجّل ذاتيًا يبقى موقوفًا حتى تعتمده الإدارة
+                var activeStr = Tawsela.Data.Row.Str(restaurant, "IsActive");
+                var active = activeStr == "True" || activeStr == "1" ||
+                             string.Equals(activeStr, "true", StringComparison.OrdinalIgnoreCase);
+                if (_newDelivery != null) _newDelivery.Enabled = active;
+                if (!active)
+                    _info.Text = "قيد مراجعة الإدارة — لن تتمكن من إنشاء توصيلات حتى اعتماد حسابك";
             }
             else
             {
                 _header.Text = "لوحة المطعم";
+                _info.Text = "";
             }
 
-            _stack.AddArrangedSubview(Controls.SectionTitle("توصيلاتي"));
+            if (stats != null)
+            {
+                var pending = Tawsela.Data.Row.Int(stats, "pending");
+
+                _content.AddArrangedSubview(Controls.SectionTitle("ملخص التوصيلات"));
+                _content.AddArrangedSubview(StatsRow(
+                    Tawsela.Data.Row.Int(stats, "today").ToString(),
+                    pending.ToString(),
+                    Tawsela.Data.Row.Int(stats, "delivered").ToString(),
+                    Tawsela.Data.Row.Num(stats, "revenue").ToString("0") + " ج.م"));
+
+                // تنبيه عند وصول توصيلة جديدة أثناء فتح اللوحة
+                if (_lastPending >= 0 && pending > _lastPending)
+                    Ui.Toast("لديك توصيلة جديدة");
+                _lastPending = pending;
+            }
+
+            _content.AddArrangedSubview(Controls.SectionTitle("توصيلاتي"));
 
             if (orders == null || orders.Count == 0)
             {
-                _stack.AddArrangedSubview(MakeLabel("لا توجد توصيلات حاليًا", 14f, Theme.TextSecondary,
+                _content.AddArrangedSubview(MakeLabel("لا توجد توصيلات حاليًا", 14f, Theme.TextSecondary,
                     UIFontWeight.Regular, UITextAlignment.Right));
                 return;
             }
 
-            foreach (var o in orders) _stack.AddArrangedSubview(Row(o));
+            foreach (var o in orders) _content.AddArrangedSubview(Row(o));
         }
 
+        private void ClearContent()
+        {
+            for (int i = _content.ArrangedSubviews.Length - 1; i >= 0; i--)
+            {
+                var v = _content.ArrangedSubviews[i];
+                _content.RemoveArrangedSubview(v);
+                v.RemoveFromSuperview();
+            }
+        }
+
+        /// <summary>صف الإحصائيات: اليوم / قيد الانتظار / تم التسليم / الإيراد.</summary>
+        private UIView StatsRow(string today, string pending, string delivered, string revenue)
+        {
+            var card = Controls.Card();
+            var row = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Horizontal,
+                Distribution = UIStackViewDistribution.FillEqually,
+                Spacing = 8,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+
+            row.AddArrangedSubview(StatCell("اليوم", today));
+            row.AddArrangedSubview(StatCell("قيد الانتظار", pending));
+            row.AddArrangedSubview(StatCell("تم التسليم", delivered));
+            row.AddArrangedSubview(StatCell("الإيراد", revenue));
+
+            card.AddSubview(row);
+            card.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(row, NSLayoutAttribute.Top, NSLayoutRelation.Equal, card, NSLayoutAttribute.Top, 1, 10),
+                NSLayoutConstraint.Create(row, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, card, NSLayoutAttribute.Leading, 1, 10),
+                NSLayoutConstraint.Create(row, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -10),
+                NSLayoutConstraint.Create(row, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, card, NSLayoutAttribute.Bottom, 1, -10),
+            });
+            return card;
+        }
+
+        private UIView StatCell(string label, string value)
+        {
+            var cell = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 2,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            cell.AddArrangedSubview(MakeLabel(value, 17f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Center));
+            cell.AddArrangedSubview(MakeLabel(label, 11f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Center));
+            return cell;
+        }
+
+        /// <summary>بطاقة توصيلة (للعرض فقط) — الضغط يفتح شاشة التفاصيل الخاصة بالمطعم.</summary>
         private UIView Row(Dictionary<string, object> o)
         {
             var card = Controls.Card();
@@ -162,59 +267,9 @@ namespace Tawsela.iOS.Screens
                 NSLayoutConstraint.Create(price, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, card, NSLayoutAttribute.Bottom, 1, -10),
             });
 
-            // إجراءات حسب الحالة (نفس حالات RestaurantDeliveryExecuteActivity)
-            var actions = new UIStackView
-            {
-                Axis = UILayoutConstraintAxis.Vertical,
-                Spacing = 8,
-                TranslatesAutoresizingMaskIntoConstraints = false
-            };
-
-            if (string.IsNullOrEmpty(status) || status == "قيد الانتظار")
-            {
-                var accept = Controls.PrimaryButton("قبول التوصيلة", 42f);
-                accept.TouchUpInside += (s, e) => Run(() => Api.AcceptRestaurantDelivery(id));
-                actions.AddArrangedSubview(accept);
-            }
-            if (status == "مخصص للسائق")
-            {
-                var arrived = Controls.OutlineButton("وصلت للمحل");
-                arrived.TouchUpInside += (s, e) => Run(() => Api.ArrivedAtRestaurant(id));
-                actions.AddArrangedSubview(arrived);
-            }
-            if (status == "وصل للمحل")
-            {
-                var picked = Controls.OutlineButton("تم استلام الطلب");
-                picked.TouchUpInside += (s, e) => Run(() => Api.PickedUpRestaurantDelivery(id));
-                actions.AddArrangedSubview(picked);
-            }
-            if (status == "استلمت الطلب")
-            {
-                var delivered = Controls.PrimaryButton("تم التسليم للعميل", 42f);
-                delivered.TouchUpInside += (s, e) => Run(() => Api.DeliveredRestaurantDelivery(id));
-                actions.AddArrangedSubview(delivered);
-            }
-
-            if (actions.ArrangedSubviews.Length > 0)
-            {
-                card.AddSubview(actions);
-                card.AddConstraints(new[]
-                {
-                    NSLayoutConstraint.Create(actions, NSLayoutAttribute.Top, NSLayoutRelation.Equal, price, NSLayoutAttribute.Bottom, 1, 8),
-                    NSLayoutConstraint.Create(actions, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, card, NSLayoutAttribute.Leading, 1, 12),
-                    NSLayoutConstraint.Create(actions, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -12),
-                    NSLayoutConstraint.Create(actions, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, card, NSLayoutAttribute.Bottom, 1, -10),
-                });
-            }
-
-            // فتح شاشة التنفيذ عند لمس البطاقة — فقط إن لم تكن هناك أزرار داخلية
-            // (وإلا فالإيماءة قد تسرق لمس الأزرار).
-            if (actions.ArrangedSubviews.Length == 0)
-            {
-                card.UserInteractionEnabled = true;
-                card.AddGestureRecognizer(new UITapGestureRecognizer(
-                    () => Push(new RestaurantDeliveryExecuteViewController(id))));
-            }
+            card.UserInteractionEnabled = true;
+            card.AddGestureRecognizer(new UITapGestureRecognizer(
+                () => Push(new RestaurantOrderDetailViewController(id))));
 
             return card;
         }
@@ -232,21 +287,6 @@ namespace Tawsela.iOS.Screens
                     Push(new RestaurantNewDeliveryViewController(areas));
                 });
             }, null, ex =>
-            {
-                progress.Dismiss();
-                Ui.Toast(ex.Message);
-            });
-        }
-
-        private void Run(Action action)
-        {
-            var progress = Ui.ShowProgress("جارٍ التنفيذ…");
-            Ui.Run(action, () =>
-            {
-                progress.Dismiss();
-                Ui.Toast("تم");
-                Load();
-            }, ex =>
             {
                 progress.Dismiss();
                 Ui.Toast(ex.Message);

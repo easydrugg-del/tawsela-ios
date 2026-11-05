@@ -16,10 +16,11 @@ namespace Tawsela.iOS.Screens
     {
         private UISegmentedControl _role;
         private UITextField _fullName, _phone, _user, _pass, _referral, _carModel, _carPlate, _carColor;
-        private UITextField _supervisorCode;
-        private UILabel _govValue, _cityValue, _message, _vehicleLabel, _supervisorName;
+        private UITextField _supervisorCode, _restaurantName, _restaurantAddress;
+        private UILabel _govValue, _cityValue, _message, _vehicleLabel, _supervisorName, _restCoords;
+        private double _restLat, _restLng;
         private UISwitch _terms;
-        private UIView _driverSection;
+        private UIView _driverSection, _restaurantSection;
         private UIButton _btnRegister;
 
         private string _governorate = "";
@@ -37,7 +38,7 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(12f, 16f);
 
-            _role = new UISegmentedControl(new[] { "عميل", "سائق" });
+            _role = new UISegmentedControl(new[] { "عميل", "سائق", "مطعم" });
             _role.SelectedSegment = 0;
             _role.SelectedSegmentTintColor = Theme.Primary;
             _role.SetTitleTextAttributes(new UIStringAttributes { ForegroundColor = UIColor.White, Font = Theme.FontMedium(14) },
@@ -98,6 +99,39 @@ namespace Tawsela.iOS.Screens
             ((UIStackView)_driverSection).AddArrangedSubview(_supervisorCode);
             ((UIStackView)_driverSection).AddArrangedSubview(_supervisorName);
             stack.AddArrangedSubview(_driverSection);
+
+            // --- قسم المطعم ---
+            var restLabel = Controls.SectionTitle("بيانات المطعم");
+            _restaurantName = Controls.TextField("اسم المطعم");
+            _restaurantAddress = Controls.TextField("عنوان المطعم");
+
+            _restaurantSection = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 12,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            ((UIStackView)_restaurantSection).AddArrangedSubview(restLabel);
+            ((UIStackView)_restaurantSection).AddArrangedSubview(_restaurantName);
+            ((UIStackView)_restaurantSection).AddArrangedSubview(_restaurantAddress);
+
+            // موقع المطعم يُحدَّد مرة واحدة عند التسجيل ويُستخدم تلقائيًا في طلبات التوصيل
+            var pickRestLocation = Controls.OutlineButton("تحديد موقع المطعم على الخريطة");
+            pickRestLocation.TouchUpInside += (s, e) =>
+            {
+                Push(MapViewController.Pick(_restLat, _restLng, (lat, lng, address) =>
+                {
+                    _restLat = lat;
+                    _restLng = lng;
+                    UpdateRestCoords();
+                }));
+            };
+            _restCoords = MakeLabel("لم يُحدَّد الموقع بعد — لا بد من تحديده مرة واحدة عند التسجيل",
+                12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
+            ((UIStackView)_restaurantSection).AddArrangedSubview(pickRestLocation);
+            ((UIStackView)_restaurantSection).AddArrangedSubview(_restCoords);
+
+            stack.AddArrangedSubview(_restaurantSection);
 
             // الشروط (إلزامية — بديل chkTerms)
             var termsRow = new UIView { TranslatesAutoresizingMaskIntoConstraints = false };
@@ -170,7 +204,10 @@ namespace Tawsela.iOS.Screens
         private void UpdateRole()
         {
             var isDriver = _role.SelectedSegment == 1;
+            var isRestaurant = _role.SelectedSegment == 2;
             _driverSection.Hidden = !isDriver;
+            if (_restaurantSection != null) _restaurantSection.Hidden = !isRestaurant;
+            if (_referral != null) _referral.Hidden = isRestaurant;
         }
 
         private void PickGovernorate()
@@ -256,7 +293,8 @@ namespace Tawsela.iOS.Screens
             if (!Net.IsOnline()) { ShowMessage("لا يوجد اتصال بالإنترنت"); return; }
 
             var isDriver = _role.SelectedSegment == 1;
-            var role = isDriver ? "سائق" : "عميل";
+            var isRestaurant = _role.SelectedSegment == 2;
+            var role = isRestaurant ? "مطعم" : isDriver ? "سائق" : "عميل";
 
             var fullName = (_fullName.Text ?? "").Trim();
             var phone = (_phone.Text ?? "").Trim();
@@ -284,6 +322,15 @@ namespace Tawsela.iOS.Screens
                 return;
             }
 
+            var restaurantName = isRestaurant ? (_restaurantName.Text ?? "").Trim() : "";
+            var restaurantAddress = isRestaurant ? (_restaurantAddress.Text ?? "").Trim() : "";
+            if (isRestaurant && restaurantName == "") { ShowMessage("أدخل اسم المطعم"); return; }
+            if (isRestaurant && restaurantAddress == "") { ShowMessage("أدخل عنوان المطعم"); return; }
+            if (isRestaurant && _restLat == 0 && _restLng == 0) { ShowMessage("حدد موقع المطعم على الخريطة"); return; }
+
+            var restLat = isRestaurant ? _restLat : 0;
+            var restLng = isRestaurant ? _restLng : 0;
+
             var referral = (_referral.Text ?? "").Trim();
             var supervisorCode = isDriver ? (_supervisorCode.Text ?? "").Trim() : "";
 
@@ -292,7 +339,8 @@ namespace Tawsela.iOS.Screens
 
             Ui.Run(
                 () => Api.Register(user, pass, fullName, phone, role, carModel, carPlate, carColor,
-                    referral, _governorate, _city, supervisorCode),
+                    referral, _governorate, _city, supervisorCode,
+                    restaurantName, 0, restaurantAddress, restLat, restLng),
                 () =>
                 {
                     progress.Dismiss();
@@ -307,6 +355,14 @@ namespace Tawsela.iOS.Screens
                     _btnRegister.Enabled = true;
                     ShowMessage(ex == null ? "تعذّر إنشاء الحساب" : ex.Message);
                 });
+        }
+
+        private void UpdateRestCoords()
+        {
+            if (_restCoords == null) return;
+            _restCoords.Text = (_restLat != 0 || _restLng != 0)
+                ? "موقع المطعم: " + _restLat.ToString("0.#####") + ", " + _restLng.ToString("0.#####")
+                : "لم يُحدَّد الموقع بعد — لا بد من تحديده مرة واحدة عند التسجيل";
         }
 
         private void ShowMessage(string text)

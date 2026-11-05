@@ -438,7 +438,7 @@ namespace Tawsela.iOS.Screens
 
             row.UserInteractionEnabled = true;
             row.AddGestureRecognizer(new UITapGestureRecognizer(() =>
-                Push(new RestaurantDeliveryExecuteViewController(id))));
+                Push(new RestaurantOrderDetailViewController(id))));
 
             return row;
         }

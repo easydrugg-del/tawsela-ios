@@ -760,6 +760,9 @@ namespace Tawsela.iOS.Screens
         {
             base.ViewDidLoad();
 
+            NavigationItem.RightBarButtonItem = new UIBarButtonItem("طلبات التفعيل",
+                UIBarButtonItemStyle.Plain, (s, e) => Push(new RestaurantApprovalsViewController()));
+
             var add = Controls.PrimaryButton("إضافة مطعم");
             add.TouchUpInside += (s, e) => Add();
             View.AddSubview(add);

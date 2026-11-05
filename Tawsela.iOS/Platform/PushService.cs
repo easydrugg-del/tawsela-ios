@@ -65,6 +65,14 @@ namespace Tawsela.iOS.Platform
         /// <summary>طلب الإذن مرة واحدة فقط (لتفادي إزعاج المستخدم في كل فتح).</summary>
         public static void RequestAuthorizationOnce()
         {
+            // وضع التصوير الآلي (CI): لا نطلب إذنًا حتى لا يغطي البيلوك الشاشة ويبتلع اللمسات.
+            // يُفعَّل فقط عند تشغيل تطبيق المحاكي بهذه المتغيرات، ولا تأثير له على النسخة النهائية.
+            try
+            {
+                if (Environment.GetEnvironmentVariable("TAWSELA_UI_TEST") == "1") return;
+            }
+            catch { }
+
             if (AppServices.Prefs.GetBool(PrefName + "." + PrefAsked, false)) return;
             RequestAuthorization(null);
         }

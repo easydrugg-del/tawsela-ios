@@ -530,6 +530,12 @@ namespace Tawsela.Data
             return Post("/api/restaurant-delivery/" + id + "/delivered", new { });
         }
 
+        /// <summary>المطعم يلغي التوصيلة قبل استلامها من السائق.</summary>
+        public static string CancelRestaurantDelivery(int id)
+        {
+            return Post("/api/restaurant-delivery/" + id + "/cancel", new { });
+        }
+
         public static List<Dictionary<string, object>> GetMyRestaurantDeliveries()
         {
             var list = new List<Dictionary<string, object>>();
@@ -554,6 +560,29 @@ namespace Tawsela.Data
                     return Row(doc.RootElement);
             }
             return null;
+        }
+
+        /// <summary>إحصائيات لوحة المطعم (اليوم / قيد الانتظار / تم التسليم / الإيراد).</summary>
+        public static Dictionary<string, object>? RestaurantStats()
+        {
+            using (var doc = JsonDocument.Parse(Get("/api/restaurant-delivery/stats")))
+            {
+                if (doc.RootElement.ValueKind == JsonValueKind.Object)
+                    return Row(doc.RootElement);
+            }
+            return null;
+        }
+
+        /// <summary>تحديث بيانات المطعم (الاسم/الهاتف/العنوان/المنطقة/المحافظة/المدينة) من حساب المطعم نفسه.</summary>
+        public static string UpdateMyRestaurant(string name, string phone, string address, int areaId, double lat, double lng,
+            string governorate = "", string city = "")
+        {
+            return Post("/api/restaurant-delivery/my-restaurant", new
+            {
+                Name = name ?? "", Phone = phone ?? "", Address = address ?? "",
+                AreaId = areaId, Lat = lat, Lng = lng,
+                Governorate = governorate ?? "", City = city ?? ""
+            });
         }
 
         public static string RequestRestaurantDelivery(int areaId, string customerName, string customerPhone,
@@ -622,6 +651,24 @@ namespace Tawsela.Data
                 FullName = fullName ?? "",
                 Phone = phone ?? ""
             });
+        }
+
+        /// <summary>المطاعم المنتظرة لاعتماد الإدارة (المسجلة ذاتيًا).</summary>
+        public static List<Dictionary<string, object>> PendingRestaurants()
+        {
+            var list = new List<Dictionary<string, object>>();
+            foreach (var r in Rows(Get("/api/admin/restaurants/pending"))) list.Add(r);
+            return list;
+        }
+
+        public static string ApproveRestaurant(int id)
+        {
+            return Post("/api/admin/restaurants/" + id + "/approve", new { });
+        }
+
+        public static string RejectRestaurant(int id)
+        {
+            return Post("/api/admin/restaurants/" + id + "/reject", new { });
         }
 
         /* ---------- المحفظة ---------- */
@@ -1756,7 +1803,8 @@ namespace Tawsela.Data
         /// <summary>تسجيل حساب عبر الـ API — يملأ Session ويحفظ التوكن.</summary>
         public static void Register(string userName, string password, string fullName,
             string phone, string role, string carModel, string carPlate, string carColor,
-            string referralCode, string governorate, string city, string supervisorCode = "")
+            string referralCode, string governorate, string city, string supervisorCode = "",
+            string restaurantName = "", int areaId = 0, string address = "", double lat = 0, double lng = 0)
         {
             var text = Post("/api/auth/register", new
             {
@@ -1764,7 +1812,9 @@ namespace Tawsela.Data
                 Phone = phone ?? "", Role = role ?? "", CarModel = carModel ?? "",
                 CarPlate = carPlate ?? "", CarColor = carColor ?? "",
                 ReferralCode = referralCode ?? "", Governorate = governorate ?? "", City = city ?? "",
-                SupervisorCode = supervisorCode ?? ""
+                SupervisorCode = supervisorCode ?? "",
+                RestaurantName = restaurantName ?? "", AreaId = areaId,
+                Address = address ?? "", Lat = lat, Lng = lng
             });
             using (var doc = JsonDocument.Parse(text))
             {
