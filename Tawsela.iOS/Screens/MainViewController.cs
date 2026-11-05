@@ -333,9 +333,9 @@ namespace Tawsela.iOS.Screens
                     Tile("ic_action_receipt", "إحصائياتي", Theme.Red, Theme.PrimaryDark,
                         () => Push(new CustomerStatsViewController())));
 
-                // إعادة آخر رحلة بضغطة واحدة (بديل btnReorder في MainActivity)
+                // توصيلة زي آخر مرة بضغطة واحدة (بديل btnReorder في MainActivity)
                 AddRow(
-                    Tile("ic_action_reorder", "إعادة آخر رحلة", Theme.Blue, Theme.PrimaryDark, ReorderLast),
+                    Tile("ic_action_reorder", "توصيلة زي آخر مرة", Theme.Blue, Theme.PrimaryDark, ReorderLast),
                     Tile("ic_action_map", "سائقون قريبون", Theme.Hex(0x00897B), Theme.PrimaryDark,
                         () => Push(new NearbyDriversViewController())));
 
@@ -458,7 +458,7 @@ namespace Tawsela.iOS.Screens
         }
 
         /// <summary>
-        /// إعادة آخر رحلة: يجلب آخر طلبات العميل ويفتح شاشة الطلب معبأة
+        /// توصيلة زي آخر مرة: يجلب آخر طلبات العميل ويفتح شاشة الطلب معبأة
         /// (بديل ReorderLast في MainActivity).
         /// </summary>
         private void ReorderLast()
@@ -479,7 +479,12 @@ namespace Tawsela.iOS.Screens
                         return;
                     }
 
-                    Push(new NewOrderViewController(orders[0]));
+                    // نمرّر آخر رحلة بالطريقتين لضمان وصول البيانات للشاشة
+                    // (نفس Intent extras prefFrom/prefTo في أندرويد).
+                    var order = orders[0];
+                    var screen = new NewOrderViewController(order);
+                    screen.SetPrefill(order);
+                    Push(screen);
                 });
             }, null, ex =>
             {

@@ -50,23 +50,29 @@ namespace Tawsela.iOS.Screens
         private VoiceInput _voice;
 
         // إعادة آخر رحلة (بديل prefFrom/prefTo/prefServiceId في أندرويد)
-        private readonly Order _prefill;
+        private Order _prefill;
         private int _prefillServiceId;
+        private bool _prefillApplied;
 
         public NewOrderViewController() : base("طلب توصيلة جديدة") { }
 
-        /// <summary>يفتح الشاشة معبأة بنقاط آخر رحلة ونوع خدمتها (زر «إعادة آخر رحلة»).</summary>
+        /// <summary>يفتح الشاشة معبأة بنقاط آخر رحلة ونوع خدمتها (زر «توصيلة زي آخر مرة»).</summary>
         public NewOrderViewController(Order prefill) : base("طلب توصيلة جديدة")
         {
             _prefill = prefill;
+        }
+
+        /// <summary>تعبئة رحلة سابقة بعد إنشاء الشاشة (نفس سلوك Intent extras في أندرويد).</summary>
+        public void SetPrefill(Order order)
+        {
+            _prefill = order;
+            if (IsViewLoaded && order != null) ApplyPrefill();
         }
 
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
             BuildUi();
-
-            if (_prefill != null) ApplyPrefill();
 
             LoadServices();
             LoadSavedPlaces();
@@ -75,13 +81,26 @@ namespace Tawsela.iOS.Screens
 
             // مع الإعادة لا نستبدل نقطة الانطلاق بموقع الجهاز
             if (_prefill == null) RequestLocation();
+            else ApplyPrefill();
 
             RefreshDriversCount();
+        }
+
+        public override void ViewDidAppear(bool animated)
+        {
+            base.ViewDidAppear(animated);
+
+            // ضمان تعبئة بيانات آخر رحلة مرة واحدة بعد ظهور الشاشة
+            // (بعض العناصر تُحدَّث بعد ViewDidLoad فلا نسمح لها بمسح التعبئة).
+            if (_prefill != null && !_prefillApplied) ApplyPrefill();
         }
 
         /// <summary>تعبئة الحقول من رحلة سابقة (بديل Intent extras في ReorderLast).</summary>
         private void ApplyPrefill()
         {
+            if (_prefill == null || _fromField == null) return;
+            _prefillApplied = true;
+
             _prefillServiceId = _prefill.ServiceTypeId;
 
             _fromField.Text = _prefill.FromAddress ?? "";
@@ -93,6 +112,10 @@ namespace Tawsela.iOS.Screens
             _toLat = _prefill.ToLat;
             _toLng = _prefill.ToLng;
             _toCoords.Text = Coords(_toLat, _toLng);
+
+            // نفس أندرويد: حساب الأجرة فورًا بعد التعبئة (EstimateNow)
+            UpdateEstimate();
+            RefreshDriversCount();
         }
 
         private void BuildUi()
