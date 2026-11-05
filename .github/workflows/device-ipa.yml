@@ -1,0 +1,156 @@
+name: device-ipa
+
+# يبني نسخة iOS لجهاز حقيقي (ios-arm64) كملف .ipa **غير موقّع**.
+# الاستخدام: تثبيت على iPhone بـ Sideloadly (حساب Apple مجاني) — 7 أيام لكل تثبيت.
+# التوقيع بيحصل على جهازك، مش هنا. لذلك لا نحتاج شهادات ولا provisioning profile.
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'صورة macOS (xcode-27 لأن .NET iOS 27.1 يتطلب Xcode 27.1)'
+        required: false
+        default: 'xcode-27'
+      dotnet:
+        description: 'إصدار .NET SDK'
+        required: false
+        default: '10.0.x'
+      firebase:
+        description: 'تضمين Firebase/APNs (يحتاج حساب مدفوع — اتركها false للحساب المجاني)'
+        required: false
+        default: 'false'
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'Tawsela.Core/**'
+      - 'Tawsela.iOS/**'
+      - 'Assets/leaflet/**'
+      - 'Resources/drawable/**'
+      - '.github/workflows/device-ipa.yml'
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: '1'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+
+jobs:
+  ipa:
+    name: Build unsigned device IPA
+    runs-on: ${{ inputs.runner || 'xcode-27' }}
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          echo "Available Xcode:"
+          ls -d /Applications/Xcode*.app || true
+          # .NET iOS 27.1 يتطلب Xcode 27.1 بالتحديد
+          if [ -d /Applications/Xcode_27.1.app ]; then
+            sudo xcode-select -s /Applications/Xcode_27.1.app
+          elif [ -d /Applications/Xcode.app ]; then
+            sudo xcode-select -s /Applications/Xcode.app
+          fi
+          xcodebuild -version
+
+      # global.json يثبّت SDK 11 preview للتطوير المحلي على ويندوز؛ نتجاوزه في CI
+      - name: Use the runner SDK
+        run: rm -f global.json
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet || '10.0.x' }}
+
+      - name: Show SDK
+        run: dotnet --version
+
+      - name: Install iOS workload
+        run: dotnet workload install ios
+
+      - name: Restore (device)
+        run: dotnet restore Tawsela.iOS/Tawsela.iOS.csproj -r ios-arm64
+
+      - name: Build (device, unsigned)
+        run: |
+          dotnet build Tawsela.iOS/Tawsela.iOS.csproj \
+            -c Release \
+            -f net10.0-ios \
+            -r ios-arm64 \
+            -m:1 -nr:false \
+            -p:EnableCodeSigning=false \
+            -p:EnableFirebase=${{ inputs.firebase || 'false' }}
+
+      - name: Locate app bundle
+        id: locate
+        run: |
+          APP=$(find Tawsela.iOS/bin/Release/net10.0-ios -maxdepth 3 -type d -name 'Tawsela.app' | grep -i 'ios-arm64' | head -1)
+          [ -n "$APP" ] || { echo "::error::Tawsela.app not found"; find Tawsela.iOS/bin -maxdepth 4 -type d | head -40; exit 1; }
+          echo "app=$APP" >> "$GITHUB_OUTPUT"
+          echo "Found: $APP"
+          du -sh "$APP"
+
+      - name: Verify device build
+        run: |
+          APP='${{ steps.locate.outputs.app }}'
+          BIN="$APP/Tawsela.iOS"
+          [ -f "$BIN" ] || BIN="$APP/$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Info.plist")"
+          echo "Binary: $BIN"
+          lipo -info "$BIN" || file "$BIN"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :MinimumOSVersion' "$APP/Info.plist"
+          echo "--- signatures (يجب أن تكون غير موقّعة) ---"
+          codesign -dv "$APP" 2>&1 || echo "unsigned (as expected)"
+          echo "--- entitlements ---"
+          codesign -d --entitlements - "$APP" 2>&1 | head -20 || true
+
+      - name: Package .ipa
+        id: pack
+        run: |
+          APP='${{ steps.locate.outputs.app }}'
+          rm -rf out && mkdir -p out/Payload
+          cp -R "$APP" out/Payload/
+          VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist")
+          BUILD=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist")
+          IPA="Tawsela-${VERSION}-${BUILD}-unsigned.ipa"
+          ( cd out && zip -qry "../$IPA" Payload )
+          ls -lh "$IPA"
+          unzip -l "$IPA" | head -15
+          echo "ipa=$IPA" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tawsela-device-ipa-${{ github.run_number }}
+          path: ${{ steps.pack.outputs.ipa }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach to release
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view device-ipa >/dev/null 2>&1 || \
+            gh release create device-ipa \
+              --title "Tawsela — iOS device IPA (unsigned)" \
+              --notes "ملف .ipa غير موقّع لتثبيت على iPhone حقيقي عبر Sideloadly. راجع SIDELOAD.md."
+          gh release upload device-ipa '${{ steps.pack.outputs.ipa }}' --clobber
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: device-ipa-logs-${{ github.run_number }}
+          path: |
+            Tawsela.iOS/obj/**/*.log
+            Tawsela.iOS/bin/**/*.log
+          if-no-files-found: ignore
+          retention-days: 7
