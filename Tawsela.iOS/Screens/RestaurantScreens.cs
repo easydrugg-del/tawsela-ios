@@ -47,6 +47,10 @@ namespace Tawsela.iOS.Screens
         {
             base.ViewDidLoad();
             BuildUi();
+
+            // منطقة التسعير مخفية — نختار أول منطقة تلقائيًا (تفضل في الذاكرة للاستخدام عند الإرسال)
+            if (_area == null && _areas.Count > 0) SelectArea(_areas[0]);
+
             LoadRestaurant();
             ApplyRepeat();
         }
@@ -135,16 +139,9 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(12f, 16f);
 
-            /* ---------- المنطقة والسعر (أعلى الشاشة زي أندرويد) ---------- */
-            stack.AddArrangedSubview(Controls.SectionTitle("المنطقة والسعر"));
-
+            /* ---------- منطقة التسعير: مخفية عن المستخدم (تُحدد تلقائيًا وتُستخدم عند الإرسال) ---------- */
             _areaValue = MakeLabel("اختر المنطقة", 15f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
-            _areaValue.UserInteractionEnabled = true;
-            _areaValue.AddGestureRecognizer(new UITapGestureRecognizer(() => PickArea()));
-            stack.AddArrangedSubview(_areaValue);
-
             _fareValue = MakeLabel("—", 20f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
-            stack.AddArrangedSubview(_fareValue);
 
             /* ---------- العناوين ---------- */
             stack.AddArrangedSubview(Controls.SectionTitle("العناوين"));
