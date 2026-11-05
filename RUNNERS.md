@@ -32,7 +32,36 @@
 - لو `boot` بيرجع خطأ صريح → المشكلة في الصورة.
 - لو صامت والجهاز يفضل `Shutdown` → الصورة تالفة، غيّر الليبل.
 
-### 3. `Remote access is disabled`
+### 3. اللمس/الكيبورد بيتبعت لكن مفيش أثر (أخطر مشكلة)
+
+**الأعراض:** مقبس الإدخال بيتصل بنجاح (`ok: true`)، الإطارات بتتبعت (`sent: 2`)، لكن الشاشة ما بتتغيرش أبدًا.
+
+**السبب:** Xcode 27 فيه **Device Hub**، ولما بيبقى نشط بيفصل خدمات الإدخال القديمة (legacy HID) بتاعة المحاكي. serve-sim بيرسل الإطارات وiOS بيرميها بصمت.
+
+**الفحص:**
+```bash
+xcrun simctl spawn <UDID> notifyutil -g com.apple.coredevice.dtuhidd.active
+# الناتج "com.apple.coredevice.dtuhidd.active 1" = الإدخال مقطوع
+```
+
+**الإصلاح** (لازم قبل تثبيت التطبيق — الأمر بيعيد تشغيل SpringBoard وبيقفل التطبيقات):
+```bash
+npx --yes serve-sim repair-input -d <UDID>
+```
+
+الـ workflow فيه خطوة `Repair Device Hub input (Xcode 27)` بتعمل الفحص والإصلاح تلقائيًا، وبترفض تكمل لو المفتاح فضل `1`.
+وفيه كذلك `SERVE_SIM_DISABLE_DEVICE_HUB_KEYBOARD=1` عشان الكيبورد يمشي على نفس المسار القديم.
+
+**فحص سريع بعد التشغيل:** `GET /live-diag/<TOKEN>` بيرجّع `inputShadowed` و`deviceHubInput`.
+
+### 4. `This serve-sim preview requires an auth token`
+
+صفحة serve-sim نفسها محتاجة التوكن في الـ **fragment** مش الـ query:
+```
+https://<tunnel>/?k=<TOKEN>#token=<TOKEN>
+```
+
+### 5. `Remote access is disabled`
 
 `serve-sim` بيرفض الوصول البعيد افتراضيًا. لازم `--auth-token` (مضاف في الـ workflow).
 
