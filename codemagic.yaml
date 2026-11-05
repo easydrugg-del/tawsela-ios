@@ -1,0 +1,136 @@
+# بناء «توصيلة» لنظام iOS على Codemagic.
+#
+# التطبيق UIKit خالص (net10.0-ios) — لا يحتاج CocoaPods، ولا شهادة توقيع
+# للـ Simulator. نسخة الجهاز الحقيقي تُبنى **بدون توقيع** ثم تُثبَّت بـ Sideloadly.
+#
+# لماذا Xcode 27.1؟ لأن حزمة .NET iOS 27.1 مبنية عليه تحديدًا.
+# (Codemagic توفره على /Applications/Xcode-27.1.app)
+
+definitions:
+  ios_env: &ios_env
+    xcode: 27.1
+    vars:
+      DOTNET_CHANNEL: "10.0"
+
+workflows:
+  # ------------------------------------------------------------------
+  # 1) نسخة المحاكي — أسرع، وتُستخدم لمراجعة الشاشات
+  # ------------------------------------------------------------------
+  ios-simulator:
+    name: iOS Simulator (.app)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      <<: *ios_env
+
+    scripts:
+      - name: تجهيز .NET 10
+        script: |
+          # global.json مثبّت على SDK 11 preview محليًا — نحذفه على CI
+          rm -f global.json
+
+          export PATH="$HOME/.dotnet:$PATH"
+          if ! dotnet --list-sdks 2>/dev/null | grep -q "^10\."; then
+            curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+            chmod +x /tmp/dotnet-install.sh
+            /tmp/dotnet-install.sh --channel "$DOTNET_CHANNEL" --install-dir "$HOME/.dotnet"
+          fi
+
+          # نجعل dotnet متاحًا للخطوات التالية
+          echo "PATH=$HOME/.dotnet:$PATH" >> $CM_ENV
+
+          dotnet --version
+          xcodebuild -version
+
+      - name: تثبيت iOS workload
+        script: |
+          dotnet workload install ios
+
+      - name: بناء نسخة المحاكي (ad-hoc)
+        script: |
+          dotnet build Tawsela.iOS/Tawsela.iOS.csproj \
+            -c Release \
+            -f net10.0-ios \
+            -r iossimulator-arm64 \
+            -m:1 -nr:false \
+            -p:CodesignKey=- \
+            -p:EnableFirebase=false
+
+      - name: فحص الحزمة + ضغطها
+        script: |
+          APP="Tawsela.iOS/bin/Release/net10.0-ios/iossimulator-arm64/Tawsela.app"
+          test -d "$APP" || { echo "Tawsela.app غير موجود"; exit 1; }
+
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist"
+
+          mkdir -p build
+          ditto -c -k --sequesterRsrc --keepParent "$APP" build/Tawsela-sim.zip
+          du -sh build/Tawsela-sim.zip
+
+    artifacts:
+      - build/Tawsela-sim.zip
+      - Tawsela.iOS/bin/Release/net10.0-ios/iossimulator-arm64/Tawsela.app
+
+  # ------------------------------------------------------------------
+  # 2) نسخة الجهاز الحقيقي — .ipa بدون توقيع (Sideloadly)
+  # ------------------------------------------------------------------
+  ios-device-ipa:
+    name: iOS Device IPA (unsigned)
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    environment:
+      <<: *ios_env
+
+    scripts:
+      - name: تجهيز .NET 10
+        script: |
+          rm -f global.json
+
+          export PATH="$HOME/.dotnet:$PATH"
+          if ! dotnet --list-sdks 2>/dev/null | grep -q "^10\."; then
+            curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+            chmod +x /tmp/dotnet-install.sh
+            /tmp/dotnet-install.sh --channel "$DOTNET_CHANNEL" --install-dir "$HOME/.dotnet"
+          fi
+
+          echo "PATH=$HOME/.dotnet:$PATH" >> $CM_ENV
+
+          dotnet --version
+          xcodebuild -version
+
+      - name: تثبيت iOS workload
+        script: |
+          dotnet workload install ios
+
+      - name: بناء نسخة الجهاز (بدون توقيع)
+        script: |
+          dotnet build Tawsela.iOS/Tawsela.iOS.csproj \
+            -c Release \
+            -f net10.0-ios \
+            -r ios-arm64 \
+            -m:1 -nr:false \
+            -p:EnableCodeSigning=false \
+            -p:EnableFirebase=false
+
+      - name: تجميع ملف .ipa
+        script: |
+          APP=$(find Tawsela.iOS/bin/Release/net10.0-ios -maxdepth 3 -type d -name 'Tawsela.app' | grep ios-arm64 | head -1)
+          [ -n "$APP" ] || { echo "Tawsela.app غير موجود"; find Tawsela.iOS/bin -maxdepth 4 -type d | head -40; exit 1; }
+
+          BIN="$APP/Tawsela.iOS"
+          [ -f "$BIN" ] || BIN="$APP/$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Info.plist")"
+          lipo -info "$BIN" || file "$BIN"
+
+          VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist")
+          BUILD=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist")
+
+          rm -rf out && mkdir -p out/Payload build
+          cp -R "$APP" out/Payload/
+          ( cd out && zip -qry "../build/Tawsela-${VERSION}-${BUILD}-unsigned.ipa" Payload )
+
+          ls -lh build/*.ipa
+
+    artifacts:
+      - build/*.ipa
