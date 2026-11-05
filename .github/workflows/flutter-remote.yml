@@ -184,15 +184,22 @@ jobs:
           [ -n "$UDID" ] || { echo "::error::No iOS simulator available on this runner image"; exit 1; }
 
           echo "Booting iOS Simulator UDID: $UDID"
-          xcrun simctl boot "$UDID" || true
+          echo "--- runtimes ---"
+          xcrun simctl list runtimes || true
+          echo "--- boot attempt ---"
+          xcrun simctl boot "$UDID" 2>&1 || echo "boot command exited with $?"
 
           # بعض صور macOS تكون بطيئة جدًا في أول إقلاع؛ نستطلع الحالة بدل التعليق للأبد
           BOOTED=0
           for i in $(seq 1 160); do
-            if xcrun simctl list devices | grep -q "$UDID (Booted)"; then BOOTED=1; break; fi
+            LINE=$(xcrun simctl list devices | grep -F "$UDID" || true)
+            case "$LINE" in
+              *"(Booted)"*) BOOTED=1; break ;;
+            esac
+            if [ $((i % 12)) -eq 0 ]; then echo "waiting $((i*5))s -> ${LINE:-<device missing>}"; fi
             sleep 5
           done
-          [ "$BOOTED" = "1" ] || { echo "::error::Simulator $UDID never reached Booted state"; exit 1; }
+          [ "$BOOTED" = "1" ] || { echo "::error::Simulator $UDID never reached Booted state"; xcrun simctl list devices || true; exit 1; }
 
           # مهلة قصيرة إضافية حتى تجهز واجهة النظام قبل تشغيل البث
           sleep 20
