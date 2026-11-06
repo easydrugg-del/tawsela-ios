@@ -38,7 +38,7 @@ namespace Tawsela.iOS.Screens
             header.TranslatesAutoresizingMaskIntoConstraints = false;
             View.AddSubview(header);
 
-            var title = MakeLabel("🛠️ لوحة الإدارة", 20f, UIColor.White, UIFontWeight.Bold, UITextAlignment.Center);
+            var title = MakeLabel("🛠️ لوحة الإدارة", 20f, UIColor.White, UIFontWeight.Bold, UITextAlignment.Right);
             _stats = MakeLabel("جارٍ التحميل…", 14f, Theme.Hex(0xDDDDDD), UIFontWeight.Regular, UITextAlignment.Center);
             _stats.Lines = 0;
 
