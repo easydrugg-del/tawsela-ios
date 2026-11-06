@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface"
+    android:padding="16dp">
+
+  <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="اشتراك السائق VIP"
+      android:textSize="22sp"
+      android:textStyle="bold"
+      android:textColor="@color/primary"
+      android:layout_marginBottom="14dp" />
+
+  <TextView
+      android:id="@+id/txtInfo"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text=""
+      android:textSize="15sp"
+      android:background="@drawable/edit_rounded"
+      android:padding="16dp" />
+
+  <TextView
+      android:id="@+id/txtHistoryTitle"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="سجل الاشتراكات"
+      android:textSize="16sp"
+      android:textStyle="bold"
+      android:textColor="@color/primary"
+      android:layout_marginTop="16dp"
+      android:layout_marginBottom="8dp" />
+
+  <ListView
+      android:id="@+id/lstHistory"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:divider="@null"
+      android:dividerHeight="0dp" />
+
+  <Button
+      android:id="@+id/btnMonthly"
+      android:layout_width="match_parent"
+      android:layout_height="52dp"
+      android:text="اشتراك شهري"
+      android:textColor="@color/text_primary"
+      android:background="@drawable/tile_card_selector"
+      android:layout_marginTop="8dp" />
+
+  <Button
+      android:id="@+id/btnYearly"
+      android:layout_width="match_parent"
+      android:layout_height="52dp"
+      android:text="اشتراك سنوي (وفر شهرين)"
+      android:textColor="@color/text_primary"
+      android:background="@drawable/tile_card_selector"
+      android:layout_marginTop="8dp" />
+</LinearLayout>

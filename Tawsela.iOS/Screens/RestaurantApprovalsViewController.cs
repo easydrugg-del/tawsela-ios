@@ -18,6 +18,20 @@ namespace Tawsela.iOS.Screens
             get { return "لا توجد طلبات تفعيل حاليًا"; }
         }
 
+        protected override string Subtitle
+        {
+            get { return "المطاعم التي سجّلت نفسها ولم تُعتمد بعد"; }
+        }
+
+        public override void ViewDidLoad()
+        {
+            base.ViewDidLoad();
+
+            // زر «تحديث» (بديل btnRefresh في أندرويد)
+            NavigationItem.RightBarButtonItem = new UIBarButtonItem("تحديث",
+                UIBarButtonItemStyle.Plain, (s, e) => Reload());
+        }
+
         protected override List<Dictionary<string, object>> Fetch()
         {
             return Api.PendingRestaurants();

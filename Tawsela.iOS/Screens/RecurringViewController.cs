@@ -16,7 +16,7 @@ namespace Tawsela.iOS.Screens
         private UIStackView _list;
         private UILabel _empty;
 
-        public RecurringViewController() : base("الرحلات المتكررة") { }
+        public RecurringViewController() : base("الجدولة المتكررة") { }
 
         public override void ViewDidLoad()
         {
@@ -33,7 +33,7 @@ namespace Tawsela.iOS.Screens
                 "احفظ رحلتك المتكررة (مثل الذهاب للعمل) ليتم تنبيهك بها يوميًا.",
                 13f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right));
 
-            var add = Controls.PrimaryButton("إضافة رحلة متكررة");
+            var add = Controls.PrimaryButton("إضافة جدولة من آخر طلب");
             add.TouchUpInside += (s, e) => AddNew();
             stack.AddArrangedSubview(add);
 

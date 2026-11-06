@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:background="@drawable/bg_header"
+      android:padding="16dp"
+      android:gravity="center_vertical">
+
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="←"
+        android:textSize="20sp"
+        android:textColor="@color/white"
+        android:background="@null" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="تحديات الأسبوع"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:layout_marginStart="12dp" />
+  </LinearLayout>
+
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="🏅 أكمل التحديات واكسب نقاط إضافية"
+      android:textSize="14sp"
+      android:textColor="@color/text_secondary"
+      android:gravity="center"
+      android:padding="16dp" />
+
+  <ListView
+      android:id="@+id/listChallenges"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:padding="12dp" />
+</LinearLayout>

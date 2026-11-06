@@ -13,8 +13,10 @@ namespace Tawsela.iOS.Screens
     public class SubscriptionViewController : BaseViewController
     {
         private UILabel _info;
+        private UIStackView _history;
 
-        public SubscriptionViewController() : base("الاشتراك") { }
+        public SubscriptionViewController()
+            : base(Session.IsDriver ? "اشتراك السائق VIP" : "الاشتراك VIP") { }
 
         public override void ViewDidLoad()
         {
@@ -38,6 +40,15 @@ namespace Tawsela.iOS.Screens
                 NSLayoutConstraint.Create(_info, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, card, NSLayoutAttribute.Bottom, 1, -12),
             });
             stack.AddArrangedSubview(card);
+
+            stack.AddArrangedSubview(Controls.SectionTitle("سجل الاشتراكات"));
+            _history = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 8,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            stack.AddArrangedSubview(_history);
 
             var monthly = Controls.PrimaryButton("اشتراك شهري");
             monthly.TouchUpInside += (s, e) => Subscribe("شهري");
@@ -86,6 +97,28 @@ namespace Tawsela.iOS.Screens
                         "الخصم: " + discount + "% على كل رحلة\n" +
                         "السنوي: " + (price * 10).ToString("0.00") + " ج.م (شهران مجانًا)";
                     _info.TextColor = active ? Theme.Green : Theme.TextPrimary;
+
+                    for (int i = _history.ArrangedSubviews.Length - 1; i >= 0; i--)
+                    {
+                        var v = _history.ArrangedSubviews[i];
+                        _history.RemoveArrangedSubview(v);
+                        v.RemoveFromSuperview();
+                    }
+
+                    if (history == null || history.Count == 0)
+                    {
+                        _history.AddArrangedSubview(MakeLabel("لا يوجد سجل اشتراكات بعد", 13f,
+                            Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right));
+                        return;
+                    }
+
+                    foreach (var h in history)
+                    {
+                        _history.AddArrangedSubview(Controls.InfoRow(
+                            (string.IsNullOrEmpty(h.Plan) ? "اشتراك" : h.Plan) + " · " + h.Price.ToString("0.00") + " ج.م",
+                            h.StartAt.ToString("dd/MM/yyyy") + " ← " + h.ExpiresAt.ToString("dd/MM/yyyy") +
+                            " · " + h.StatusDisplay));
+                    }
                 });
             }, null, ex => Ui.Toast(ex.Message));
         }

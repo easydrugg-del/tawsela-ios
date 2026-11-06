@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/bg_header"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🚗 حركات سائق"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:id="@+id/txtDriverInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:textColor="#DDDDDD"
+        android:layout_marginTop="8dp"
+        android:visibility="gone" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:id="@+id/laySearch"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="vertical"
+      android:padding="16dp">
+
+    <EditText
+        android:id="@+id/txtQuery"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="رقم الحساب / رقم السيارة / اسم السائق"
+        android:inputType="text"
+        android:textSize="15sp"
+        android:padding="12dp"
+        android:background="@drawable/edit_rounded" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+      <Button
+          android:id="@+id/btnFromDate"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:text="من: —"
+          android:textSize="13sp"
+          android:textColor="@color/text_primary"
+          android:layout_marginEnd="4dp"
+          android:background="@drawable/tile_card_selector" />
+
+      <Button
+          android:id="@+id/btnToDate"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:text="إلى: —"
+          android:textSize="13sp"
+          android:textColor="@color/text_primary"
+          android:layout_marginStart="4dp"
+          android:layout_marginEnd="4dp"
+          android:background="@drawable/tile_card_selector" />
+
+      <Button
+          android:id="@+id/btnClearDates"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="🧹 الكل"
+          android:textSize="13sp"
+          android:textColor="@color/text_primary"
+          android:layout_marginStart="4dp"
+          android:background="@drawable/tile_card_selector" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnSearch"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="🔍 بحث"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/tile_orange_selector" />
+
+    <ListView
+        android:id="@+id/lstDrivers"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/txtEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ابحث برقم الحساب أو السيارة أو الاسم"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:padding="16dp" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:id="@+id/layOrders"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="vertical"
+      android:padding="16dp"
+      android:visibility="gone">
+
+    <TextView
+        android:id="@+id/txtSummary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:background="@drawable/card_ripple"
+        android:padding="12dp"
+        android:layout_marginBottom="8dp" />
+
+    <ListView
+        android:id="@+id/lstOrders"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/btnBackSearch"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="🔙 بحث جديد"
+        android:textSize="15sp"
+        android:textColor="@color/text_primary"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/tile_card_selector" />
+  </LinearLayout>
+
+</LinearLayout>

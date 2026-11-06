@@ -1,0 +1,1193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+    <ScrollView
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical">
+
+        <!-- شريط علوي -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_header"
+            android:padding="16dp">
+
+          <TextView
+              android:id="@+id/txtUserName"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_weight="1"
+              android:text="أهلاً"
+              android:textSize="18sp"
+              android:textStyle="bold"
+              android:textColor="@color/white" />
+
+          <TextView
+              android:id="@+id/txtDriverBalance"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text=""
+              android:textSize="13sp"
+              android:textStyle="bold"
+              android:textColor="@color/white"
+              android:background="@drawable/btn_badge_bg"
+              android:paddingLeft="10dp"
+              android:paddingRight="10dp"
+              android:paddingTop="4dp"
+              android:paddingBottom="4dp"
+              android:layout_marginEnd="8dp"
+              android:visibility="gone" />
+
+          <Button
+              android:id="@+id/btnLogout"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="خروج"
+              android:textSize="14sp"
+              android:textColor="@color/white"
+              android:background="@drawable/tile_red_selector"
+              android:paddingLeft="14dp"
+              android:paddingRight="14dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtAccountStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:background="@color/accent"
+            android:gravity="center"
+            android:padding="12dp"
+            android:visibility="gone" />
+
+        <!-- رايح فين؟ -->
+        <LinearLayout
+            android:id="@+id/cardWhereTo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_ripple"
+            android:padding="18dp"
+            android:layout_margin="16dp">
+
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="رايح فين؟"
+              android:textSize="22sp"
+              android:textStyle="bold"
+              android:textColor="@color/primary" />
+
+          <TextView
+              android:layout_width="match_parent"
+              android:layout_height="52dp"
+              android:gravity="center"
+              android:text=" اضغط لطلب توصيلة جديدة "
+              android:textSize="16sp"
+              android:textStyle="bold"
+              android:textColor="@color/white"
+              android:background="@drawable/btn_gradient_ride"
+              android:paddingLeft="14dp"
+              android:paddingRight="14dp"
+              android:layout_marginTop="12dp"
+              android:elevation="6dp"
+              android:shadowColor="#424242"
+              android:shadowDx="0"
+              android:shadowDy="3"
+              android:shadowRadius="8" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtPromoBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="عروض اليوم"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:background="@color/accent"
+            android:padding="10dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:visibility="gone" />
+
+        <!-- منطقة أزرار العميل -->
+        <LinearLayout
+            android:id="@+id/linerCustomer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone">
+
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="القائمة الرئيسية"
+              android:textSize="17sp"
+              android:textStyle="bold"
+              android:textColor="@color/primary"
+              android:padding="4dp"
+              android:layout_marginBottom="4dp" />
+
+          <LinearLayout
+              android:id="@+id/adCardCustomer"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:background="@drawable/card_ripple"
+              android:padding="12dp"
+              android:layout_marginBottom="8dp"
+              android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/adImgCustomer"
+                android:layout_width="match_parent"
+                android:layout_height="160dp"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/adTitleCustomer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:layout_marginTop="6dp" />
+
+            <TextView
+                android:id="@+id/adBodyCustomer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="2dp" />
+          </LinearLayout>
+
+          <!-- بطاقة توصيلاتي -->
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:background="@drawable/card_ripple"
+              android:padding="12dp"
+              android:layout_marginBottom="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🚕 توصيلاتي"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:layout_marginBottom="6dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2">
+              <LinearLayout
+                  android:id="@+id/btnMyOrders"
+                  android:layout_width="0dp"
+                  android:layout_weight="1"
+                  android:layout_height="88dp"
+                  android:orientation="vertical"
+                  android:gravity="center"
+                  android:background="@drawable/tile_card_selector"
+                  android:clickable="true"
+                  android:focusable="true"
+                  android:layout_margin="4dp"
+                  android:elevation="2dp"
+                  android:padding="6dp">
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/badge_orange"
+                    android:scaleType="fitCenter"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_taxi"
+                    android:contentDescription="توصيلاتي" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="توصيلاتي"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginTop="2dp" />
+              </LinearLayout>
+              <LinearLayout
+                  android:id="@+id/btnReorder"
+                  android:layout_width="0dp"
+                  android:layout_weight="1"
+                  android:layout_height="88dp"
+                  android:orientation="vertical"
+                  android:gravity="center"
+                  android:background="@drawable/tile_card_selector"
+                  android:clickable="true"
+                  android:focusable="true"
+                  android:layout_margin="4dp"
+                  android:elevation="2dp"
+                  android:padding="6dp">
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/badge_orange"
+                    android:scaleType="fitCenter"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_replay"
+                    android:contentDescription="توصيلة زي آخر مرة" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="توصيلة زي آخر مرة"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginTop="2dp" />
+              </LinearLayout>
+            </LinearLayout>
+          </LinearLayout>
+
+          <!-- بطاقة المحفظة والمفضلة والإشعارات -->
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:background="@drawable/card_ripple"
+              android:padding="12dp"
+              android:layout_marginBottom="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💰 المحفظة والمفضلة والإشعارات"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:layout_marginBottom="6dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2">
+              <LinearLayout
+                  android:id="@+id/btnWallet"
+                  android:layout_width="0dp"
+                  android:layout_weight="1"
+                  android:layout_height="88dp"
+                  android:orientation="vertical"
+                  android:gravity="center"
+                  android:background="@drawable/tile_card_selector"
+                  android:clickable="true"
+                  android:focusable="true"
+                  android:layout_margin="4dp"
+                  android:elevation="2dp"
+                  android:padding="6dp">
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/badge_green"
+                    android:scaleType="fitCenter"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_wallet"
+                    android:contentDescription="محفظتي" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="محفظتي"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginTop="2dp" />
+              </LinearLayout>
+              <LinearLayout
+                  android:id="@+id/btnFavorites"
+                  android:layout_width="0dp"
+                  android:layout_weight="1"
+                  android:layout_height="88dp"
+                  android:orientation="vertical"
+                  android:gravity="center"
+                  android:background="@drawable/tile_card_selector"
+                  android:clickable="true"
+                  android:focusable="true"
+                  android:layout_margin="4dp"
+                  android:elevation="2dp"
+                  android:padding="6dp">
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/badge_green"
+                    android:scaleType="fitCenter"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_star"
+                    android:contentDescription="المفضلون" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="المفضلون"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginTop="2dp" />
+              </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2">
+              <LinearLayout
+                  android:id="@+id/btnOffers"
+                  android:layout_width="0dp"
+                  android:layout_weight="1"
+                  android:layout_height="88dp"
+                  android:orientation="vertical"
+                  android:gravity="center"
+                  android:background="@drawable/tile_card_selector"
+                  android:clickable="true"
+                  android:focusable="true"
+                  android:layout_margin="4dp"
+                  android:elevation="2dp"
+                  android:padding="6dp">
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/badge_purple"
+                    android:scaleType="fitCenter"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_gift"
+                    android:contentDescription="العروض والكوبونات" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="العروض والكوبونات"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginTop="2dp" />
+              </LinearLayout>
+              <FrameLayout
+                  android:layout_width="0dp"
+                  android:layout_weight="1"
+                  android:layout_height="88dp"
+                  android:layout_margin="4dp">
+                <LinearLayout
+                    android:id="@+id/btnNotifications"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/tile_card_selector"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="2dp"
+                    android:padding="6dp">
+                  <ImageView
+                      android:layout_width="42dp"
+                      android:layout_height="42dp"
+                      android:background="@drawable/badge_purple"
+                      android:scaleType="fitCenter"
+                      android:padding="9dp"
+                      android:src="@drawable/ic_bell"
+                      android:contentDescription="الإشعارات" />
+                  <TextView
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="الإشعارات"
+                      android:textSize="12sp"
+                      android:textStyle="bold"
+                      android:textColor="@color/text_primary"
+                      android:layout_marginTop="2dp" />
+                </LinearLayout>
+                <TextView
+                    android:id="@+id/txtNotifBadge"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginEnd="4dp"
+                    android:layout_marginTop="2dp"
+                    android:gravity="center"
+                    android:textColor="@color/white"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/btn_badge_bg"
+                    android:visibility="gone" />
+              </FrameLayout>
+            </LinearLayout>
+          </LinearLayout>
+
+          <!-- بطاقة المكافآت -->
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:background="@drawable/card_ripple"
+              android:padding="12dp"
+              android:layout_marginBottom="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⭐ المكافآت والدعم"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:layout_marginBottom="6dp" />
+          <LinearLayout
+              android:id="@+id/rowRewards"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="horizontal"
+              android:weightSum="2">
+            <LinearLayout
+                android:id="@+id/btnReferral"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="88dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/tile_card_selector"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_margin="4dp"
+                android:elevation="2dp"
+                android:padding="6dp">
+              <ImageView
+                  android:layout_width="42dp"
+                  android:layout_height="42dp"
+                  android:background="@drawable/badge_deep_orange"
+                  android:scaleType="fitCenter"
+                  android:padding="9dp"
+                  android:src="@drawable/ic_group"
+                  android:contentDescription="دعوة الأصدقاء" />
+              <TextView
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="دعوة الأصدقاء"
+                  android:textSize="12sp"
+                  android:textStyle="bold"
+                  android:textColor="@color/text_primary"
+                  android:layout_marginTop="2dp" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/btnLoyalty"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="88dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/tile_card_selector"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_margin="4dp"
+                android:elevation="2dp"
+                android:padding="6dp">
+              <ImageView
+                  android:layout_width="42dp"
+                  android:layout_height="42dp"
+                  android:background="@drawable/badge_deep_orange"
+                  android:scaleType="fitCenter"
+                  android:padding="9dp"
+                  android:src="@drawable/ic_trophy"
+                  android:contentDescription="نقاط الولاء" />
+              <TextView
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="نقاط الولاء"
+                  android:textSize="12sp"
+                  android:textStyle="bold"
+                  android:textColor="@color/text_primary"
+                  android:layout_marginTop="2dp" />
+            </LinearLayout>
+          </LinearLayout>
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="horizontal"
+              android:weightSum="2">
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="88dp"
+                android:layout_margin="4dp">
+              <LinearLayout
+                  android:id="@+id/btnSubscription"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:orientation="vertical"
+                  android:gravity="center"
+                  android:background="@drawable/tile_card_selector"
+                  android:clickable="true"
+                  android:focusable="true"
+                  android:elevation="2dp"
+                  android:padding="6dp">
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/badge_deep_orange"
+                    android:scaleType="fitCenter"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_crown"
+                    android:contentDescription="اشتراك VIP" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="اشتراك VIP"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginTop="2dp" />
+              </LinearLayout>
+              <TextView
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="top|end"
+                  android:layout_marginEnd="6dp"
+                  android:layout_marginTop="6dp"
+                  android:text="جديد"
+                  android:textSize="10sp"
+                  android:textStyle="bold"
+                  android:textColor="@color/white"
+                  android:background="@drawable/badge_new" />
+            </FrameLayout>
+            <LinearLayout
+                android:id="@+id/btnComplaint"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="88dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/tile_card_selector"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_margin="4dp"
+                android:elevation="2dp"
+                android:padding="6dp">
+              <ImageView
+                  android:layout_width="42dp"
+                  android:layout_height="42dp"
+                  android:background="@drawable/badge_deep_orange"
+                  android:scaleType="fitCenter"
+                  android:padding="9dp"
+                  android:src="@drawable/ic_support"
+                  android:contentDescription="الدعم" />
+              <TextView
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="الدعم"
+                  android:textSize="12sp"
+                  android:textStyle="bold"
+                  android:textColor="@color/text_primary"
+                  android:layout_marginTop="2dp" />
+            </LinearLayout>
+          </LinearLayout>
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="horizontal"
+              android:weightSum="1">
+            <FrameLayout
+                android:id="@+id/cardChallenges"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="88dp"
+                android:layout_margin="4dp">
+              <LinearLayout
+                  android:id="@+id/btnChallenges"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:orientation="vertical"
+                  android:gravity="center"
+                  android:background="@drawable/tile_card_selector"
+                  android:clickable="true"
+                  android:focusable="true"
+                  android:elevation="2dp"
+                  android:padding="6dp">
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/badge_deep_orange"
+                    android:scaleType="fitCenter"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_flag"
+                    android:contentDescription="تحديات الأسبوع" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="تحديات الأسبوع"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginTop="2dp" />
+              </LinearLayout>
+              <TextView
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="top|end"
+                  android:layout_marginEnd="6dp"
+                  android:layout_marginTop="6dp"
+                  android:text="جديد"
+                  android:textSize="10sp"
+                  android:textStyle="bold"
+                  android:textColor="@color/white"
+                  android:background="@drawable/badge_new" />
+            </FrameLayout>
+          </LinearLayout>
+          </LinearLayout>
+        </LinearLayout>
+
+        <!-- منطقة السائق -->
+        <LinearLayout
+            android:id="@+id/linerDriver"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone">
+
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="لوحة الكابتن"
+              android:textSize="17sp"
+              android:textStyle="bold"
+              android:textColor="@color/primary"
+              android:padding="4dp"
+              android:layout_marginBottom="4dp" />
+
+          <TextView
+              android:id="@+id/txtDriverNumber"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text=""
+              android:textSize="14sp"
+              android:textStyle="bold"
+              android:textColor="@color/white"
+              android:background="@drawable/btn_badge_bg"
+              android:paddingLeft="14dp"
+              android:paddingRight="14dp"
+              android:paddingTop="6dp"
+              android:paddingBottom="6dp"
+              android:layout_marginBottom="10dp"
+              android:visibility="gone" />
+
+          <LinearLayout
+              android:id="@+id/adCardDriver"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:background="@drawable/card_ripple"
+              android:padding="12dp"
+              android:layout_marginBottom="8dp"
+              android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/adImgDriver"
+                android:layout_width="match_parent"
+                android:layout_height="160dp"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/adTitleDriver"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:layout_marginTop="6dp" />
+
+            <TextView
+                android:id="@+id/adBodyDriver"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="2dp" />
+          </LinearLayout>
+
+          <!-- بطاقة حالة الاتصال -->
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:background="@drawable/card_ripple"
+              android:padding="14dp"
+              android:layout_marginBottom="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🟢 حالة الاستقبال"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btnOnlineToggle"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="تفعيل الاستقبال"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:background="@drawable/tile_orange_selector" />
+          </LinearLayout>
+
+          <!-- بطاقة التوصيلات -->
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:background="@drawable/card_ripple"
+              android:padding="12dp"
+              android:layout_marginBottom="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📥 التوصيلات"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:layout_marginBottom="6dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2">
+              <LinearLayout
+                  android:id="@+id/btnDriverOrders"
+                  android:layout_width="0dp"
+                  android:layout_weight="1"
+                  android:layout_height="88dp"
+                  android:orientation="vertical"
+                  android:gravity="center"
+                  android:background="@drawable/tile_card_selector"
+                  android:clickable="true"
+                  android:focusable="true"
+                  android:layout_margin="4dp"
+                  android:elevation="2dp"
+                  android:padding="6dp">
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/badge_teal"
+                    android:scaleType="fitCenter"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_inbox"
+                    android:contentDescription="الواردة" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="الواردة (الجديدة)"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginTop="2dp" />
+              </LinearLayout>
+              <LinearLayout
+                  android:id="@+id/btnDriverMyOrders"
+                  android:layout_width="0dp"
+                  android:layout_weight="1"
+                  android:layout_height="88dp"
+                  android:orientation="vertical"
+                  android:gravity="center"
+                  android:background="@drawable/tile_card_selector"
+                  android:clickable="true"
+                  android:focusable="true"
+                  android:layout_margin="4dp"
+                  android:elevation="2dp"
+                  android:padding="6dp">
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/badge_orange"
+                    android:scaleType="fitCenter"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_taxi"
+                    android:contentDescription="توصيلاتي (المنتهية)" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="توصيلاتي (المنتهية)"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginTop="2dp" />
+              </LinearLayout>
+            </LinearLayout>
+          </LinearLayout>
+
+          <!-- بطاقة توصيلات المطاعم -->
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:background="@drawable/card_ripple"
+              android:padding="12dp"
+              android:layout_marginBottom="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🏪 توصيلات المطاعم"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:layout_marginBottom="6dp" />
+
+            <LinearLayout
+                android:id="@+id/btnRestaurantDeliveries"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/tile_card_selector"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_margin="4dp"
+                android:elevation="2dp"
+                android:padding="8dp">
+              <ImageView
+                  android:layout_width="42dp"
+                  android:layout_height="42dp"
+                  android:background="@drawable/badge_purple"
+                  android:scaleType="fitCenter"
+                  android:padding="9dp"
+                  android:src="@drawable/ic_home"
+                  android:contentDescription="توصيلات المطاعم" />
+              <TextView
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="توصيلات المطاعم"
+                  android:textSize="13sp"
+                  android:textStyle="bold"
+                  android:textColor="@color/text_primary"
+                  android:layout_marginLeft="10dp" />
+            </LinearLayout>
+          </LinearLayout>
+
+          <!-- بطاقة الشغل -->
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:background="@drawable/card_ripple"
+              android:padding="12dp"
+              android:layout_marginBottom="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🗺️ الشغل والأرباح"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:layout_marginBottom="6dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="1">
+              <LinearLayout
+                  android:id="@+id/btnDriverStats"
+                  android:layout_width="0dp"
+                  android:layout_weight="1"
+                  android:layout_height="88dp"
+                  android:orientation="vertical"
+                  android:gravity="center"
+                  android:background="@drawable/tile_card_selector"
+                  android:clickable="true"
+                  android:focusable="true"
+                  android:layout_margin="4dp"
+                  android:elevation="2dp"
+                  android:padding="6dp">
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/badge_teal"
+                    android:scaleType="fitCenter"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_money"
+                    android:contentDescription="الأرباح" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="الأرباح"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginTop="2dp" />
+              </LinearLayout>
+            </LinearLayout>
+          </LinearLayout>
+
+          <!-- بطاقة حسابي: قائمة عمودية بأسلوب التطبيقات -->
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:background="@drawable/card_ripple"
+              android:padding="12dp"
+              android:layout_marginBottom="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="👤 حسابي"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/btnWalletDriver"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/tile_card_selector"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="8dp"
+                android:elevation="2dp"
+                android:padding="14dp">
+              <ImageView
+                  android:layout_width="40dp"
+                  android:layout_height="40dp"
+                  android:background="@drawable/badge_green"
+                  android:scaleType="fitCenter"
+                  android:padding="9dp"
+                  android:src="@drawable/ic_wallet"
+                  android:contentDescription="محفظة السائق" />
+              <TextView
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="المحفظة / شحن الرصيد"
+                  android:textSize="15sp"
+                  android:textStyle="bold"
+                  android:textColor="@color/text_primary"
+                  android:layout_marginStart="10dp" />
+            </LinearLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:layout_marginBottom="8dp">
+              <LinearLayout
+                  android:id="@+id/btnNotificationsDriver"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:orientation="horizontal"
+                  android:gravity="center_vertical"
+                  android:background="@drawable/tile_card_selector"
+                  android:clickable="true"
+                  android:focusable="true"
+                  android:elevation="2dp"
+                  android:padding="14dp">
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/badge_purple"
+                    android:scaleType="fitCenter"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_bell"
+                    android:contentDescription="الإشعارات" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="الإشعارات"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginStart="10dp" />
+              </LinearLayout>
+              <TextView
+                  android:id="@+id/txtNotifBadgeDriver"
+                  android:layout_width="26dp"
+                  android:layout_height="26dp"
+                  android:layout_gravity="top|end"
+                  android:layout_marginEnd="10dp"
+                  android:layout_marginTop="4dp"
+                  android:gravity="center"
+                  android:textColor="@color/white"
+                  android:textSize="12sp"
+                  android:textStyle="bold"
+                  android:background="@drawable/btn_badge_bg"
+                  android:visibility="gone" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:id="@+id/btnDoc"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/tile_card_selector"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="8dp"
+                android:elevation="2dp"
+                android:padding="14dp">
+              <ImageView
+                  android:layout_width="40dp"
+                  android:layout_height="40dp"
+                  android:background="@drawable/badge_indigo"
+                  android:scaleType="fitCenter"
+                  android:padding="9dp"
+                  android:src="@drawable/ic_doc"
+                  android:contentDescription="إعادة إرسال الوثائق" />
+              <TextView
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="إعادة إرسال الوثائق"
+                  android:textSize="15sp"
+                  android:textStyle="bold"
+                  android:textColor="@color/text_primary"
+                  android:layout_marginStart="10dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/btnDriverShifts"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/tile_card_selector"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="2dp"
+                android:padding="14dp">
+              <ImageView
+                  android:layout_width="40dp"
+                  android:layout_height="40dp"
+                  android:background="@drawable/badge_indigo"
+                  android:scaleType="fitCenter"
+                  android:padding="9dp"
+                  android:src="@drawable/ic_clock"
+                  android:contentDescription="النوبات" />
+              <TextView
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="النوبات"
+                  android:textSize="15sp"
+                  android:textStyle="bold"
+                  android:textColor="@color/text_primary"
+                  android:layout_marginStart="10dp" />
+            </LinearLayout>
+          </LinearLayout>
+
+          <Button
+              android:id="@+id/btnSos"
+              android:layout_width="match_parent"
+              android:layout_height="58dp"
+              android:text="زر الطوارئ SOS"
+              android:textSize="17sp"
+              android:textStyle="bold"
+              android:textColor="@color/white"
+              android:gravity="center"
+              android:drawableStart="@drawable/ic_warning"
+              android:drawablePadding="10dp"
+              android:paddingLeft="14dp"
+              android:paddingRight="14dp"
+              android:layout_marginTop="4dp"
+              android:elevation="4dp"
+              android:background="@drawable/tile_red_selector" />
+        </LinearLayout>
+
+        <!-- منطقة أزرار المدير -->
+        <LinearLayout
+            android:id="@+id/linerAdmin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:visibility="gone">
+
+          <Button
+              android:id="@+id/btnAdmin"
+              android:layout_width="match_parent"
+              android:layout_height="58dp"
+              android:text="الإدارة الكاملة"
+              android:textSize="17sp"
+              android:textStyle="bold"
+              android:textColor="@color/white"
+              android:gravity="center"
+              android:drawableStart="@drawable/ic_shield"
+              android:drawablePadding="10dp"
+              android:paddingLeft="14dp"
+              android:paddingRight="14dp"
+              android:background="@drawable/tile_orange_selector" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnProfile"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="ملفي الشخصي"
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:drawableStart="@drawable/ic_person"
+            android:drawablePadding="10dp"
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/tile_orange_selector" />
+
+        <Button
+            android:id="@+id/btnSettings"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="الإعدادات"
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:drawableStart="@drawable/ic_settings"
+            android:drawablePadding="10dp"
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp"
+            android:layout_margin="16dp"
+            android:background="@drawable/tile_dark_selector" />
+
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="Designed @ Ahmed Ali"
+      android:textSize="10sp"
+      android:textColor="@color/text_secondary"
+      android:gravity="center"
+      android:layout_marginTop="8dp"
+      android:layout_marginBottom="8dp"
+      android:alpha="0.6" />
+</LinearLayout></ScrollView>
+
+
+</LinearLayout>

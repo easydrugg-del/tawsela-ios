@@ -1,10 +1,14 @@
 using System;
 using System.Text;
+using System.Threading.Tasks;
 using Foundation;
 using Tawsela.Core.Platform;
 using Tawsela.Data;
 using UIKit;
 using UserNotifications;
+#if FIREBASE_IOS
+using Firebase.CloudMessaging;
+#endif
 
 namespace Tawsela.iOS.Platform
 {
@@ -95,16 +99,54 @@ namespace Tawsela.iOS.Platform
                 var bytes = deviceToken.ToArray();
                 var sb = new StringBuilder(bytes.Length * 2);
                 foreach (var b in bytes) sb.Append(b.ToString("x2"));
-                var token = sb.ToString();
+                var apns = sb.ToString();
 
-                AppServices.Prefs.Set(PrefName + "." + PrefToken, token);
+                AppServices.Prefs.Set(PrefName + "." + PrefToken + "_apns", apns);
 
-                // Firebase للـ iOS يعيد توكن FCM مختلفًا عن توكن APNs؛
-                // عند تفعيله نستخدم FCM token، وإلا نرسل توكن APNs كما هو.
-                SendToServer(token);
+#if FIREBASE_IOS
+                // الخادم يرسل عبر FCM v1، وFCM على iOS يحتاج توكن FCM (مشتق من APNs)
+                // وليس توكن APNs الخام. Firebase يجهّزه بعد ثوانٍ من التسجيل → ننتظره.
+                try { Messaging.SharedInstance.ApnsToken = deviceToken; } catch { }
+                WaitForFcmToken(apns, 0);
+#else
+                AppServices.Prefs.Set(PrefName + "." + PrefToken, apns);
+                SendToServer(apns);
+#endif
             }
             catch { }
         }
+
+#if FIREBASE_IOS
+        /// <summary>ينتظر توكن FCM (حتى 15 ثانية) ثم يرسله للخادم.</summary>
+        private static void WaitForFcmToken(string apnsToken, int attempt)
+        {
+            try
+            {
+                var fcm = Messaging.SharedInstance.FcmToken;
+                if (!string.IsNullOrEmpty(fcm))
+                {
+                    AppServices.Prefs.Set(PrefName + "." + PrefToken, fcm);
+                    SendToServer(fcm);
+                    return;
+                }
+            }
+            catch { }
+
+            if (attempt >= 15)
+            {
+                // لم يصل توكن FCM (غالبًا GoogleService-Info.plist غير مضاف) — آخر محاولة بتوكن APNs
+                AppServices.Prefs.Set(PrefName + "." + PrefToken, apnsToken);
+                SendToServer(apnsToken);
+                return;
+            }
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(1000).ConfigureAwait(false);
+                WaitForFcmToken(apnsToken, attempt + 1);
+            });
+        }
+#endif
 
         public static void HandleFailedToRegister(NSError error)
         {

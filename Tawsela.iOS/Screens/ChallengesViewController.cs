@@ -28,6 +28,9 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(12f, 16f);
 
+            stack.AddArrangedSubview(MakeLabel("🏅 أكمل التحديات واكسب نقاط إضافية",
+                13f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right));
+
             _header = MakeLabel("جارٍ التحميل…", 15f, Theme.TextPrimary, UIFontWeight.Medium, UITextAlignment.Right);
             stack.AddArrangedSubview(_header);
 

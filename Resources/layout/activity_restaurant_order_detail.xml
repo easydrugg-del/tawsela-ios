@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="16dp">
+
+    <TextView
+        android:id="@+id/txtOrderDetailTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="تفاصيل التوصيلة"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/black" />
+
+    <TextView
+        android:id="@+id/txtOrderDetailStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="15sp"
+        android:textColor="@color/primary"
+        android:layout_marginTop="6dp" />
+
+    <TextView
+        android:id="@+id/txtOrderDetailFare"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="15sp"
+        android:textColor="@color/black"
+        android:layout_marginTop="12dp" />
+
+    <TextView
+        android:id="@+id/txtOrderDetailArea"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:textColor="#444444"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/txtOrderDetailPickup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:textColor="#444444"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/txtOrderDetailDelivery"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:textColor="#444444"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/txtOrderDetailDriver"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:textColor="#444444"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/btnOrderDetailRepeat"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="إعادة نفس الطلب"
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        android:background="@drawable/tile_blue_selector"
+        android:layout_marginTop="20dp" />
+
+    <Button
+        android:id="@+id/btnOrderDetailCancel"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="إلغاء الطلب"
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        android:background="@drawable/tile_red_selector"
+        android:layout_marginTop="20dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/txtOrderDetailMsg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:textColor="#C62828"
+        android:layout_marginTop="12dp" />
+  </LinearLayout>
+</ScrollView>

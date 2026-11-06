@@ -7,17 +7,16 @@ using UIKit;
 namespace Tawsela.iOS.Screens
 {
     /// <summary>
-    /// بديل Activities/ProfileActivity.cs + SettingsActivity.cs:
-    /// بيانات الحساب، تعديل الاسم/الهاتف، تغيير كلمة المرور، قفل PIN،
-    /// المستندات القانونية، تسجيل الخروج، وحذف الحساب.
+    /// بديل Activities/ProfileActivity.cs:
+    /// بطاقة نقاط الولاء والعضوية، اسم المستخدم/الاسم الكامل/الهاتف،
+    /// حفظ التغييرات، تغيير كلمة المرور، واختصار حسابات المدير.
     /// </summary>
     public class ProfileViewController : BaseViewController
     {
-        private UISwitch _pinSwitch;
-        private UILabel _pinState;
         private UILabel _loyalty;
+        private UITextField _fullName, _phone, _oldPwd, _newPwd, _newPwd2;
 
-        public ProfileViewController() : base("حسابي") { }
+        public ProfileViewController() : base("ملفي الشخصي") { }
 
         public override void ViewDidLoad()
         {
@@ -26,91 +25,141 @@ namespace Tawsela.iOS.Screens
             LoadLoyalty();
         }
 
-        public override void ViewWillAppear(bool animated)
-        {
-            base.ViewWillAppear(animated);
-            RefreshPinState();
-        }
-
         private void BuildUi()
         {
             var stack = CreateScrollContent(12f, 16f);
 
-            stack.AddArrangedSubview(Controls.InfoRow("الاسم", Session.FullName));
-            stack.AddArrangedSubview(Controls.InfoRow("اسم المستخدم", Session.UserName));
-            stack.AddArrangedSubview(Controls.InfoRow("الهاتف", Session.Phone));
-            stack.AddArrangedSubview(Controls.InfoRow("الدور", Session.Role));
-            stack.AddArrangedSubview(Controls.InfoRow("المحافظة", Session.Governorate));
-            stack.AddArrangedSubview(Controls.InfoRow("المدينة", Session.City));
-
-            // نقاط الولاء والعضوية (بديل Api.LoyaltyPoints في ProfileActivity)
-            _loyalty = MakeLabel("", 14f, Theme.Primary, UIFontWeight.Semibold, UITextAlignment.Right);
+            /* ---------- نقاط الولاء والعضوية ---------- */
+            var card = Controls.Card();
+            var title = MakeLabel("نقاط الولاء والعضوية", 12f, Theme.TextSecondary,
+                UIFontWeight.Regular, UITextAlignment.Right);
+            _loyalty = MakeLabel("—", 14f, Theme.Primary, UIFontWeight.Semibold, UITextAlignment.Right);
+            _loyalty.Lines = 0;
             _loyalty.Hidden = !Session.IsCustomer;
-            stack.AddArrangedSubview(_loyalty);
 
-            var edit = Controls.PrimaryButton("تعديل البيانات");
-            edit.TouchUpInside += (s, e) => EditProfile();
-            stack.AddArrangedSubview(edit);
-
-            var password = Controls.OutlineButton("تغيير كلمة المرور");
-            password.TouchUpInside += (s, e) => ChangePassword();
-            stack.AddArrangedSubview(password);
-
-            stack.AddArrangedSubview(Controls.SectionTitle("قفل التطبيق"));
-
-            var pinRow = new UIView { TranslatesAutoresizingMaskIntoConstraints = false };
-            _pinState = MakeLabel("", 13f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
-            _pinSwitch = new UISwitch { OnTintColor = Theme.Primary, TranslatesAutoresizingMaskIntoConstraints = false };
-            _pinSwitch.ValueChanged += (s, e) => TogglePin(_pinSwitch.On);
-
-            pinRow.AddSubview(_pinState);
-            pinRow.AddSubview(_pinSwitch);
-            pinRow.AddConstraints(new[]
+            card.AddSubview(title);
+            card.AddSubview(_loyalty);
+            card.AddConstraints(new[]
             {
-                NSLayoutConstraint.Create(_pinSwitch, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, pinRow, NSLayoutAttribute.Leading, 1, 0),
-                NSLayoutConstraint.Create(_pinSwitch, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, pinRow, NSLayoutAttribute.CenterY, 1, 0),
-                NSLayoutConstraint.Create(_pinState, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, pinRow, NSLayoutAttribute.CenterY, 1, 0),
-                NSLayoutConstraint.Create(_pinState, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, _pinSwitch, NSLayoutAttribute.Trailing, 1, 10),
-                NSLayoutConstraint.Create(_pinState, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, pinRow, NSLayoutAttribute.Trailing, 1, 0),
-                NSLayoutConstraint.Create(pinRow, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 40),
+                NSLayoutConstraint.Create(title, NSLayoutAttribute.Top, NSLayoutRelation.Equal, card, NSLayoutAttribute.Top, 1, 10),
+                NSLayoutConstraint.Create(title, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, card, NSLayoutAttribute.Leading, 1, 12),
+                NSLayoutConstraint.Create(title, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -12),
+
+                NSLayoutConstraint.Create(_loyalty, NSLayoutAttribute.Top, NSLayoutRelation.Equal, title, NSLayoutAttribute.Bottom, 1, 4),
+                NSLayoutConstraint.Create(_loyalty, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, card, NSLayoutAttribute.Leading, 1, 12),
+                NSLayoutConstraint.Create(_loyalty, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -12),
+                NSLayoutConstraint.Create(_loyalty, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, card, NSLayoutAttribute.Bottom, 1, -10),
             });
-            stack.AddArrangedSubview(pinRow);
+            stack.AddArrangedSubview(card);
 
-            var changePin = Controls.OutlineButton("تغيير الرقم السري");
-            changePin.TouchUpInside += (s, e) => SetPin();
-            stack.AddArrangedSubview(changePin);
+            /* ---------- بيانات الحساب ---------- */
+            stack.AddArrangedSubview(MakeLabel("اسم المستخدم", 12f, Theme.TextSecondary,
+                UIFontWeight.Regular, UITextAlignment.Right));
+            stack.AddArrangedSubview(Controls.InfoRow("", Session.UserName));
 
-            var biometric = Controls.OutlineButton("تسجيل البصمة / Face ID");
-            biometric.TouchUpInside += (s, e) => TestBiometric();
-            stack.AddArrangedSubview(biometric);
+            stack.AddArrangedSubview(MakeLabel("الاسم الكامل", 12f, Theme.TextSecondary,
+                UIFontWeight.Regular, UITextAlignment.Right));
+            _fullName = Controls.TextField("الاسم الكامل");
+            _fullName.Text = Session.FullName ?? "";
+            stack.AddArrangedSubview(_fullName);
 
-            stack.AddArrangedSubview(Controls.SectionTitle("قانوني"));
+            stack.AddArrangedSubview(MakeLabel("رقم الهاتف", 12f, Theme.TextSecondary,
+                UIFontWeight.Regular, UITextAlignment.Right));
+            _phone = Controls.TextField("01xxxxxxxxx");
+            _phone.KeyboardType = UIKeyboardType.PhonePad;
+            _phone.Text = Session.Phone ?? "";
+            stack.AddArrangedSubview(_phone);
 
-            var legal = Controls.OutlineButton("المستندات القانونية");
-            legal.TouchUpInside += (s, e) => ShowLegal();
-            stack.AddArrangedSubview(legal);
+            var save = Controls.PrimaryButton("حفظ التغييرات");
+            save.TouchUpInside += (s, e) => SaveProfile();
+            stack.AddArrangedSubview(save);
 
-            var logout = Controls.DangerButton("تسجيل الخروج");
-            logout.TouchUpInside += (s, e) => Logout();
-            stack.AddArrangedSubview(logout);
+            /* ---------- تغيير كلمة المرور ---------- */
+            stack.AddArrangedSubview(Controls.SectionTitle("تغيير كلمة المرور"));
 
-            // الأدمن: اختصار لحسابات الإدارة (بديل btnAdminAccounts) — لا يرى «حذف الحساب»
+            _oldPwd = Controls.TextField("كلمة المرور الحالية");
+            _oldPwd.SecureTextEntry = true;
+            stack.AddArrangedSubview(_oldPwd);
+
+            _newPwd = Controls.TextField("كلمة المرور الجديدة");
+            _newPwd.SecureTextEntry = true;
+            stack.AddArrangedSubview(_newPwd);
+
+            _newPwd2 = Controls.TextField("تأكيد كلمة المرور الجديدة");
+            _newPwd2.SecureTextEntry = true;
+            stack.AddArrangedSubview(_newPwd2);
+
+            var change = Controls.PrimaryButton("تغيير كلمة المرور");
+            change.TouchUpInside += (s, e) => ChangePassword();
+            stack.AddArrangedSubview(change);
+
+            /* ---------- اختصار حسابات المدير (btnAdminAccounts) ---------- */
             if (Session.IsAdmin)
             {
-                var admins = Controls.OutlineButton("حسابات الإدارة");
+                var admins = Controls.OutlineButton("إدارة حسابات المدير");
                 admins.TouchUpInside += (s, e) => Push(new AdminAccountsViewController());
                 stack.AddArrangedSubview(admins);
-                return;
             }
 
-            var delete = Controls.DangerButton("حذف الحساب");
-            delete.TouchUpInside += (s, e) => DeleteAccount();
-            stack.AddArrangedSubview(delete);
+            /* ---------- حذف الحساب (بديل btnDeleteAccount / txtDeleteWeb) ---------- */
+            if (!Session.IsAdmin)
+            {
+                var del = Controls.OutlineButton("حذف حسابي نهائياً");
+                del.SetTitleColor(Theme.Red, UIControlState.Normal);
+                del.TouchUpInside += (s, e) => ConfirmDeleteAccount();
+                stack.AddArrangedSubview(del);
 
-            // رابط حذف الحساب عبر الويب (بديل txtDeleteWeb → Legal.DeleteAccountUrl)
-            var deleteWeb = Controls.OutlineButton("حذف الحساب عبر الموقع");
-            deleteWeb.TouchUpInside += (s, e) => Legal.Open(Legal.DeleteAccountUrl);
-            stack.AddArrangedSubview(deleteWeb);
+                var web = MakeLabel("أو اطلب حذف الحساب عبر صفحة الويب", 12f,
+                    Theme.Primary, UIFontWeight.Regular, UITextAlignment.Right);
+                web.UserInteractionEnabled = true;
+                web.AddGestureRecognizer(new UITapGestureRecognizer(
+                    () => Legal.Open(Legal.DeleteAccountUrl, err => Ui.Toast(err))));
+                stack.AddArrangedSubview(web);
+            }
+        }
+
+        /// <summary>نفس تحذير ProfileActivity في أندرويد قبل حذف الحساب.</summary>
+        private void ConfirmDeleteAccount()
+        {
+            Ui.Confirm("حذف حسابي نهائياً",
+                "سيتم حذف بياناتك الشخصية نهائياً ولن تستطيع تسجيل الدخول مجدداً.\n" +
+                "لا يمكن التراجع عن هذه العملية. هل أنت متأكد؟",
+                "حذف نهائي",
+                () => DeleteAccountNow(false));
+        }
+
+        /// <summary>حذف الحساب من الخادم ثم إنهاء الجلسة (مع خيار التنازل عن الرصيد).</summary>
+        private void DeleteAccountNow(bool forfeitBalance)
+        {
+            var progress = Ui.ShowProgress("جاري حذف الحساب...");
+            Ui.Run(() => Api.DeleteAccount(forfeitBalance), () =>
+            {
+                progress.Dismiss();
+                try { Api.ClearSession(); } catch { }
+                try { AppServices.Prefs.Remove("tawsela.remember_user"); } catch { }
+                try { InAppNotifications.Stop(); } catch { }
+                try { AppLock.ClearBackground(); } catch { }
+                Ui.Toast("تم حذف الحساب");
+                Router.ShowLogin();
+            }, ex =>
+            {
+                progress.Dismiss();
+                var msg = ex == null ? "تعذّر حذف الحساب" : ex.Message;
+
+                // رصيد متبقٍ: اعرض خيار التنازل صراحةً (نفس أندرويد)
+                if (!forfeitBalance && msg.Contains("رصيد"))
+                {
+                    Ui.Confirm("رصيد متبقٍ في المحفظة",
+                        "لا يمكن حذف الحساب مع وجود رصيد. هل توافق على التنازل عن الرصيد المتبقي وحذف الحساب نهائيًا؟\n\n" +
+                        "إذا أردت الاحتفاظ بالرصيد، ألغِ الحذف وتواصل مع الإدارة لتسويته أولًا.",
+                        "تنازل واحذف",
+                        () => DeleteAccountNow(true));
+                }
+                else
+                {
+                    Ui.Toast(msg);
+                }
+            });
         }
 
         /// <summary>
@@ -146,180 +195,51 @@ namespace Tawsela.iOS.Screens
             });
         }
 
-        private void RefreshPinState()
+        private void SaveProfile()
         {
-            var active = AppLock.IsActive();
-            _pinSwitch.On = active;
-            _pinState.Text = active ? "مفعّل — يُطلب عند فتح التطبيق" : "غير مفعّل";
-            _pinState.TextColor = active ? Theme.Green : Theme.TextSecondary;
-        }
+            var name = (_fullName.Text ?? "").Trim();
+            var phone = (_phone.Text ?? "").Trim();
 
-        private void TogglePin(bool enabled)
-        {
-            if (enabled)
+            if (name.Length < 3) { Ui.Toast("اكتب الاسم الكامل"); return; }
+            if (phone.Length < 8) { Ui.Toast("اكتب رقم هاتف صحيح"); return; }
+
+            var progress = Ui.ShowProgress("جارٍ الحفظ…");
+            Ui.Run(() => Api.UpdateProfile(name, phone), () =>
             {
-                if (!AppLock.HasPin())
-                {
-                    SetPin();
-                    _pinSwitch.On = AppLock.IsActive();
-                    return;
-                }
-                AppLock.SetEnabled(true);
-                Ui.Toast("تم تفعيل قفل التطبيق");
-            }
-            else
+                progress.Dismiss();
+                Session.FullName = name;
+                Session.Phone = phone;
+                Ui.Toast("تم حفظ التغييرات");
+            }, ex =>
             {
-                AppLock.SetEnabled(false);
-                Ui.Toast("تم إيقاف قفل التطبيق");
-            }
-            RefreshPinState();
-        }
-
-        private void SetPin()
-        {
-            Ui.Prompt("رقم سري جديد", "من 4 إلى 6 أرقام", "", "••••", pin =>
-            {
-                if (string.IsNullOrEmpty(pin) || pin.Length < 4 || pin.Length > 6)
-                {
-                    Ui.Toast("الرقم من 4 إلى 6 أرقام");
-                    return;
-                }
-
-                Ui.Prompt("تأكيد الرقم السري", "أعد إدخال الرقم", "", "••••", again =>
-                {
-                    if (pin != again)
-                    {
-                        Ui.Toast("الرقمان غير متطابقين");
-                        return;
-                    }
-
-                    try
-                    {
-                        AppLock.SetPin(pin);
-                       Ui.Toast("تم حفظ الرقم السري");
-                        RefreshPinState();
-                    }
-                    catch (Exception ex) { Ui.Toast(ex.Message); }
-                }, UIKeyboardType.NumberPad);
-            }, UIKeyboardType.NumberPad);
-        }
-
-        private void TestBiometric()
-        {
-            string kind;
-            if (!Biometrics.IsAvailable(out kind))
-            {
-                Ui.Toast("البصمة / Face ID غير متاح على هذا الجهاز");
-                return;
-            }
-
-            Biometrics.Authenticate("لتفعيل الفتح السريع", (ok, msg) =>
-            {
-                Ui.Toast(ok ? "تم التحقق بنجاح — " + kind : msg);
-            });
-        }
-
-        private void EditProfile()
-        {
-            Ui.Prompt("تعديل الاسم", "الاسم الكامل", Session.FullName, "الاسم", name =>
-            {
-                Ui.Prompt("تعديل الهاتف", "رقم الهاتف", Session.Phone, "01xxxxxxxxx", phone =>
-                {
-                    var progress = Ui.ShowProgress("جارٍ الحفظ…");
-                    Ui.Run(() => Api.UpdateProfile(name, phone), () =>
-                    {
-                        progress.Dismiss();
-                        Session.FullName = name;
-                        Session.Phone = phone;
-                        Ui.Toast("تم حفظ البيانات");
-                        // أعد بناء الشاشة لعرض القيم الجديدة
-                        NavigationController?.PopViewController(true);
-                        Router.GoHome();
-                    }, ex =>
-                    {
-                        progress.Dismiss();
-                        Ui.Toast(ex.Message);
-                    });
-                }, UIKeyboardType.PhonePad);
+                progress.Dismiss();
+                Ui.Toast(ex.Message);
             });
         }
 
         private void ChangePassword()
         {
-            Ui.Prompt("كلمة المرور الحالية", "", "", "••••••", oldPwd =>
+            var oldPwd = (_oldPwd.Text ?? "").Trim();
+            var newPwd = (_newPwd.Text ?? "").Trim();
+            var again = (_newPwd2.Text ?? "").Trim();
+
+            if (oldPwd == "") { Ui.Toast("أدخل كلمة المرور الحالية"); return; }
+            if (newPwd.Length < 6) { Ui.Toast("كلمة المرور 6 أحرف على الأقل"); return; }
+            if (newPwd != again) { Ui.Toast("الرقمان غير متطابقين"); return; }
+
+            var progress = Ui.ShowProgress("جارٍ التغيير…");
+            Ui.Run(() => Api.ChangePassword(oldPwd, newPwd), () =>
             {
-                Ui.Prompt("كلمة المرور الجديدة", "6 أحرف على الأقل", "", "••••••", newPwd =>
-                {
-                    if ((newPwd ?? "").Length < 6)
-                    {
-                        Ui.Toast("كلمة المرور 6 أحرف على الأقل");
-                        return;
-                    }
-
-                    var progress = Ui.ShowProgress("جارٍ التغيير…");
-                    Ui.Run(() => Api.ChangePassword(oldPwd, newPwd), () =>
-                    {
-                        progress.Dismiss();
-                        Ui.Toast("تم تغيير كلمة المرور");
-                    }, ex =>
-                    {
-                        progress.Dismiss();
-                        Ui.Toast(ex.Message);
-                    });
-                }, UIKeyboardType.Default);
-            }, UIKeyboardType.Default);
-        }
-
-        private void ShowLegal()
-        {
-            Ui.Choose("المستندات القانونية",
-                new[] { "سياسة الخصوصية", "شروط الاستخدام", "حذف الحساب" },
-                index =>
-                {
-                    var url = index == 0 ? Legal.PrivacyUrl
-                            : index == 1 ? Legal.TermsUrl
-                            : Legal.DeleteAccountUrl;
-                    Legal.Open(url, err => Ui.Toast(err));
-                });
-        }
-
-        private void Logout()
-        {
-            Ui.Confirm("تسجيل الخروج", "سيتم إنهاء الجلسة على هذا الجهاز.", "خروج", () =>
+                progress.Dismiss();
+                _oldPwd.Text = "";
+                _newPwd.Text = "";
+                _newPwd2.Text = "";
+                Ui.Toast("تم تغيير كلمة المرور");
+            }, ex =>
             {
-                try { Api.ClearSession(); } catch { }
-                try { AppServices.Prefs.Remove("tawsela.remember_user"); } catch { }
-                try { InAppNotifications.Stop(); } catch { }
-                try { AppLock.ClearBackground(); } catch { }
-                Ui.Toast("تم تسجيل الخروج");
-                Router.ShowLogin();
+                progress.Dismiss();
+                Ui.Toast(ex.Message);
             });
-        }
-
-        private void DeleteAccount()
-        {
-            Ui.Confirm("حذف الحساب",
-                "سيتم حذف حسابك نهائيًا. لا يمكن التراجع. هل تريد المتابعة؟",
-                "حذف نهائي", () =>
-                {
-                    Ui.Confirm("تأكيد أخير",
-                        "قد تفقد رصيد المحفظة المتبقي. متأكد؟",
-                        "نعم، احذف", () =>
-                        {
-                            var progress = Ui.ShowProgress("جارٍ حذف الحساب…");
-                            Ui.Run(() => Api.DeleteAccount(true), () =>
-                            {
-                                progress.Dismiss();
-                                try { Api.ClearSession(); } catch { }
-                                Ui.Toast("تم حذف الحساب");
-                                Router.ShowLogin();
-                            }, ex =>
-                            {
-                                progress.Dismiss();
-                                Ui.Toast(ex.Message);
-                            });
-                        });
-                });
         }
     }
 }

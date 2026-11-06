@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <ScrollView
+      android:id="@+id/scrollAreasAdmin"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="المناطق"
+          android:textSize="22sp"
+          android:textStyle="bold"
+          android:textColor="@color/primary"
+          android:layout_marginTop="8dp"
+          android:layout_marginBottom="10dp" />
+
+      <!-- اختيار المحافظة ثم المدينة -->
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:background="@drawable/card_ripple"
+          android:padding="14dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="اختر المحافظة والمدينة لعرض مناطقهما"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="المحافظة"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="2dp" />
+
+        <Spinner
+            android:id="@+id/spinAdminGov"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="@drawable/edit_rounded"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="المدينة"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="2dp" />
+
+        <Spinner
+            android:id="@+id/spinAdminCity"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="@drawable/edit_rounded"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp" />
+      </LinearLayout>
+
+      <TextView
+          android:id="@+id/txtAreasCityTitle"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="المناطق المسجلة"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/primary"
+          android:layout_marginTop="14dp"
+          android:layout_marginBottom="6dp" />
+
+      <LinearLayout
+          android:id="@+id/contentAreas"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical" />
+
+      <!-- نموذج إضافة/تعديل منطقة داخل المدينة المختارة -->
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:background="@drawable/card_ripple"
+          android:padding="14dp"
+          android:layout_marginTop="14dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="إضافة / تعديل منطقة"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/txtAreaSelection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="المحافظة: —  |  المدينة: —"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/txtAreaName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="اسم المنطقة / القرية (مثال: نهطاي)"
+            android:inputType="text"
+            android:textSize="15sp"
+            android:padding="12dp"
+            android:background="@drawable/edit_rounded" />
+
+        <TextView
+            android:id="@+id/txtAreaCoords"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="الإحداثيات: لم تُحدَّد بعد"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:padding="6dp"
+            android:layout_marginTop="6dp" />
+
+        <Button
+            android:id="@+id/btnPickAreaCoords"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:text="تحديد الموقع على الخريطة"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:drawableStart="@drawable/ic_pin"
+            android:drawablePadding="8dp"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/tile_orange_selector" />
+
+        <CheckBox
+            android:id="@+id/chkAreaActive"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="مفعّلة (تظهر للعملاء)"
+            android:checked="true"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+          <Button
+              android:id="@+id/btnSaveArea"
+              android:layout_width="0dp"
+              android:layout_weight="1"
+              android:layout_height="46dp"
+              android:text="حفظ المنطقة"
+              android:textSize="14sp"
+              android:textStyle="bold"
+              android:textColor="@color/white"
+              android:background="@drawable/tile_orange_selector" />
+
+          <Button
+              android:id="@+id/btnCancelAreaEdit"
+              android:layout_width="0dp"
+              android:layout_weight="1"
+              android:layout_height="46dp"
+              android:text="إلغاء التعديل"
+              android:textSize="14sp"
+              android:textColor="@color/white"
+              android:layout_marginStart="8dp"
+              android:visibility="gone"
+              android:background="@drawable/tile_dark_selector" />
+        </LinearLayout>
+      </LinearLayout>
+    </LinearLayout>
+  </ScrollView>
+</LinearLayout>

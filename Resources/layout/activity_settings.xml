@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/bg_header"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="الإعدادات"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:gravity="center_vertical"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="الوضع الليلي"
+        android:textSize="16sp"
+        android:textColor="@color/black" />
+
+    <Switch
+        android:id="@+id/swDark"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:gravity="center_vertical"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="اللغة"
+        android:textSize="16sp"
+        android:textColor="@color/black" />
+
+    <Spinner
+        android:id="@+id/spnLang"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:id="@+id/layoutFcm"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="مفتاح خادم FCM (للدفع الحقيقي عبر الإنترنت)"
+        android:textSize="16sp"
+        android:textColor="@color/black" />
+
+    <EditText
+        android:id="@+id/txtFcmKey"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="الصق مفتاح الخادم من Firebase"
+        android:textSize="14sp"
+        android:padding="10dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/edit_rounded" />
+
+    <Button
+        android:id="@+id/btnSaveFcm"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:text="حفظ المفتاح"
+        android:textSize="14sp"
+        android:textColor="@color/white"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/tile_orange_selector" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:gravity="center_vertical"
+      android:padding="16dp">
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="الوضع الصامت للسائق"
+        android:textSize="16sp"
+        android:textColor="@color/black" />
+    <Switch
+        android:id="@+id/swSilent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:gravity="center_vertical"
+      android:padding="16dp">
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="توفير البطارية للسائق"
+        android:textSize="16sp"
+        android:textColor="@color/black" />
+    <Switch
+        android:id="@+id/swBattery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="خدمات جوجل (الإشعارات)"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/black" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="6dp">
+
+      <TextView
+          android:layout_width="0dp"
+          android:layout_weight="1"
+          android:layout_height="wrap_content"
+          android:text="تفعيل إشعارات جوجل (FCM) — أوقفها إن حذف Play Protect التطبيق أو على الأجهزة بدون خدمات جوجل؛ ستصلك التنبيهات أثناء فتح التطبيق فقط"
+          android:textSize="14sp"
+          android:textColor="@color/black" />
+
+      <Switch
+          android:id="@+id/swGoogle"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/txtGoogleState"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginTop="4dp" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="قفل التطبيق برقم سري"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/black" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="6dp">
+
+      <TextView
+          android:layout_width="0dp"
+          android:layout_weight="1"
+          android:layout_height="wrap_content"
+          android:text="تفعيل القفل (يُطلب بعد الدخول وعند العودة)"
+          android:textSize="14sp"
+          android:textColor="@color/black" />
+
+      <Switch
+          android:id="@+id/swAppLock"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnSetPin"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:text="تعيين / تغيير الرقم السري"
+        android:textSize="14sp"
+        android:textColor="@color/text_primary"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/tile_card_selector" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="القانوني والخصوصية"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/black" />
+
+    <Button
+        android:id="@+id/btnPrivacy"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:text="سياسة الخصوصية"
+        android:textSize="14sp"
+        android:textColor="@color/text_primary"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/tile_card_selector" />
+
+    <Button
+        android:id="@+id/btnTerms"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:text="شروط الاستخدام"
+        android:textSize="14sp"
+        android:textColor="@color/text_primary"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/tile_card_selector" />
+
+    <Button
+        android:id="@+id/btnDeleteAccountWeb"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:text="طلب حذف الحساب عبر الويب"
+        android:textSize="14sp"
+        android:textColor="@color/text_primary"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/tile_card_selector" />
+  </LinearLayout>
+
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="ملاحظة: تبديل اللغة يطبّق الإعدادات العامة؛ الترجمة الكاملة للنصوص تتطلب موارد نصوص (strings)."
+      android:textSize="12sp"
+      android:textColor="@color/text_secondary"
+      android:padding="16dp" />
+</LinearLayout>

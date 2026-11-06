@@ -26,8 +26,15 @@ namespace Tawsela.iOS
             Theme.ApplyGlobal();
 
             // 4) الإشعارات (بديل FirebaseService + قناة الإشعارات)
-            PushService.Init();
-            Router.RegisterPushRouting();
+#if FIREBASE_IOS
+            // Firebase Core قبل أي استخدام لـ Messaging (يقرأ GoogleService-Info.plist)
+            try { Firebase.Core.App.Configure(); } catch { }
+#endif
+            if (!ScreenshotRunner.Enabled)
+            {
+                PushService.Init();
+                Router.RegisterPushRouting();
+            }
 
             // 5) ترحيل أمني: مسح أي بيانات اتصال مباشر بقاعدة من إصدارات قديمة
             try
@@ -38,7 +45,10 @@ namespace Tawsela.iOS
             catch { }
 
             // 6) الشبكة تُهيّأ للاستخدام (آخر موقع معروف)
-            try { LocationService.Init(); } catch { }
+            if (!ScreenshotRunner.Enabled)
+            {
+                try { LocationService.Init(); } catch { }
+            }
 
             return true;
         }

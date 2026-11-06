@@ -36,7 +36,7 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(14f, 18f);
 
-            stack.AddArrangedSubview(MakeLabel("كيف كانت رحلتك؟", 20f, Theme.TextPrimary,
+            stack.AddArrangedSubview(MakeLabel("قيّم تجربتك", 20f, Theme.TextPrimary,
                 UIFontWeight.Bold, UITextAlignment.Center));
 
             // النجوم
@@ -68,7 +68,7 @@ namespace Tawsela.iOS.Screens
 
             _comment = Controls.TextArea("", 110f);
             ((UITextView)_comment).Text = "";
-            stack.AddArrangedSubview(Controls.SectionTitle("تعليق (اختياري)"));
+            stack.AddArrangedSubview(Controls.SectionTitle("أضف تعليق (اختياري)"));
             stack.AddArrangedSubview(_comment);
 
             var photoBtn = Controls.OutlineButton("إضافة صورة (اختياري)");

@@ -21,6 +21,15 @@ namespace Tawsela.iOS.Screens
             _orderId = orderId;
         }
 
+        public override void ViewDidLoad()
+        {
+            base.ViewDidLoad();
+
+            // «تحديث العروض» (بديل btnRefresh في أندرويد)
+            NavigationItem.RightBarButtonItem = new UIBarButtonItem("تحديث العروض",
+                UIBarButtonItemStyle.Plain, (s, e) => Reload());
+        }
+
         protected override string EmptyText
         {
             get { return "لم يصل أي عرض بعد — انتظر قليلًا"; }

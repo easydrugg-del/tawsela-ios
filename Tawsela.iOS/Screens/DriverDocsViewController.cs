@@ -37,7 +37,7 @@ namespace Tawsela.iOS.Screens
         private UIButton _submit;
         private readonly List<UILabel> _imageStates = new List<UILabel>();
 
-        public DriverDocsViewController() : base("مستنداتي") { }
+        public DriverDocsViewController() : base("إعادة إرسال الوثائق") { }
 
         public override void ViewDidLoad()
         {
@@ -54,7 +54,7 @@ namespace Tawsela.iOS.Screens
                 UIFontWeight.Regular, UITextAlignment.Right);
             stack.AddArrangedSubview(_status);
 
-            _opLicense = Controls.TextField("رقم رخصة القيادة");
+            _opLicense = Controls.TextField("رقم التشغيل");
             stack.AddArrangedSubview(_opLicense);
 
             stack.AddArrangedSubview(MakeLabel("ارفع صورة واضحة لكل مستند (يمكنك رفع بعضها فقط):",
@@ -108,7 +108,7 @@ namespace Tawsela.iOS.Screens
                 stack.AddArrangedSubview(card);
             }
 
-            _submit = Controls.PrimaryButton("إرسال المستندات");
+            _submit = Controls.PrimaryButton("إرسال للمراجعة");
             _submit.TouchUpInside += (s, e) => Submit();
             stack.AddArrangedSubview(_submit);
         }

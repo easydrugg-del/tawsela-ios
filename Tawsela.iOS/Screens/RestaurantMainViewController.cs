@@ -81,7 +81,7 @@ namespace Tawsela.iOS.Screens
             _stack.AddArrangedSubview(card);
 
             /* ---------- الإجراء الأساسي ---------- */
-            var newDelivery = Controls.PrimaryButton("＋ طلب توصيلة جديدة");
+            var newDelivery = Controls.PrimaryButton("＋ طلب توصيل جديد");
             newDelivery.TouchUpInside += (s, e) => OpenNewDelivery();
             _newDelivery = newDelivery;
             _stack.AddArrangedSubview(newDelivery);
@@ -97,7 +97,7 @@ namespace Tawsela.iOS.Screens
             };
 
             grid.AddArrangedSubview(GridRow(
-                Controls.Tile("ic_action_receipt", "توصيلاتي", Theme.Blue, Theme.PrimaryDark,
+                Controls.Tile("ic_action_receipt", "طلباتي", Theme.Blue, Theme.PrimaryDark,
                     () => Push(new RestaurantDeliveryMyOrdersViewController())),
                 Controls.Tile("ic_person", "بيانات المطعم", Theme.Hex(0x8E24AA), Theme.PrimaryDark,
                     () => Push(new RestaurantProfileViewController()))));
@@ -170,7 +170,7 @@ namespace Tawsela.iOS.Screens
             if (restaurant != null)
             {
                 var name = Tawsela.Data.Row.Str(restaurant, "Name");
-                _header.Text = string.IsNullOrEmpty(name) ? "مطعمي" : name;
+                _header.Text = "مرحباً " + (string.IsNullOrEmpty(name) ? "مطعمي" : name);
 
                 var phone = Tawsela.Data.Row.Str(restaurant, "Phone");
                 var address = Tawsela.Data.Row.Str(restaurant, "Address");

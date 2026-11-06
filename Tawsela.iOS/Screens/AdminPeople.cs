@@ -15,7 +15,15 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class DriversAdminViewController : ListViewController<Driver>
     {
+        private UITextField _search;
+
         public DriversAdminViewController() : base("إدارة السائقين") { }
+
+        public override void ViewDidLoad()
+        {
+            base.ViewDidLoad();
+            _search = AddSearchBar("بحث بالاسم أو رقم السيارة...");
+        }
 
         protected override string EmptyText
         {
@@ -24,7 +32,15 @@ namespace Tawsela.iOS.Screens
 
         protected override List<Driver> Fetch()
         {
-            return Api.AllDrivers();
+            var list = Api.AllDrivers();
+
+            var q = (_search == null ? "" : (_search.Text ?? "")).Trim();
+            if (q.Length == 0 || list == null) return list;
+
+            return list.FindAll(d =>
+                (!string.IsNullOrEmpty(d.FullName) && d.FullName.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                (!string.IsNullOrEmpty(d.Phone) && d.Phone.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                (!string.IsNullOrEmpty(d.CarPlate) && d.CarPlate.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0));
         }
 
         protected override UIView BuildRow(Driver d)
@@ -250,7 +266,12 @@ namespace Tawsela.iOS.Screens
 
         protected override string EmptyText
         {
-            get { return "لا يوجد عملاء محذوفون"; }
+            get { return "لا يوجد محذوفون بعد"; }
+        }
+
+        protected override string Subtitle
+        {
+            get { return "أرشيف بيانات العملاء المحذوفين ومن حذفها ومتى"; }
         }
 
         protected override List<DeletedCustomer> Fetch()
@@ -272,7 +293,15 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class DocsAdminViewController : ListViewController<DriverDoc>
     {
-        public DocsAdminViewController() : base("مراجعة المستندات") { }
+        private UITextField _search;
+
+        public DocsAdminViewController() : base("مراجعة وثائق السائقين") { }
+
+        public override void ViewDidLoad()
+        {
+            base.ViewDidLoad();
+            _search = AddSearchBar("بحث بالاسم أو رقم السيارة...");
+        }
 
         protected override string EmptyText
         {
@@ -281,7 +310,14 @@ namespace Tawsela.iOS.Screens
 
         protected override List<DriverDoc> Fetch()
         {
-            return Api.AllDocuments();
+            var list = Api.AllDocuments();
+
+            var q = (_search == null ? "" : (_search.Text ?? "")).Trim();
+            if (q.Length == 0 || list == null) return list;
+
+            return list.FindAll(d =>
+                (!string.IsNullOrEmpty(d.FullName) && d.FullName.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                (!string.IsNullOrEmpty(d.CarPlate) && d.CarPlate.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0));
         }
 
         protected override UIView BuildRow(DriverDoc d)
@@ -415,7 +451,7 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class ComplaintsAdminViewController : ListViewController<Complaint>
     {
-        public ComplaintsAdminViewController() : base("الشكاوى") { }
+        public ComplaintsAdminViewController() : base("إدارة الشكاوى") { }
 
         protected override string EmptyText
         {
@@ -464,16 +500,43 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class SubscriptionsAdminViewController : ListViewController<Subscription>
     {
-        public SubscriptionsAdminViewController() : base("الاشتراكات") { }
+        private UITextField _search;
+        private List<Subscription> _rows;
+
+        public SubscriptionsAdminViewController() : base("إدارة الاشتراكات") { }
 
         protected override string EmptyText
         {
             get { return "لا توجد اشتراكات"; }
         }
 
+        protected override string Subtitle
+        {
+            get
+            {
+                if (_rows == null) return "إجمالي الإيراد: —";
+
+                decimal total = 0;
+                var active = 0;
+                foreach (var s in _rows)
+                {
+                    total += s.Price;
+                    if (s.IsActive) active++;
+                }
+                return "إجمالي الإيراد: " + total.ToString("0.00") + " ج.م · اشتراك نشط: " + active;
+            }
+        }
+
         protected override List<Subscription> Fetch()
         {
-            return Api.AllSubscriptions();
+            _rows = Api.AllSubscriptions();
+
+            var q = (_search == null ? "" : (_search.Text ?? "")).Trim();
+            if (q.Length == 0 || _rows == null) return _rows;
+
+            return _rows.FindAll(s =>
+                (!string.IsNullOrEmpty(s.FullName) && s.FullName.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                (!string.IsNullOrEmpty(s.Phone) && s.Phone.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0));
         }
 
         protected override UIView BuildRow(Subscription s)
@@ -488,6 +551,38 @@ namespace Tawsela.iOS.Screens
         {
             base.ViewDidLoad();
 
+            // بحث باسم العميل (بديل txtSearch في أندرويد)
+            const float headerHeight = 60f;
+            var header = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            View.AddSubview(header);
+            View.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 8),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 16),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, -16),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, headerHeight),
+            });
+
+            _search = Controls.TextField("بحث باسم العميل...");
+            _search.EditingChanged += (s, e) => Reload();
+            header.AddArrangedSubview(_search);
+
+            List.TopInset = headerHeight + 8;
+
+            var edit = Controls.OutlineButton("تعديل الأسعار والخصومات");
+            edit.TouchUpInside += (s, e) => EditSettings();
+            View.AddSubview(edit);
+            View.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(edit, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Leading, 1, 16),
+                NSLayoutConstraint.Create(edit, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Trailing, 1, -16),
+                NSLayoutConstraint.Create(edit, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Bottom, 1, -74),
+            });
+
             var grant = Controls.PrimaryButton("منح اشتراك لعميل");
             grant.TouchUpInside += (s, e) => Grant();
             View.AddSubview(grant);
@@ -497,7 +592,50 @@ namespace Tawsela.iOS.Screens
                 NSLayoutConstraint.Create(grant, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Trailing, 1, -16),
                 NSLayoutConstraint.Create(grant, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Bottom, 1, -12),
             });
-            List.Scroll.ContentInset = new UIEdgeInsets(0, 0, 84, 0);
+            List.Scroll.ContentInset = new UIEdgeInsets(0, 0, 148, 0);
+        }
+
+        /// <summary>تعديل سعر الاشتراك ونسبة الخصم (بديل ShowSettingsDialog في أندرويد).</summary>
+        private void EditSettings()
+        {
+            Ui.Run(() =>
+            {
+                var settings = Api.AdminSettings();
+                var price = settings.ContainsKey("subPrice") ? Row.Num(settings["subPrice"]) : 99m;
+                var disc = settings.ContainsKey("subDiscount") ? Row.Int(settings["subDiscount"]) : 15;
+
+                Ui.BeginOnMain(() =>
+                {
+                    Ui.Prompt("السعر الشهري (ج.م)", "السعر الشهري (ج.م)",
+                        price.ToString("0.##"), "99", priceText =>
+                    {
+                        Ui.Prompt("نسبة الخصم (%)", "نسبة الخصم (%)",
+                            disc.ToString(), "15", discText =>
+                        {
+                            decimal p;
+                            int d;
+                            if (!decimal.TryParse((priceText ?? "").Trim(), out p)) p = 99;
+                            if (!int.TryParse((discText ?? "").Trim(), out d)) d = 15;
+
+                            var progress = Ui.ShowProgress("جارٍ الحفظ…");
+                            Ui.Run(() => Api.AdminSaveSettings(new Dictionary<string, string>
+                            {
+                                { "SubscriptionPrice", p.ToString(System.Globalization.CultureInfo.InvariantCulture) },
+                                { "SubscriptionDiscount", d.ToString() }
+                            }), () =>
+                            {
+                                progress.Dismiss();
+                                Ui.Toast("تم الحفظ");
+                                Reload();
+                            }, ex =>
+                            {
+                                progress.Dismiss();
+                                Ui.Toast(ex.Message);
+                            });
+                        }, UIKeyboardType.NumberPad);
+                    }, UIKeyboardType.DecimalPad);
+                });
+            }, null, ex => Ui.Toast(ex.Message));
         }
 
         /// <summary>منح اشتراك يدوي لعميل (بديل Api.AdminSubscribe).</summary>
@@ -556,14 +694,14 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class TopUpsAdminViewController : ListViewController<Dictionary<string, object>>
     {
-        public TopUpsAdminViewController() : base("طلبات الشحن") { }
+        public TopUpsAdminViewController() : base("طلبات شحن العملاء") { }
 
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
 
             // تعديل رقم الدفع الرسمي (بديل AdminSaveSettings { PaymentPhone })
-            var editPhone = Controls.OutlineButton("تعديل رقم الدفع");
+            var editPhone = Controls.OutlineButton("رقم هاتف الدفع (يحوّل عليه العملاء)");
             editPhone.TouchUpInside += (s, e) => EditPaymentPhone();
             View.AddSubview(editPhone);
             View.AddConstraints(new[]
@@ -592,7 +730,7 @@ namespace Tawsela.iOS.Screens
                 {
                     progress.Dismiss();
 
-                    Ui.Prompt("رقم الدفع", "الرقم الذي يحوّل عليه العملاء", current, "01xxxxxxxxx", phone =>
+                    Ui.Prompt("رقم هاتف الدفع (يحوّل عليه العملاء)", "الرقم الذي يحوّل عليه العملاء", current, "01xxxxxxxxx", phone =>
                     {
                         var saving = Ui.ShowProgress("جارٍ الحفظ…");
 
@@ -619,7 +757,7 @@ namespace Tawsela.iOS.Screens
 
         protected override string EmptyText
         {
-            get { return "لا توجد طلبات شحن"; }
+            get { return "لا توجد طلبات معلقة"; }
         }
 
         protected override List<Dictionary<string, object>> Fetch()

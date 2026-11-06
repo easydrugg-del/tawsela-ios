@@ -126,8 +126,12 @@
 		<string>remote-notification</string>
 	</array>
 
-	<!-- Firebase يلتقط توكن APNs تلقائيًا (يُفعَّل فقط عند EnableFirebase=true) -->
+	<!--
+	  نُعطّل Proxy الخاص بـ Firebase لأنه يستبدل تنفيذ AppDelegate (swizzling)
+	  فيمنع PushService.HandleRegistered من الوصول إلى توكن APNs.
+	  نحن نسجّل التوكن ونمرّره يدويًا إلى Messaging.SharedInstance.ApnsToken.
+	-->
 	<key>FirebaseAppDelegateProxyEnabled</key>
-	<true/>
+	<false/>
 </dict>
 </plist>

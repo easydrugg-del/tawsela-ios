@@ -35,7 +35,7 @@
     <!-- تحذيرات معروفة من كود مشترك موروث (nullable / APIs مهجورة) -->
     <NoWarn>CS8632;CS0162;SYSLIB0014;SYSLIB0060;CA1422</NoWarn>
 
-    <!-- تفعيل Push عبر Firebase: مرّر -p:EnableFirebase=true بعد إضافة الحزم -->
+    <!-- تفعيل Push عبر Firebase: أضف GoogleService-Info.plist ثم مرّر -p:EnableFirebase=true -->
     <EnableFirebase Condition="'$(EnableFirebase)' == ''">false</EnableFirebase>
   </PropertyGroup>
 
@@ -91,9 +91,10 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(EnableFirebase)' == 'true'">
-    <!-- بديل Xamarin.Firebase.Messaging (أندرويد فقط) -->
-    <PackageReference Include="Xamarin.Firebase.iOS.CloudMessaging" Version="10.29.0.1" />
-    <PackageReference Include="Xamarin.Firebase.iOS.Core" Version="10.29.0.1" />
+    <!-- بديل Xamarin.Firebase.Messaging (أندرويد فقط).
+         AdamE.* هو تحديث مجتمعي لحزم Xamarin.Firebase.iOS.* الرسمية (المتوقفة عند 8.10)
+         ويستهدف net10.0-ios26.0 — متوافق مع .NET 10 وXcode 27 بدون Xamarin.Build.Download. -->
+    <PackageReference Include="AdamE.Firebase.iOS.CloudMessaging" Version="12.19.3" />
   </ItemGroup>
 
   <!--

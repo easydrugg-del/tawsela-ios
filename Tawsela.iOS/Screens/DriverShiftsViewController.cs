@@ -15,7 +15,7 @@ namespace Tawsela.iOS.Screens
         private UIStackView _list;
         private UILabel _state;
 
-        public DriverShiftsViewController() : base("الورديات") { }
+        public DriverShiftsViewController() : base("نوبات العمل") { }
 
         public override void ViewDidLoad()
         {
@@ -31,19 +31,17 @@ namespace Tawsela.iOS.Screens
             _state = MakeLabel("", 14f, Theme.TextSecondary, UIFontWeight.Medium, UITextAlignment.Right);
             stack.AddArrangedSubview(_state);
 
-            var start = Controls.PrimaryButton("بدء وردية");
-            start.TouchUpInside += (s, e) => Run(() => Api.StartShift(), "تم بدء الوردية");
+            var start = Controls.PrimaryButton("▶ بدء نوبة");
+            start.TouchUpInside += (s, e) => Run(() => Api.StartShift(), "تم بدء النوبة");
             stack.AddArrangedSubview(start);
 
-            var end = Controls.DangerButton("إنهاء الوردية");
+            var end = Controls.DangerButton("⏹ إنهاء النوبة");
             end.TouchUpInside += (s, e) =>
             {
-                Ui.Confirm("إنهاء الوردية", "هل تريد إنهاء الوردية الحالية؟", "إنهاء",
-                    () => Run(() => Api.EndShift(), "تم إنهاء الوردية"));
+                Ui.Confirm("إنهاء النوبة", "هل تريد إنهاء النوبة الحالية؟", "إنهاء",
+                    () => Run(() => Api.EndShift(), "تم إنهاء النوبة"));
             };
             stack.AddArrangedSubview(end);
-
-            stack.AddArrangedSubview(Controls.SectionTitle("سجل الورديات"));
 
             _list = new UIStackView
             {
@@ -61,7 +59,7 @@ namespace Tawsela.iOS.Screens
                 var shifts = Api.DriverShifts();
                 Ui.BeginOnMain(() =>
                 {
-                    _state.Text = "عدد الورديات المسجلة: " + (shifts == null ? 0 : shifts.Count);
+                    _state.Text = "الحالة: " + (shifts == null ? 0 : shifts.Count) + " نوبة مسجلة";
                     Render(shifts);
                 });
             }, null, ex => Ui.Toast(ex.Message));
@@ -78,7 +76,7 @@ namespace Tawsela.iOS.Screens
 
             if (shifts == null || shifts.Count == 0)
             {
-                _list.AddArrangedSubview(MakeLabel("لا توجد ورديات بعد", 14f, Theme.TextSecondary,
+                _list.AddArrangedSubview(MakeLabel("لا توجد نوبات بعد", 14f, Theme.TextSecondary,
                     UIFontWeight.Regular, UITextAlignment.Right));
                 return;
             }

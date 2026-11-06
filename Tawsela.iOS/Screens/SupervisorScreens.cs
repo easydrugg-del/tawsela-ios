@@ -14,11 +14,11 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class SupervisorAdminViewController : ListViewController<Supervisor>
     {
-        public SupervisorAdminViewController() : base("المشرفون") { }
+        public SupervisorAdminViewController() : base("مشرفو التكاتك") { }
 
         protected override string EmptyText
         {
-            get { return "لا يوجد مشرفون"; }
+            get { return "لا يوجد مشرفون بعد"; }
         }
 
         protected override List<Supervisor> Fetch()
@@ -62,7 +62,7 @@ namespace Tawsela.iOS.Screens
         {
             base.ViewDidLoad();
 
-            var add = Controls.PrimaryButton("إضافة مشرف");
+            var add = Controls.PrimaryButton("➕ إضافة مشرف");
             add.TouchUpInside += (s, e) => Add();
             View.AddSubview(add);
             View.AddConstraints(new[]
@@ -177,6 +177,7 @@ namespace Tawsela.iOS.Screens
         private readonly Supervisor _supervisor;
         private UIStackView _stack;
         private DateTime _from, _to;
+        private UIButton _btnFrom, _btnTo;
 
         public SupervisorEarningsViewController(Supervisor supervisor)
             : base("أرباح " + (supervisor == null ? "" : supervisor.FullName))
@@ -199,11 +200,44 @@ namespace Tawsela.iOS.Screens
             month.TouchUpInside += (s, e) => { _from = DateTime.Today.AddDays(-30); _to = DateTime.Today; Load(); };
             _stack.AddArrangedSubview(month);
 
-            var payout = Controls.PrimaryButton("تسجيل دفعة");
+            // من/إلى (بديل btnFrom / btnTo في أندرويد)
+            _btnFrom = Controls.OutlineButton("من:", null, 38f);
+            _btnFrom.TouchUpInside += (s, e) => PickDate(true);
+            _stack.AddArrangedSubview(_btnFrom);
+
+            _btnTo = Controls.OutlineButton("إلى:", null, 38f);
+            _btnTo.TouchUpInside += (s, e) => PickDate(false);
+            _stack.AddArrangedSubview(_btnTo);
+
+            var show = Controls.PrimaryButton("عرض");
+            show.TouchUpInside += (s, e) => Load();
+            _stack.AddArrangedSubview(show);
+
+            var payout = Controls.PrimaryButton("💸 تسجيل صرف لهذه المدة");
             payout.TouchUpInside += (s, e) => AddPayout();
             _stack.AddArrangedSubview(payout);
 
             Load();
+        }
+
+        private void PickDate(bool isFrom)
+        {
+            var initial = isFrom ? _from : _to;
+            Push(new DatePickViewController(isFrom ? "من تاريخ" : "إلى تاريخ", initial, picked =>
+            {
+                if (isFrom)
+                {
+                    _from = picked;
+                    _btnFrom.SetTitle("من: " + picked.ToString("dd/MM/yyyy"), UIControlState.Normal);
+                }
+                else
+                {
+                    _to = picked;
+                    _btnTo.SetTitle("إلى: " + picked.ToString("dd/MM/yyyy"), UIControlState.Normal);
+                }
+
+                Load();
+            }));
         }
 
         private void Load()
@@ -218,9 +252,9 @@ namespace Tawsela.iOS.Screens
                 var earnings = Api.GetSupervisorEarnings(id, from, to);
                 Ui.BeginOnMain(() =>
                 {
-                    while (_stack.ArrangedSubviews.Length > 3)
+                    while (_stack.ArrangedSubviews.Length > 6)
                     {
-                        var v = _stack.ArrangedSubviews[3];
+                        var v = _stack.ArrangedSubviews[6];
                         _stack.RemoveArrangedSubview(v);
                         v.RemoveFromSuperview();
                     }
@@ -243,7 +277,7 @@ namespace Tawsela.iOS.Screens
 
                     if (earnings.Payouts != null && earnings.Payouts.Count > 0)
                     {
-                        _stack.AddArrangedSubview(Controls.SectionTitle("الدفعات"));
+                        _stack.AddArrangedSubview(Controls.SectionTitle("سجل الصرف"));
                         foreach (var p in earnings.Payouts)
                         {
                             _stack.AddArrangedSubview(Controls.InfoRow(
@@ -251,6 +285,12 @@ namespace Tawsela.iOS.Screens
                                 p.Amount.ToString("0.00") + " ج.م" +
                                 (string.IsNullOrEmpty(p.Note) ? "" : "\n" + p.Note)));
                         }
+                    }
+                    else
+                    {
+                        _stack.AddArrangedSubview(Controls.SectionTitle("سجل الصرف"));
+                        _stack.AddArrangedSubview(MakeLabel("لا يوجد صرف مسجّل", 13f,
+                            Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right));
                     }
                 });
             }, null, ex => Ui.Toast(ex.Message));
@@ -296,11 +336,16 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class RestaurantDeliveryAdminViewController : ListViewController<Dictionary<string, object>>
     {
-        public RestaurantDeliveryAdminViewController() : base("مناطق توصيل المطاعم") { }
+        public RestaurantDeliveryAdminViewController() : base("🏪 توصيلات المطاعم") { }
 
         protected override string EmptyText
         {
             get { return "لا توجد مناطق توصيل"; }
+        }
+
+        protected override string Subtitle
+        {
+            get { return "مناطق التوصيل وأسعارها · المطاعم والمحلات"; }
         }
 
         protected override List<Dictionary<string, object>> Fetch()
@@ -372,7 +417,19 @@ namespace Tawsela.iOS.Screens
                 NSLayoutConstraint.Create(add, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Trailing, 1, -16),
                 NSLayoutConstraint.Create(add, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Bottom, 1, -12),
             });
-            List.Scroll.ContentInset = new UIEdgeInsets(0, 0, 84, 0);
+
+            // إدارة المطاعم والمحلات (بديل تبويب «＋ إضافة مطعم/محل»)
+            var restaurants = Controls.OutlineButton("＋ إضافة مطعم/محل");
+            restaurants.TouchUpInside += (s, e) => Push(new RestaurantsAdminViewController());
+            View.AddSubview(restaurants);
+            View.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(restaurants, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Leading, 1, 16),
+                NSLayoutConstraint.Create(restaurants, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Trailing, 1, -16),
+                NSLayoutConstraint.Create(restaurants, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, add, NSLayoutAttribute.Top, 1, -8),
+            });
+
+            List.Scroll.ContentInset = new UIEdgeInsets(0, 0, 136, 0);
         }
 
         private void Add()

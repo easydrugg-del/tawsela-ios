@@ -1,0 +1,865 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/bg_header"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🛠️ لوحة الإدارة"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:id="@+id/txtStats"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:textColor="#DDDDDD"
+        android:layout_marginTop="8dp" />
+
+    <!-- اختصار واضح لإدارة الأكواد والخصومات أعلى الشاشة -->
+    <Button
+        android:id="@+id/btnCouponsTop"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="🎟️ إدارة الأكواد والخصومات"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="@color/primary"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/tile_card_selector" />
+  </LinearLayout>
+
+  <ScrollView
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="إدارة المستخدمين"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/primary"
+          android:padding="4dp" />
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:weightSum="3">
+        <LinearLayout
+            android:id="@+id/btnManageDrivers"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🚕"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="السائقون"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnManageCustomers"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="👥"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="العملاء"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnDriverSearch"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🔍"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="بحث سائق"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:weightSum="3">
+        <LinearLayout
+            android:id="@+id/btnSupervisors"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🧑‍✈️"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="مشرفو التكاتك"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:weightSum="2">
+        <LinearLayout
+            android:id="@+id/btnDriverMovements"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🚗"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="حركات سائق"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnDriverStatement"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="📒"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="كشف حساب"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="الخدمات والعروض"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/primary"
+          android:padding="4dp"
+          android:layout_marginTop="8dp" />
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:weightSum="3">
+        <LinearLayout
+            android:id="@+id/btnManageCoupons"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🎟️"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="إدارة الأكواد"
+              android:textSize="11sp"
+              android:textStyle="bold"
+              android:maxLines="2"
+              android:gravity="center"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnManageServices"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🛎️"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="الخدمات"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnSubscriptions"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="💳"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="الاشتراكات"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:weightSum="3">
+        <LinearLayout
+            android:id="@+id/btnAreas"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="📍"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="المناطق"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnStreets"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🛣️"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="الشوارع"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <View
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="1dp" />
+      </LinearLayout>
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:weightSum="1">
+        <LinearLayout
+            android:id="@+id/btnRestaurantDeliveryAdmin"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="88dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🏪"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="توصيلات المطاعم"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="المتابعة والدعم"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/primary"
+          android:padding="4dp"
+          android:layout_marginTop="8dp" />
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:weightSum="3">
+        <LinearLayout
+            android:id="@+id/btnComplaints"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="📢"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="الشكاوى"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnDocs"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="📄"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="التوثيق"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnAnalytics"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="📊"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="تحليلات"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="الخرائط والتقارير"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/primary"
+          android:padding="4dp"
+          android:layout_marginTop="8dp" />
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:weightSum="3">
+        <LinearLayout
+            android:id="@+id/btnHeatmap"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🔥"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="الحرارية"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnDriverMap"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🗺️"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="خريطة السائقين"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnTripReport"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🧾"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="تقرير الرحلات"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="المالية والإعلانات"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/primary"
+          android:padding="4dp"
+          android:layout_marginTop="8dp" />
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:weightSum="3">
+        <LinearLayout
+            android:id="@+id/btnTopups"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="💰"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="طلبات الشحن"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnDriverFee"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="💸"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="خصم السائق"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnAds"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="📣"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="الإعلانات"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="الطوارئ والنظام"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/primary"
+          android:padding="4dp"
+          android:layout_marginTop="8dp" />
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:weightSum="3">
+        <LinearLayout
+            android:id="@+id/btnEmergencyTypes"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🚨"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="بيانات الطوارئ"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnEmergencies"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🆘"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="تفاصيل الطوارئ"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/btnAdminAccounts"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="👔"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="المديرين"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <Button
+          android:id="@+id/btnAppUpdate"
+          android:layout_width="match_parent"
+          android:layout_height="52dp"
+          android:text="⬆️ تحديث الاصدار"
+          android:textSize="14sp"
+          android:textStyle="bold"
+          android:textColor="@color/white"
+          android:layout_margin="4dp"
+          android:background="@drawable/tile_red_selector"
+          android:visibility="gone" />
+
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="Designed @ Ahmed Ali"
+      android:textSize="10sp"
+      android:textColor="@color/text_secondary"
+      android:gravity="center"
+      android:layout_marginTop="8dp"
+      android:layout_marginBottom="8dp"
+      android:alpha="0.6" />
+</LinearLayout></ScrollView>
+
+
+</LinearLayout>

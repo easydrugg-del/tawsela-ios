@@ -16,7 +16,7 @@ namespace Tawsela.iOS.Screens
     {
         private UILabel _summary;
 
-        public HeatmapViewController() : base("الخريطة الحرارية") { }
+        public HeatmapViewController() : base("الخريطة الحرارية للطلبات") { }
 
         public override void ViewDidLoad()
         {
@@ -29,13 +29,17 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(12f, 16f);
 
-            _summary = MakeLabel("جارٍ التحميل…", 14f, Theme.TextSecondary,
+            _summary = MakeLabel("جاري تحميل البيانات...", 14f, Theme.TextSecondary,
                 UIFontWeight.Regular, UITextAlignment.Right);
             stack.AddArrangedSubview(_summary);
 
             var refresh = Controls.OutlineButton("تحديث");
             refresh.TouchUpInside += (s, e) => Load();
             stack.AddArrangedSubview(refresh);
+
+            // مفتاح ألوان الخريطة (بديل وسيلة إيضاح HeatmapActivity)
+            stack.AddArrangedSubview(Controls.InfoRow("كثافة الطلبات",
+                "عالي جداً · عالي · منخفض"));
         }
 
         private void Load()
@@ -98,9 +102,12 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(10f, 16f);
 
-            _query = Controls.TextField("اسم السائق أو رقم الهاتف أو اللوحة");
+            _query = Controls.TextField("هاتف أو اسم...");
             _query.ReturnKeyType = UIReturnKeyType.Search;
             _query.EditingDidEndOnExit += (s, e) => Search();
+            stack.AddArrangedSubview(MakeLabel(
+                "برقم الهاتف أو باسم السائق/صاحب المركبة",
+                12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right));
             stack.AddArrangedSubview(_query);
 
             var button = Controls.PrimaryButton("بحث");
@@ -172,7 +179,9 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class DriverMovementsViewController : ListViewController<Driver>
     {
-        public DriverMovementsViewController() : base("تحركات السائقين") { }
+        private UITextField _query;
+
+        public DriverMovementsViewController() : base("🚗 حركات سائق") { }
 
         protected override string EmptyText
         {
@@ -181,7 +190,46 @@ namespace Tawsela.iOS.Screens
 
         protected override List<Driver> Fetch()
         {
-            return Api.AllDrivers();
+            var list = Api.AllDrivers();
+            var q = (_query == null ? "" : (_query.Text ?? "")).Trim();
+            if (q.Length == 0 || list == null) return list;
+
+            return list.FindAll(d =>
+                (!string.IsNullOrEmpty(d.FullName) && d.FullName.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                (!string.IsNullOrEmpty(d.Phone) && d.Phone.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                (!string.IsNullOrEmpty(d.CarPlate) && d.CarPlate.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                (!string.IsNullOrEmpty(d.DriverNumber) && d.DriverNumber.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0));
+        }
+
+        /// <summary>بحث فوري (بديل txtQuery / btnClearDates في أندرويد).</summary>
+        private void BuildSearchBar()
+        {
+            const float headerHeight = 96f;
+
+            var header = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 6,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            View.AddSubview(header);
+            View.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 8),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 16),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, -16),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, headerHeight),
+            });
+
+            _query = Controls.TextField("رقم الحساب / رقم السيارة / اسم السائق");
+            _query.EditingChanged += (s, e) => Reload();
+            header.AddArrangedSubview(_query);
+
+            var clear = Controls.OutlineButton("🧹 الكل", null, 36f);
+            clear.TouchUpInside += (s, e) => { _query.Text = ""; Reload(); };
+            header.AddArrangedSubview(clear);
+
+            List.TopInset = headerHeight + 8;
         }
 
         protected override UIView BuildRow(Driver d)
@@ -210,6 +258,7 @@ namespace Tawsela.iOS.Screens
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
+            BuildSearchBar();
 
             var map = Controls.PrimaryButton("عرض الجميع على الخريطة");
             map.TouchUpInside += (s, e) => ShowAll();
@@ -285,6 +334,10 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(12f, 16f);
 
+            var share = Controls.OutlineButton("📤 مشاركة التقرير");
+            share.TouchUpInside += (s, e) => ShareReport();
+            stack.AddArrangedSubview(share);
+
             var week = Controls.OutlineButton("آخر 7 أيام");
             week.TouchUpInside += (s, e) => Load(7);
             stack.AddArrangedSubview(week);
@@ -305,6 +358,30 @@ namespace Tawsela.iOS.Screens
                 var text = Api.EarningsReport(days);
                 Ui.BeginOnMain(() => _report.Text = string.IsNullOrEmpty(text) ? "لا توجد بيانات" : text);
             }, null, ex => Ui.Toast(ex.Message));
+        }
+
+        /// <summary>مشاركة نص التقرير (بديل Intent.ActionSend في أندرويد).</summary>
+        private void ShareReport()
+        {
+            var text = _report == null ? "" : (_report.Text ?? "");
+            if (string.IsNullOrWhiteSpace(text) || text.IndexOf("جارٍ", StringComparison.Ordinal) == 0)
+            {
+                Ui.Toast("لا يوجد تقرير للمشاركة");
+                return;
+            }
+
+            var share = new UIActivityViewController(
+                new Foundation.NSObject[] { new Foundation.NSString(text) }, null);
+
+            if (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad &&
+                share.PopoverPresentationController != null)
+            {
+                share.PopoverPresentationController.SourceView = View;
+                share.PopoverPresentationController.SourceRect =
+                    new CoreGraphics.CGRect(View.Bounds.Width / 2, View.Bounds.Height / 2, 1, 1);
+            }
+
+            PresentViewController(share, true, null);
         }
     }
 
@@ -327,7 +404,7 @@ namespace Tawsela.iOS.Screens
                 UIFontWeight.Bold, UITextAlignment.Right);
             _stack.AddArrangedSubview(_points);
 
-            var redeem = Controls.OutlineButton("استبدال النقاط");
+            var redeem = Controls.OutlineButton("استبدال 100 نقطة = 10ج");
             redeem.TouchUpInside += (s, e) => Redeem();
             _stack.AddArrangedSubview(redeem);
 
@@ -415,6 +492,8 @@ namespace Tawsela.iOS.Screens
     {
         private UIStackView _list;
         private UILabel _summary;
+        private DateTime _from = DateTime.Today.AddDays(-7);
+        private DateTime _to = DateTime.Today;
 
         public TripReportViewController() : base("تقرير الرحلات") { }
 
@@ -429,6 +508,9 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(10f, 16f);
 
+            stack.AddArrangedSubview(MakeLabel("التاريخ حسب:", 12f, Theme.TextSecondary,
+                UIFontWeight.Regular, UITextAlignment.Right));
+
             var week = Controls.OutlineButton("آخر 7 أيام");
             week.TouchUpInside += (s, e) => Load(DateTime.Today.AddDays(-7), DateTime.Today);
             stack.AddArrangedSubview(week);
@@ -441,7 +523,11 @@ namespace Tawsela.iOS.Screens
             custom.TouchUpInside += (s, e) => PickRange();
             stack.AddArrangedSubview(custom);
 
-            _summary = MakeLabel("جارٍ التحميل…", 14f, Theme.TextSecondary,
+            var show = Controls.PrimaryButton("عرض الرحلات");
+            show.TouchUpInside += (s, e) => Load(_from, _to);
+            stack.AddArrangedSubview(show);
+
+            _summary = MakeLabel("اختر الفترة ثم اضغط عرض الرحلات", 14f, Theme.TextSecondary,
                 UIFontWeight.Regular, UITextAlignment.Right);
             stack.AddArrangedSubview(_summary);
 
@@ -481,6 +567,9 @@ namespace Tawsela.iOS.Screens
 
         private void Load(DateTime from, DateTime to)
         {
+            _from = from;
+            _to = to;
+
             Ui.Run(() =>
             {
                 Dictionary<int, decimal> fees;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Tawsela.Core.Platform;
 using Tawsela.Data;
 using Tawsela.Models;
+using Tawsela.iOS.Platform;
 using UIKit;
 
 namespace Tawsela.iOS.Screens
@@ -15,13 +16,35 @@ namespace Tawsela.iOS.Screens
     public class RegisterViewController : BaseViewController
     {
         private UISegmentedControl _role;
-        private UITextField _fullName, _phone, _user, _pass, _referral, _carModel, _carPlate, _carColor;
+        private UITextField _fullName, _phone, _user, _pass, _referral, _carModel, _carPlate;
         private UITextField _supervisorCode, _restaurantName, _restaurantAddress;
-        private UILabel _govValue, _cityValue, _message, _vehicleLabel, _supervisorName, _restCoords;
+        private UILabel _govValue, _cityValue, _message, _vehicleLabel, _vehicleValue, _supervisorName, _restCoords;
+        private string _vehicleType = "";
         private double _restLat, _restLng;
         private UISwitch _terms;
         private UIView _driverSection, _restaurantSection;
         private UIButton _btnRegister;
+
+        /* ---------- وثائق السائق (بديل linerDriverDocs في RegisterActivity) ---------- */
+
+        private UITextField _opLicense;
+        private readonly Dictionary<string, string> _docs = new Dictionary<string, string>();
+
+        // نفس مفاتيح الخادم العربية المستخدمة في أندرويد
+        private static readonly string[] DocKeys =
+        {
+            "فاتورة", "ترخيص_مرور", "بطاقة_سائق", "بطاقة_مالك", "اصل_فيش"
+        };
+
+        // نفس نصوص أزرار activity_register.xml
+        private static readonly string[] DocLabels =
+        {
+            "📷 صورة الفاتورة *",
+            "📷 ترخيص المرور (اختياري)",
+            "📷 بطاقة السائق *",
+            "📷 بطاقة المالك *",
+            "📷 أصل الفيش *"
+        };
 
         private string _governorate = "";
         private string _city = "";
@@ -37,6 +60,9 @@ namespace Tawsela.iOS.Screens
         private void BuildUi()
         {
             var stack = CreateScrollContent(12f, 16f);
+
+            stack.AddArrangedSubview(MakeLabel("أنا:", 13f, Theme.TextPrimary,
+                UIFontWeight.Medium, UITextAlignment.Right));
 
             _role = new UISegmentedControl(new[] { "عميل", "سائق", "مطعم" });
             _role.SelectedSegment = 0;
@@ -54,7 +80,7 @@ namespace Tawsela.iOS.Screens
             _phone.KeyboardType = UIKeyboardType.PhonePad;
             _phone.SemanticContentAttribute = UISemanticContentAttribute.ForceLeftToRight;
 
-            _user = Controls.TextField("اسم المستخدم (بالإنجليزية)");
+            _user = Controls.TextField("اسم المستخدم (للدخول)");
             _pass = Controls.TextField("كلمة المرور", true);
 
             stack.AddArrangedSubview(_fullName);
@@ -62,7 +88,9 @@ namespace Tawsela.iOS.Screens
             stack.AddArrangedSubview(_user);
             stack.AddArrangedSubview(_pass);
 
-            // المحافظة ثم المدينة (بديل spinnerGovernorate / spinnerCity)
+            // موقعك: المحافظة ثم المدينة (بديل spinnerGovernorate / spinnerCity)
+            stack.AddArrangedSubview(Controls.SectionTitle("موقعك"));
+
             _govValue = MakeSelector("المحافظة", "اختر المحافظة", () => PickGovernorate());
             stack.AddArrangedSubview(SelectorRow("المحافظة", _govValue));
 
@@ -73,13 +101,14 @@ namespace Tawsela.iOS.Screens
             stack.AddArrangedSubview(_referral);
 
             // --- قسم السائق ---
+            // نفس ترتيب أندرويد: نوع المركبة (عنوان) ← موديل ← لوحة ← نوع المركبة (spinner) ← كود المشرف
             _vehicleLabel = Controls.SectionTitle("بيانات المركبة");
-            _carModel = Controls.TextField("موديل السيارة / التوك توك");
+            _carModel = Controls.TextField("موديل السيارة");
             _carPlate = Controls.TextField("رقم اللوحة");
-            _carColor = Controls.TextField("لون المركبة");
+            _vehicleValue = MakeSelector("نوع المركبة", "اختر نوع المركبة", () => PickVehicleType());
 
             // كود المشرف (اختياري) مع التحقق الفوري (بديل Api.LookupSupervisor)
-            _supervisorCode = Controls.TextField("كود المشرف (اختياري)");
+            _supervisorCode = Controls.TextField("كود المشرف (رقمين - اختياري)");
             _supervisorCode.AutocapitalizationType = UITextAutocapitalizationType.AllCharacters;
             _supervisorCode.EditingDidEnd += (s, e) => CheckSupervisor();
 
@@ -95,9 +124,37 @@ namespace Tawsela.iOS.Screens
             ((UIStackView)_driverSection).AddArrangedSubview(_vehicleLabel);
             ((UIStackView)_driverSection).AddArrangedSubview(_carModel);
             ((UIStackView)_driverSection).AddArrangedSubview(_carPlate);
-            ((UIStackView)_driverSection).AddArrangedSubview(_carColor);
+            ((UIStackView)_driverSection).AddArrangedSubview(SelectorRow("نوع المركبة", _vehicleValue));
             ((UIStackView)_driverSection).AddArrangedSubview(_supervisorCode);
             ((UIStackView)_driverSection).AddArrangedSubview(_supervisorName);
+
+            // وثائق السائق (مطلوبة) — رقم التشغيل + 5 صور مع حالة كل صورة
+            var docsBox = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 8,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            docsBox.AddArrangedSubview(Controls.SectionTitle("وثائق السائق (مطلوبة)"));
+
+            _opLicense = Controls.TextField("رقم التشغيل *");
+            docsBox.AddArrangedSubview(_opLicense);
+
+            for (int i = 0; i < DocKeys.Length; i++)
+            {
+                var key = DocKeys[i];
+                var status = MakeLabel("لم تُرفع", 12f, Theme.TextSecondary,
+                    UIFontWeight.Regular, UITextAlignment.Right);
+
+                var pick = Controls.OutlineButton(DocLabels[i]);
+                pick.TouchUpInside += (s, e) => PickDoc(key, status);
+
+                docsBox.AddArrangedSubview(pick);
+                docsBox.AddArrangedSubview(status);
+            }
+
+            ((UIStackView)_driverSection).AddArrangedSubview(docsBox);
+
             stack.AddArrangedSubview(_driverSection);
 
             // --- قسم المطعم ---
@@ -207,7 +264,69 @@ namespace Tawsela.iOS.Screens
             var isRestaurant = _role.SelectedSegment == 2;
             _driverSection.Hidden = !isDriver;
             if (_restaurantSection != null) _restaurantSection.Hidden = !isRestaurant;
-            if (_referral != null) _referral.Hidden = isRestaurant;
+            // كود الإحالة للعميل فقط (أندرويد: linerReferral مخفي للسائق والمطعم)
+            if (_referral != null) _referral.Hidden = isDriver || isRestaurant;
+        }
+
+        /// <summary>
+        /// اختيار صورة مستند (معرض/كاميرا) وترميزها Base64 بحد 800px وجودة JPEG 70
+        /// — نفس ShowImageSourceDialog + DecodeBitmap في أندرويد.
+        /// </summary>
+        private void PickDoc(string key, UILabel status)
+        {
+            Ui.Choose("اختر مصدر الصورة", new[] { "المعرض", "الكاميرا" }, index =>
+            {
+                Action<UIImage> apply = image =>
+                {
+                    if (image == null) return;
+
+                    var scaled = ImagePicker.Scale(image, 800f);
+                    string base64;
+                    try
+                    {
+                        using (var data = scaled.AsJPEG(0.7f))
+                            base64 = data == null ? "" : Convert.ToBase64String(data.ToArray());
+                    }
+                    catch
+                    {
+                        base64 = "";
+                    }
+
+                    if (string.IsNullOrEmpty(base64))
+                    {
+                        Ui.Toast("تعذّر قراءة الصورة");
+                        return;
+                    }
+
+                    _docs[key] = base64;
+                    status.Text = "✓ تم الرفع";
+                    status.TextColor = Theme.Green;
+                };
+
+                if (index == 0)
+                    ImagePicker.PickImage(this, false, apply, err => Ui.Toast(err));
+                else
+                    ImagePicker.PickImage(this, true, apply, err => Ui.Toast(err));
+            });
+        }
+
+        /// <summary>صورة واحدة على الأقل من الفاتورة أو بطاقة السائق أو بطاقة المالك أو أصل الفيش.</summary>
+        private bool HasRequiredDoc()
+        {
+            return _docs.ContainsKey("فاتورة") || _docs.ContainsKey("بطاقة_سائق") ||
+                   _docs.ContainsKey("بطاقة_مالك") || _docs.ContainsKey("اصل_فيش");
+        }
+
+        /// <summary>نوع المركبة (بديل spinnerVehicleType في أندرويد — قيمته تُرسل في حقل carColor).</summary>
+        private void PickVehicleType()
+        {
+            var types = new List<string> { "سيارة", "توكتوك", "سيارة كيوتة" };
+            Ui.Choose("نوع المركبة", types, index =>
+            {
+                _vehicleType = types[index];
+                _vehicleValue.Text = _vehicleType;
+                _vehicleValue.TextColor = Theme.TextPrimary;
+            });
         }
 
         private void PickGovernorate()
@@ -228,8 +347,7 @@ namespace Tawsela.iOS.Screens
         }
 
         private void PickCity()
-        {
-            if (string.IsNullOrEmpty(_governorate))
+        {            if (string.IsNullOrEmpty(_governorate))
             {
                 Ui.Toast("اختر المحافظة أولًا");
                 return;
@@ -301,24 +419,37 @@ namespace Tawsela.iOS.Screens
             var user = (_user.Text ?? "").Trim();
             var pass = _pass.Text ?? "";
 
-            if (fullName == "") { ShowMessage("أدخل الاسم الكامل"); return; }
-            if (phone == "") { ShowMessage("أدخل رقم الهاتف"); return; }
-            if (user == "") { ShowMessage("أدخل اسم المستخدم"); return; }
-            if (pass.Length < 6) { ShowMessage("كلمة المرور 6 أحرف على الأقل"); return; }
-            if (string.IsNullOrEmpty(_governorate) || string.IsNullOrEmpty(_city))
+            // نفس نصوص وترتيب تحقق أندرويد (RegisterActivity)
+            if (fullName == "" || phone == "" || user == "" || pass == "")
             {
-                ShowMessage("اختر المحافظة والمدينة");
+                ShowMessage("أكمل جميع الحقول الأساسية");
                 return;
             }
-            if (!_terms.On) { ShowMessage("يجب الموافقة على الشروط"); return; }
+            if (pass.Length < 6) { ShowMessage("كلمة المرور يجب أن تكون 6 أحرف على الأقل"); return; }
+            if (!_terms.On)
+            {
+                ShowMessage("يجب الموافقة على شروط الاستخدام وسياسة الخصوصية");
+                return;
+            }
 
             var carModel = isDriver ? (_carModel.Text ?? "").Trim() : "";
             var carPlate = isDriver ? (_carPlate.Text ?? "").Trim() : "";
-            var carColor = isDriver ? (_carColor.Text ?? "").Trim() : "";
+            var carColor = isDriver ? _vehicleType : "";
+
+            if (string.IsNullOrEmpty(_governorate)) { ShowMessage("اختر المحافظة"); return; }
+            if (string.IsNullOrEmpty(_city)) { ShowMessage("اختر المدينة"); return; }
 
             if (isDriver && (carModel == "" || carPlate == ""))
             {
-                ShowMessage("أدخل موديل السيارة ورقم اللوحة");
+                ShowMessage("أدخل بيانات السيارة");
+                return;
+            }
+
+            var opLicense = isDriver ? (_opLicense.Text ?? "").Trim() : "";
+            if (isDriver && opLicense == "") { ShowMessage("رقم التشغيل مطلوب"); return; }
+            if (isDriver && !HasRequiredDoc())
+            {
+                ShowMessage("ارفع صورة واحدة على الأقل (الفاتورة أو بطاقة السائق أو بطاقة المالك أو أصل الفيش)");
                 return;
             }
 
@@ -334,13 +465,30 @@ namespace Tawsela.iOS.Screens
             var referral = (_referral.Text ?? "").Trim();
             var supervisorCode = isDriver ? (_supervisorCode.Text ?? "").Trim() : "";
 
+            // نسخة من الصور بخمس مفاتيح دائمًا (أندرويد يرسل المفاتيح الخمسة ولو فاضية)
+            var images = new Dictionary<string, string>();
+            if (isDriver)
+            {
+                foreach (var key in DocKeys)
+                {
+                    string value;
+                    images[key] = _docs.TryGetValue(key, out value) ? value : "";
+                }
+            }
+
             _btnRegister.Enabled = false;
             var progress = Ui.ShowProgress("جارٍ إنشاء الحساب…");
 
             Ui.Run(
-                () => Api.Register(user, pass, fullName, phone, role, carModel, carPlate, carColor,
-                    referral, _governorate, _city, supervisorCode,
-                    restaurantName, 0, restaurantAddress, restLat, restLng),
+                () =>
+                {
+                    Api.Register(user, pass, fullName, phone, role, carModel, carPlate, carColor,
+                        referral, _governorate, _city, supervisorCode,
+                        restaurantName, 0, restaurantAddress, restLat, restLng);
+
+                    // رفع وثائق السائق بعد إنشاء الحساب (بديل Api.AddDriverDocs في أندرويد)
+                    if (isDriver) Api.AddDriverDocs(images, opLicense);
+                },
                 () =>
                 {
                     progress.Dismiss();

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="اختر ستايل الأيقونات"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#E85D00"
+        android:gravity="center"
+        android:layout_marginBottom="20dp" />
+
+    <!-- Style A -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="الستايل A - دائري متدرج"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#333" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center">
+      <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:gravity="center"
+          android:background="@drawable/tile_card_selector"
+          android:padding="12dp"
+          android:layout_margin="4dp"
+          android:elevation="2dp">
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/badge_orange"
+            android:contentDescription="أيقونة" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="توصيلاتي"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#333"
+            android:layout_marginTop="4dp" />
+      </LinearLayout>
+    </LinearLayout>
+
+    <!-- Style B -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="الستايل B - مربع مدور ثلاثي الأبعاد"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#333" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center">
+      <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:gravity="center"
+          android:background="@drawable/tile_card_selector"
+          android:padding="12dp"
+          android:layout_margin="4dp"
+          android:elevation="2dp">
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/badge_blue"
+            android:contentDescription="أيقونة" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="توصيلاتي"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#333"
+            android:layout_marginTop="4dp" />
+      </LinearLayout>
+    </LinearLayout>
+
+    <!-- Style C -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="الستايل C - بيضاوي بإطار ذهبي"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#333" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center">
+      <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:gravity="center"
+          android:background="@drawable/tile_card_selector"
+          android:padding="12dp"
+          android:layout_margin="4dp"
+          android:elevation="2dp">
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/badge_green"
+            android:contentDescription="أيقونة" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="توصيلاتي"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#333"
+            android:layout_marginTop="4dp" />
+      </LinearLayout>
+    </LinearLayout>
+
+    <!-- Style D -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="الستايل D - زجاجي شفاف"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#333" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center">
+      <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:gravity="center"
+          android:background="@drawable/tile_card_selector"
+          android:padding="12dp"
+          android:layout_margin="4dp"
+          android:elevation="2dp"
+          android:backgroundTint="#E85D00">
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/badge_purple"
+            android:contentDescription="أيقونة" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="توصيلاتي"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#333"
+            android:layout_marginTop="4dp" />
+      </LinearLayout>
+    </LinearLayout>
+
+    <!-- Style E -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="الستايل E - مربع بظل سفلي"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#333" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center">
+      <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:gravity="center"
+          android:background="@drawable/tile_card_selector"
+          android:padding="12dp"
+          android:layout_margin="4dp"
+          android:elevation="2dp">
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/badge_teal"
+            android:contentDescription="أيقونة" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="توصيلاتي"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#333"
+            android:layout_marginTop="4dp" />
+      </LinearLayout>
+    </LinearLayout>
+
+  </LinearLayout>
+</ScrollView>

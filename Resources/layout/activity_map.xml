@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <WebView
+      android:id="@+id/webMap"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1" />
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/card_ripple"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="تحديد الموقع على الخريطة"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/primary"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnUseMyLocation"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="توسيط الخريطة على موقعي (GPS)"
+        android:textSize="15sp"
+        android:textColor="@color/text_primary"
+        android:background="@drawable/tile_card_selector" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="اسم الشارع:"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginTop="12dp" />
+
+    <TextView
+        android:id="@+id/txtAddress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="جاري تحديد اسم الشارع..."
+        android:textSize="15sp"
+        android:textColor="@color/black"
+        android:padding="10dp"
+        android:layout_marginTop="4dp"
+        android:background="@drawable/edit_rounded" />
+
+    <TextView
+        android:id="@+id/txtCoordStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="13sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:layout_marginTop="10dp" />
+
+    <Button
+        android:id="@+id/btnConfirm"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="تأكيد الموقع"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/tile_orange_selector" />
+  </LinearLayout>
+
+  
+
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="Designed @ Ahmed Ali"
+      android:textSize="10sp"
+      android:textColor="@color/text_secondary"
+      android:gravity="center"
+      android:layout_marginTop="8dp"
+      android:layout_marginBottom="8dp"
+      android:alpha="0.6" />
+</LinearLayout>

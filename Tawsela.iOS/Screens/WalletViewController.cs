@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Tawsela.Core.Platform;
 using Tawsela.Data;
 using Tawsela.Models;
@@ -9,16 +10,22 @@ using UIKit;
 namespace Tawsela.iOS.Screens
 {
     /// <summary>
-    /// بديل Activities/WalletActivity.cs — الرصيد، الحركات، طلب شحن،
-    /// وتحويل للسائق (سحب الأرباح).
+    /// بديل Activities/WalletActivity.cs بنفس ترتيب ونصوص أندرويد:
+    /// الرصيد، الشحن الخارجي بتحويل يدوي (مبلغ/مُحوِّل/رقم عملية/صورة إيصال)،
+    /// طلبات الشحن، حركة المحفظة، ثم التحويل اللحظي داخل التطبيق.
     /// </summary>
     public class WalletViewController : BaseViewController
     {
         private UILabel _balance;
-        private UILabel _payNumber, _payInfo, _pendingInfo;
-        private UIStackView _txns;
-        private UIStackView _topUps;
-        private UIButton _btnTopUp;
+        private UILabel _payNumber, _payInfo, _pendingInfo, _receiptHint;
+        private UIStackView _txns, _topUps;
+        private UIButton _btnSubmitTopUp;
+
+        private UITextField _amount, _sender, _reference;
+        private UIImageView _preview;
+        private string _receiptBase64 = "";
+
+        private UITextField _transferPhone, _transferAmount;
 
         public WalletViewController() : base("المحفظة") { }
 
@@ -26,6 +33,7 @@ namespace Tawsela.iOS.Screens
         {
             base.ViewDidLoad();
             BuildUi();
+            LoadPayNumber();
             Load();
         }
 
@@ -39,12 +47,13 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(14f, 16f);
 
+            /* ---------- الرصيد ---------- */
             var card = Controls.Card();
             card.BackgroundColor = Theme.Primary;
 
-            var title = MakeLabel("رصيد المحفظة", 13f, UIColor.White.ColorWithAlpha(0.9f),
+            var title = MakeLabel("المحفظة / Wallet", 13f, UIColor.White.ColorWithAlpha(0.9f),
                 UIFontWeight.Regular, UITextAlignment.Right);
-            _balance = MakeLabel("—", 30f, UIColor.White, UIFontWeight.Bold, UITextAlignment.Right);
+            _balance = MakeLabel("0 ج.م", 30f, UIColor.White, UIFontWeight.Bold, UITextAlignment.Right);
 
             card.AddSubview(title);
             card.AddSubview(_balance);
@@ -61,32 +70,94 @@ namespace Tawsela.iOS.Screens
             });
             stack.AddArrangedSubview(card);
 
-            _btnTopUp = Controls.PrimaryButton("طلب شحن الرصيد");
-            _btnTopUp.TouchUpInside += (s, e) => RequestTopUp();
-            stack.AddArrangedSubview(_btnTopUp);
+            /* ---------- الشحن الخارجي ---------- */
+            stack.AddArrangedSubview(Controls.SectionTitle("شحن خارجي بتحويل يدوي — External top-up with manual review"));
 
-            // رقم التحويل الرسمي + تنبيه الطلب المعلّق (بديل txtPayNumber/txtPayPhoneInfo/txtTopupStatus)
-            _payNumber = MakeLabel("", 18f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Center);
-            _payNumber.Hidden = true;
+            _payNumber = MakeLabel("جارٍ تحميل رقم التحويل…", 18f, Theme.Primary,
+                UIFontWeight.Bold, UITextAlignment.Center);
             stack.AddArrangedSubview(_payNumber);
 
-            _payInfo = MakeLabel("", 12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
-            _payInfo.Hidden = true;
+            _payInfo = MakeLabel(
+                "حوّل المبلغ إلى رقم الشركة أعلاه من أي محفظة إلكترونية، ثم أدخل بيانات التحويل. لا تشارك OTP. " +
+                "تتم المراجعة يدويًا قبل إضافة الرصيد.\n" +
+                "Transfer to the official company number above, then submit the transaction details. " +
+                "Manual review is required before the balance is credited.",
+                12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
+            _payInfo.Lines = 0;
             stack.AddArrangedSubview(_payInfo);
+
+            var steps = MakeLabel(
+                "الخطوات / Steps:\n" +
+                "1) حوّل المبلغ إلى رقم الشركة من محفظتك الإلكترونية.\n" +
+                "2) احتفظ برسالة التأكيد أو الإيصال.\n" +
+                "3) أدخل رقم العملية أو أرفق صورة الإيصال.\n" +
+                "4) انتظر مراجعة الإدارة؛ لا يُضاف الرصيد تلقائيًا.\n" +
+                "1) Transfer to the company number using your e-wallet.\n" +
+                "2) Keep the confirmation message or receipt.\n" +
+                "3) Enter the transaction reference or attach the receipt image.\n" +
+                "4) Wait for manual approval; the balance is not added automatically.",
+                11f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
+            steps.Lines = 0;
+            stack.AddArrangedSubview(steps);
+
+            var warn = MakeLabel(
+                "تنبيه: لا تشارك رمز OTP أو بيانات البطاقة مع أي شخص. / Never share OTP or card details with anyone.",
+                11f, Theme.Red, UIFontWeight.Medium, UITextAlignment.Right);
+            warn.Lines = 0;
+            stack.AddArrangedSubview(warn);
+
+            stack.AddArrangedSubview(MakeLabel("المبلغ (ج.م) / Amount (EGP)", 12f, Theme.TextPrimary,
+                UIFontWeight.Medium, UITextAlignment.Right));
+            _amount = Controls.TextField("مثال: 100");
+            _amount.KeyboardType = UIKeyboardType.DecimalPad;
+            stack.AddArrangedSubview(_amount);
+
+            stack.AddArrangedSubview(MakeLabel("رقم المحفظة المحوَّل منها / Sender wallet number", 12f,
+                Theme.TextPrimary, UIFontWeight.Medium, UITextAlignment.Right));
+            _sender = Controls.TextField("01xxxxxxxxx");
+            _sender.KeyboardType = UIKeyboardType.PhonePad;
+            _sender.Text = Session.Phone ?? "";
+            stack.AddArrangedSubview(_sender);
+
+            stack.AddArrangedSubview(MakeLabel(
+                "رقم العملية أو صورة الإيصال (أحدهما مطلوب): رقم التحويل في رسالة التأكيد — تستخدمه الإدارة للتحقق قبل التأكيد.\n" +
+                "Transaction reference or receipt image (one is required).",
+                12f, Theme.TextPrimary, UIFontWeight.Medium, UITextAlignment.Right));
+            _reference = Controls.TextField("رقم العملية");
+            _reference.AutocapitalizationType = UITextAutocapitalizationType.AllCharacters;
+            stack.AddArrangedSubview(_reference);
+
+            var attach = Controls.OutlineButton("📷 صورة الإيصال");
+            attach.TouchUpInside += (s, e) => AttachReceipt();
+            stack.AddArrangedSubview(attach);
+
+            _preview = new UIImageView
+            {
+                ContentMode = UIViewContentMode.ScaleAspectFit,
+                BackgroundColor = Theme.White,
+                TranslatesAutoresizingMaskIntoConstraints = false,
+                Hidden = true
+            };
+            _preview.Layer.CornerRadius = Theme.CornerEdit;
+            _preview.Layer.BorderWidth = 1f;
+            _preview.Layer.BorderColor = Theme.CardStroke.CGColor;
+            _preview.Layer.MasksToBounds = true;
+            _preview.HeightAnchor.ConstraintEqualTo(180).Active = true;
+            stack.AddArrangedSubview(_preview);
+
+            _receiptHint = MakeLabel("", 12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
+            stack.AddArrangedSubview(_receiptHint);
+
+            _btnSubmitTopUp = Controls.PrimaryButton("إرسال طلب الشحن للمراجعة / Submit for review");
+            _btnSubmitTopUp.TouchUpInside += (s, e) => SubmitTopUp();
+            stack.AddArrangedSubview(_btnSubmitTopUp);
 
             _pendingInfo = MakeLabel("", 13f, Theme.Accent, UIFontWeight.Semibold, UITextAlignment.Right);
             _pendingInfo.Hidden = true;
             stack.AddArrangedSubview(_pendingInfo);
 
-            if (Session.IsDriver)
-            {
-                var withdraw = Controls.OutlineButton("سحب الأرباح");
-                withdraw.TouchUpInside += (s, e) => Withdraw();
-                stack.AddArrangedSubview(withdraw);
-            }
-
-            stack.AddArrangedSubview(Controls.SectionTitle("طلبات الشحن"));
-
+            /* ---------- طلبات الشحن ---------- */
+            stack.AddArrangedSubview(Controls.SectionTitle("🧾 طلبات الشحن وحالتها"));
             _topUps = new UIStackView
             {
                 Axis = UILayoutConstraintAxis.Vertical,
@@ -95,8 +166,8 @@ namespace Tawsela.iOS.Screens
             };
             stack.AddArrangedSubview(_topUps);
 
-            stack.AddArrangedSubview(Controls.SectionTitle("آخر الحركات"));
-
+            /* ---------- حركة المحفظة ---------- */
+            stack.AddArrangedSubview(Controls.SectionTitle("🧾 حركة المحفظة / Wallet activity"));
             _txns = new UIStackView
             {
                 Axis = UILayoutConstraintAxis.Vertical,
@@ -104,6 +175,53 @@ namespace Tawsela.iOS.Screens
                 TranslatesAutoresizingMaskIntoConstraints = false
             };
             stack.AddArrangedSubview(_txns);
+
+            /* ---------- التحويل اللحظي ---------- */
+            stack.AddArrangedSubview(Controls.SectionTitle("🔄 تحويل لحظي (دفع حق التوصيلة)"));
+            stack.AddArrangedSubview(MakeLabel(
+                "تحويل داخلي داخل التطبيق لحساب آخر مسجل في التطبيق — وليس تحويلاً لحساب خارجي " +
+                "(فودافون كاش/بنوك)",
+                12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right));
+
+            stack.AddArrangedSubview(MakeLabel("رقم موبايل المستلم", 12f, Theme.TextPrimary,
+                UIFontWeight.Medium, UITextAlignment.Right));
+            _transferPhone = Controls.TextField("01xxxxxxxxx");
+            _transferPhone.KeyboardType = UIKeyboardType.PhonePad;
+            stack.AddArrangedSubview(_transferPhone);
+
+            stack.AddArrangedSubview(MakeLabel("المبلغ (ج.م)", 12f, Theme.TextPrimary,
+                UIFontWeight.Medium, UITextAlignment.Right));
+            _transferAmount = Controls.TextField("مثال: 50");
+            _transferAmount.KeyboardType = UIKeyboardType.DecimalPad;
+            stack.AddArrangedSubview(_transferAmount);
+
+            var transfer = Controls.PrimaryButton("تحويل الآن — يسمع فوراً");
+            transfer.TouchUpInside += (s, e) => Transfer();
+            stack.AddArrangedSubview(transfer);
+        }
+
+        /// <summary>رقم التحويل الرسمي (بديل Api.PaymentPhone).</summary>
+        private void LoadPayNumber()
+        {
+            Ui.Run(() =>
+            {
+                var phone = "";
+                try { phone = Api.PaymentPhone(); } catch { }
+
+                Ui.BeginOnMain(() =>
+                {
+                    if (string.IsNullOrWhiteSpace(phone))
+                    {
+                        _payNumber.Text = "رقم التحويل غير مُهيّأ — تواصل مع الدعم";
+                        _payNumber.TextColor = Theme.Red;
+                    }
+                    else
+                    {
+                        _payNumber.Text = phone;
+                        _payNumber.TextColor = Theme.Primary;
+                    }
+                });
+            }, null, ex => AppServices.Log("TawselaWallet", "payment phone: " + ex.Message));
         }
 
         private void Load()
@@ -116,44 +234,19 @@ namespace Tawsela.iOS.Screens
                 List<Dictionary<string, object>> topUps = null;
                 try { topUps = Api.MyTopUps(); } catch { }
 
-                // رقم التحويل الرسمي (بديل Api.PaymentPhone)
-                var payPhone = "";
-                try { payPhone = Api.PaymentPhone(); } catch { }
-
                 Ui.BeginOnMain(() =>
                 {
                     _balance.Text = balance.ToString("0.00") + " ج.م";
-                    RenderPayInfo(payPhone, topUps);
+                    RenderPending(topUps);
                     RenderTopUps(topUps);
                     RenderTxns(txns);
                 });
             }, null, ex => Ui.Toast(ex.Message));
         }
 
-        /// <summary>
-        /// عرض رقم التحويل الرسمي وتنبيه الطلب المعلّق
-        /// (بديل txtPayNumber + txtPayPhoneInfo + txtTopupStatus).
-        /// </summary>
-        private void RenderPayInfo(string payPhone, List<Dictionary<string, object>> topUps)
+        /// <summary>تنبيه وجود طلب شحن قيد المراجعة (بديل txtTopupStatus).</summary>
+        private void RenderPending(List<Dictionary<string, object>> topUps)
         {
-            if (string.IsNullOrWhiteSpace(payPhone))
-            {
-                _payNumber.Hidden = true;
-                _payInfo.Text = "رقم الدفع غير مُهيّأ. تواصل مع الدعم قبل التحويل.";
-                _payInfo.Hidden = false;
-            }
-            else
-            {
-                _payNumber.Text = payPhone;
-                _payNumber.Hidden = false;
-
-                _payInfo.Text = "حوّل المبلغ على رقم الشركة أعلاه ثم أرسل بيانات العملية " +
-                                "أو صورة الإيصال من زر «طلب شحن الرصيد». " +
-                                "المراجعة يدوية قبل إضافة الرصيد.";
-                _payInfo.Hidden = false;
-            }
-
-            // هل هناك طلب قيد المراجعة؟
             var pending = "";
             if (topUps != null)
             {
@@ -172,7 +265,6 @@ namespace Tawsela.iOS.Screens
             _pendingInfo.Hidden = string.IsNullOrEmpty(pending);
         }
 
-        /// <summary>طلبات شحن الرصيد الخاصة بالمستخدم وحالتها (بديل Api.MyTopUps).</summary>
         private void RenderTopUps(List<Dictionary<string, object>> list)
         {
             for (int i = _topUps.ArrangedSubviews.Length - 1; i >= 0; i--)
@@ -262,37 +354,142 @@ namespace Tawsela.iOS.Screens
             }
         }
 
-        private void RequestTopUp()
+        /// <summary>اختيار صورة من المعرض أو الكاميرا مع معاينة فورية (بديل ReqReceiptImage).</summary>
+        private void AttachReceipt()
         {
-            Push(new TopUpRequestViewController(Load));
+            Ui.Choose("صورة الإيصال", new[] { "الكاميرا", "مكتبة الصور" }, index =>
+            {
+                if (index == 0)
+                    ImagePicker.PickImage(this, true, ShowPreview, err => Ui.Toast(err));
+                else
+                    ImagePicker.PickImage(this, false, ShowPreview, err => Ui.Toast(err));
+            });
         }
 
-        private void Withdraw()
+        private void ShowPreview(UIImage image)
         {
-            Ui.Prompt("سحب الأرباح", "المبلغ المراد سحبه", "", "المبلغ", text =>
-            {
-                decimal amount;
-                if (!decimal.TryParse(text, out amount) || amount <= 0)
-                {
-                    Ui.Toast("أدخل مبلغًا صحيحًا");
-                    return;
-                }
+            if (image == null) return;
 
-                Ui.Confirm("تأكيد السحب", "سيتم خصم " + amount.ToString("0.00") + " ج.م من المحفظة.", "تأكيد", () =>
+            // نفس مقاس أندرويد: أقصى عرض 800px وجودة JPEG 70
+            var scaled = ImagePicker.Scale(image, 800f);
+
+            try
+            {
+                using (var data = scaled.AsJPEG(0.7f))
                 {
-                    var progress = Ui.ShowProgress("جارٍ تنفيذ السحب…");
-                    Ui.Run(() => Api.Withdraw(amount), () =>
-                    {
-                        progress.Dismiss();
-                        Ui.Toast("تم إرسال طلب السحب");
-                        Load();
-                    }, ex =>
-                    {
-                        progress.Dismiss();
-                        Ui.Toast(ex.Message);
-                    });
+                    _receiptBase64 = data == null ? "" : Convert.ToBase64String(data.ToArray());
+                }
+            }
+            catch
+            {
+                _receiptBase64 = "";
+            }
+
+            if (string.IsNullOrEmpty(_receiptBase64))
+            {
+                Ui.Toast("تعذّر قراءة الصورة");
+                return;
+            }
+
+            _preview.Image = scaled;
+            _preview.Hidden = false;
+            _receiptHint.Text = "تم إرفاق الإيصال (" + (_receiptBase64.Length / 1024) + " ك.ب)";
+            _receiptHint.TextColor = Theme.Green;
+        }
+
+        private void SubmitTopUp()
+        {
+            if (!Net.IsOnline()) { Ui.Toast("لا يوجد اتصال بالإنترنت"); return; }
+
+            decimal amount;
+            if (!decimal.TryParse((_amount.Text ?? "").Trim(), NumberStyles.Any,
+                    CultureInfo.InvariantCulture, out amount))
+            {
+                Ui.Toast("أدخل المبلغ المطلوب");
+                return;
+            }
+
+            if (amount < 1 || amount > 10000)
+            {
+                Ui.Toast("المبلغ يجب أن يكون بين 1 و10000 جنيه");
+                return;
+            }
+
+            var sender = (_sender.Text ?? "").Trim();
+            if (sender == "")
+            {
+                Ui.Toast("أدخل رقم الهاتف الذي حوّلت منه");
+                return;
+            }
+
+            var reference = (_reference.Text ?? "").Trim();
+            var receipt = _receiptBase64 ?? "";
+
+            if (reference == "" && receipt == "")
+            {
+                Ui.Toast("أدخل رقم العملية أو أرفق صورة الإيصال");
+                return;
+            }
+
+            _btnSubmitTopUp.Enabled = false;
+            var progress = Ui.ShowProgress("جارٍ إرسال طلب الشحن…");
+
+            Ui.Run(
+                () => Api.RequestTopUp(amount, sender, reference, receipt),
+                () =>
+                {
+                    progress.Dismiss();
+                    _btnSubmitTopUp.Enabled = true;
+                    Ui.Toast("تم إرسال طلب الشحن — سيتم مراجعته من الإدارة");
+
+                    _amount.Text = "";
+                    _reference.Text = "";
+                    _receiptBase64 = "";
+                    _preview.Image = null;
+                    _preview.Hidden = true;
+                    _receiptHint.Text = "";
+
+                    Load();
+                },
+                ex =>
+                {
+                    progress.Dismiss();
+                    _btnSubmitTopUp.Enabled = true;
+                    Ui.Toast(ex.Message);
                 });
-            }, UIKeyboardType.DecimalPad);
+        }
+
+        private void Transfer()
+        {
+            var phone = (_transferPhone.Text ?? "").Trim();
+
+            decimal amount;
+            if (!decimal.TryParse((_transferAmount.Text ?? "").Trim(), NumberStyles.Any,
+                    CultureInfo.InvariantCulture, out amount) || amount <= 0)
+            {
+                Ui.Toast("أدخل مبلغ التحويل");
+                return;
+            }
+
+            if (phone.Length < 8) { Ui.Toast("أدخل رقم موبايل المستلم"); return; }
+
+            Ui.Confirm("تحويل لحظي",
+                "تحويل " + amount.ToString("0.00") + " ج.م إلى " + phone + "؟", "تحويل", () =>
+            {
+                var progress = Ui.ShowProgress("جارٍ التحويل…");
+                Ui.Run(() => Api.WalletTransfer(phone, amount), () =>
+                {
+                    progress.Dismiss();
+                    Ui.Toast("تم التحويل بنجاح");
+                    _transferPhone.Text = "";
+                    _transferAmount.Text = "";
+                    Load();
+                }, ex =>
+                {
+                    progress.Dismiss();
+                    Ui.Toast(ex.Message);
+                });
+            });
         }
     }
 }

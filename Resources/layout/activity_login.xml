@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+      <ImageView
+          android:layout_width="96dp"
+          android:layout_height="96dp"
+          android:src="@drawable/ic_logo"
+          android:background="@null" />
+
+      <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:gravity="center_vertical"
+          android:layout_marginTop="16dp">
+        <ImageView
+            android:layout_width="34dp"
+            android:layout_height="31dp"
+            android:src="@drawable/splash_logo"
+            android:layout_marginEnd="8dp"
+            android:background="@null"
+            android:contentDescription="توكتوك"
+            android:scaleType="fitCenter" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:gravity="center" />
+      </LinearLayout>
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="توصيل سريع وآمن"
+          android:textSize="15sp"
+          android:textColor="@color/text_secondary"
+          android:layout_marginTop="4dp"
+          android:gravity="center"
+          android:layout_marginBottom="28dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/card_ripple"
+        android:padding="20dp">
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="تسجيل الدخول"
+          android:textSize="18sp"
+          android:textStyle="bold"
+          android:textColor="@color/black"
+          android:layout_marginBottom="14dp" />
+
+      <EditText
+          android:id="@+id/txtUsername"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="رقم الموبايل أو اسم المستخدم"
+          android:inputType="text"
+          android:textSize="16sp"
+          android:padding="12dp"
+          android:background="@drawable/edit_rounded" />
+
+      <EditText
+          android:id="@+id/txtPassword"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="كلمة المرور"
+          android:inputType="textPassword"
+          android:textSize="16sp"
+          android:padding="12dp"
+          android:layout_marginTop="12dp"
+          android:background="@drawable/edit_rounded" />
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:layout_marginTop="8dp">
+
+        <CheckBox
+            android:id="@+id/chkRemember"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="تذكرني"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary" />
+
+        <CheckBox
+            android:id="@+id/chkShowPass"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="إظهار كلمة المرور"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary" />
+      </LinearLayout>
+
+      <TextView
+          android:id="@+id/txtMessage"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:textSize="14sp"
+          android:textColor="@color/red"
+          android:gravity="center"
+          android:layout_marginTop="10dp" />
+
+      <Button
+          android:id="@+id/btnLogin"
+          android:layout_width="match_parent"
+          android:layout_height="52dp"
+          android:text="دخول"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:textColor="@color/white"
+          android:layout_marginTop="12dp"
+          android:background="@drawable/tile_orange_selector" />
+
+      <Button
+          android:id="@+id/btnRegister"
+          android:layout_width="match_parent"
+          android:layout_height="52dp"
+          android:text="إنشاء حساب جديد"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:textColor="@color/white"
+          android:layout_marginTop="10dp"
+          android:background="@drawable/tile_orange_selector" />
+
+      <Button
+          android:id="@+id/btnFingerprint"
+          android:layout_width="match_parent"
+          android:layout_height="52dp"
+          android:text="الدخول بالبصمة"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:textColor="@color/white"
+          android:layout_marginTop="10dp"
+          android:visibility="gone"
+          android:background="@drawable/tile_orange_selector" />
+
+    </LinearLayout>
+  
+  <TextView
+      android:id="@+id/txtLoginLegal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="سياسة الخصوصية • شروط الاستخدام"
+      android:textSize="13sp"
+      android:textColor="@color/primary"
+      android:gravity="center"
+      android:padding="10dp" />
+
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="Designed @ Ahmed Ali"
+      android:textSize="10sp"
+      android:textColor="@color/text_secondary"
+      android:gravity="center"
+      android:layout_marginTop="8dp"
+      android:layout_marginBottom="8dp"
+      android:alpha="0.6" />
+</LinearLayout></ScrollView>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:background="@drawable/bg_header"
+      android:padding="16dp"
+      android:gravity="center_vertical">
+
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="←"
+        android:textSize="20sp"
+        android:textColor="@color/white"
+        android:background="@null" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="نوبات العمل"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:layout_marginStart="12dp" />
+  </LinearLayout>
+
+  <TextView
+      android:id="@+id/txtShiftStatus"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="الحالة: ..."
+      android:textSize="16sp"
+      android:textStyle="bold"
+      android:gravity="center"
+      android:padding="16dp" />
+
+  <Button
+      android:id="@+id/btnStartShift"
+      android:layout_width="match_parent"
+      android:layout_height="50dp"
+      android:text="▶ بدء نوبة"
+      android:textSize="16sp"
+      android:textColor="@color/text_primary"
+      android:background="@drawable/tile_card_selector"
+      android:layout_marginLeft="16dp"
+      android:layout_marginRight="16dp" />
+
+  <Button
+      android:id="@+id/btnEndShift"
+      android:layout_width="match_parent"
+      android:layout_height="50dp"
+      android:text="⏹ إنهاء النوبة"
+      android:textSize="16sp"
+      android:textColor="@color/white"
+      android:background="@drawable/tile_red_selector"
+      android:layout_marginLeft="16dp"
+      android:layout_marginRight="16dp"
+      android:layout_marginTop="8dp" />
+
+  <ListView
+      android:id="@+id/listShifts"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:padding="12dp"
+      android:layout_marginTop="12dp" />
+</LinearLayout>

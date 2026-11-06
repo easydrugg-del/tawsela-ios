@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface"
+    android:padding="16dp">
+  <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="الجدولة المتكررة"
+      android:textSize="20sp"
+      android:textStyle="bold"
+      android:textColor="@color/primary"
+      android:layout_marginBottom="10dp" />
+  <Button
+      android:id="@+id/btnAdd"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:text="إضافة جدولة من آخر طلب"
+      android:textColor="@color/white"
+      android:background="@drawable/tile_orange_selector" />
+  <ListView
+      android:id="@+id/lst"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:layout_marginTop="10dp" />
+</LinearLayout>

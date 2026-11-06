@@ -1,0 +1,761 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="طلب توصيلة جديدة"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/primary"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="14dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/card_ripple"
+        android:padding="18dp">
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="موقع الانطلاق"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:textColor="@color/black"
+          android:layout_marginBottom="8dp" />
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:gravity="center_vertical">
+
+        <AutoCompleteTextView
+            android:id="@+id/txtFrom"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:hint="من أين؟ (العنوان)"
+            android:inputType="text"
+            android:completionThreshold="3"
+            android:dropDownWidth="match_parent"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:background="@drawable/edit_rounded" />
+
+        <Button
+    android:textColor="@color/text_primary"
+            android:id="@+id/btnVoiceFrom"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:text=""
+            android:textSize="20sp"
+            android:gravity="center"
+            android:drawableStart="@drawable/ic_mic"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/tile_orange_selector" />
+      </LinearLayout>
+
+      <Button
+          android:id="@+id/btnPickFrom"
+          android:layout_width="match_parent"
+          android:layout_height="48dp"
+          android:text="تحديد موقع الانطلاق على الخريطة"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/white"
+          android:gravity="center"
+          android:drawableStart="@drawable/ic_pin"
+          android:drawablePadding="10dp"
+          android:paddingLeft="14dp"
+          android:paddingRight="14dp"
+          android:layout_marginTop="10dp"
+          android:background="@drawable/tile_orange_selector" />
+
+      <!-- السائقون القريبون من موقع الانطلاق: الاسم + السيارة + المسافة + الزمن -->
+      <TextView
+          android:id="@+id/txtNearbyLabel"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="السائقون القريبون منك:"
+          android:textSize="12sp"
+          android:textStyle="bold"
+          android:textColor="@color/text_secondary"
+          android:layout_marginTop="10dp"
+          android:layout_marginBottom="4dp"
+          android:visibility="gone" />
+
+      <LinearLayout
+          android:id="@+id/rowNearbyDrivers"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:visibility="gone" />
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="الوجهة"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:textColor="@color/black"
+          android:layout_marginTop="18dp"
+          android:layout_marginBottom="8dp" />
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:gravity="center_vertical">
+
+        <AutoCompleteTextView
+            android:id="@+id/txtTo"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:hint="إلى أين؟ (العنوان)"
+            android:inputType="text"
+            android:completionThreshold="3"
+            android:dropDownWidth="match_parent"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:background="@drawable/edit_rounded" />
+
+        <Button
+    android:textColor="@color/text_primary"
+            android:id="@+id/btnVoiceTo"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:text=""
+            android:textSize="20sp"
+            android:gravity="center"
+            android:drawableStart="@drawable/ic_mic"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/tile_orange_selector" />
+      </LinearLayout>
+
+      <TextView
+          android:id="@+id/txtToCoords"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:textSize="12sp"
+          android:textColor="@color/green"
+          android:layout_marginTop="4dp"
+          android:visibility="gone" />
+
+      <TextView
+          android:id="@+id/txtToFare"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:textSize="13sp"
+          android:textStyle="bold"
+          android:textColor="@color/primary"
+          android:layout_marginTop="3dp"
+          android:visibility="gone" />
+
+      <Button
+          android:id="@+id/btnPickTo"
+          android:layout_width="match_parent"
+          android:layout_height="48dp"
+          android:text="تحديد الوجهة على الخريطة"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/white"
+          android:gravity="center"
+          android:drawableStart="@drawable/ic_flag"
+          android:drawablePadding="10dp"
+          android:paddingLeft="14dp"
+          android:paddingRight="14dp"
+          android:layout_marginTop="10dp"
+          android:background="@drawable/tile_orange_selector" />
+
+      <!-- ===== اختيار سريع للوجهة: محافظة ← مدينة ← مناطق ← شوارع ===== -->
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="اختيار سريع للوجهة"
+          android:textSize="14sp"
+          android:textStyle="bold"
+          android:textColor="@color/primary"
+          android:layout_marginTop="14dp"
+          android:layout_marginBottom="2dp" />
+
+      <!-- المحافظة + المدينة في سطر واحد -->
+      <LinearLayout
+          android:id="@+id/rowAreaGov"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:baselineAligned="false"
+          android:layout_marginTop="2dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="المحافظة"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_secondary"
+              android:layout_marginBottom="4dp" />
+
+          <Spinner
+              android:id="@+id/spinAreaGov"
+              android:layout_width="match_parent"
+              android:layout_height="44dp"
+              android:background="@drawable/edit_rounded"
+              android:paddingLeft="8dp"
+              android:paddingRight="8dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowAreaCity"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:orientation="vertical">
+
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="المدينة"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_secondary"
+              android:layout_marginBottom="4dp" />
+
+          <Spinner
+              android:id="@+id/spinAreaCity"
+              android:layout_width="match_parent"
+              android:layout_height="44dp"
+              android:background="@drawable/edit_rounded"
+              android:paddingLeft="8dp"
+              android:paddingRight="8dp" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <!-- مناطق المدينة المختارة: عنوان واحد + شبكة بعرض كامل (3 في السطر) -->
+      <TextView
+          android:id="@+id/txtAreasLabel"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="المناطق:"
+          android:textSize="12sp"
+          android:textStyle="bold"
+          android:textColor="@color/text_secondary"
+          android:layout_marginTop="10dp"
+          android:layout_marginBottom="6dp" />
+
+      <LinearLayout
+          android:id="@+id/rowAreas"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/rowAreasChips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+      </LinearLayout>
+
+      <!-- أهم شوارع المدينة المختارة: شبكة من سطرين بعرض كامل -->
+      <TextView
+          android:id="@+id/txtCityStreetsLabel"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="أهم شوارع المدينة:"
+          android:textSize="12sp"
+          android:textStyle="bold"
+          android:textColor="@color/text_secondary"
+          android:layout_marginTop="8dp"
+          android:layout_marginBottom="6dp" />
+
+      <LinearLayout
+          android:id="@+id/rowCityTo"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/rowStreetSearch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="6dp"
+            android:visibility="gone">
+
+          <EditText
+              android:id="@+id/txtStreetSearch"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_weight="1"
+              android:hint="ابحث عن شارع (جزء من الاسم)"
+              android:inputType="text"
+              android:textSize="14sp"
+              android:padding="10dp"
+              android:background="@drawable/edit_rounded" />
+
+          <Button
+              android:id="@+id/btnVoiceStreet"
+              android:layout_width="48dp"
+              android:layout_height="48dp"
+              android:text=""
+              android:textSize="20sp"
+              android:gravity="center"
+              android:contentDescription="بحث بالصوت"
+              android:drawableStart="@drawable/ic_mic"
+              android:paddingStart="12dp"
+              android:paddingEnd="12dp"
+              android:layout_marginStart="8dp"
+              android:background="@drawable/tile_orange_selector" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowCityToChips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+      </LinearLayout>
+
+      <!-- محطة وسيطة -->
+      <TextView
+          android:id="@+id/txtStopLabel"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="محطة وسيطة (اختياري)"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/black"
+          android:layout_marginTop="14dp"
+          android:layout_marginBottom="6dp" />
+
+      <LinearLayout
+          android:id="@+id/rowStop"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:gravity="center_vertical">
+
+        <EditText
+            android:id="@+id/txtStop"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:hint="عنوان المحطة الوسطى"
+            android:inputType="text"
+            android:textSize="15sp"
+            android:padding="12dp"
+            android:background="@drawable/edit_rounded" />
+
+        <Button
+    android:textColor="@color/text_primary"
+            android:id="@+id/btnVoiceStop"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:text=""
+            android:textSize="20sp"
+            android:gravity="center"
+            android:drawableStart="@drawable/ic_mic"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/tile_orange_selector" />
+      </LinearLayout>
+
+      <Button
+          android:id="@+id/btnPickStop"
+          android:layout_width="match_parent"
+          android:layout_height="42dp"
+          android:text="تحديد المحطة على الخريطة"
+          android:textSize="14sp"
+          android:textColor="@color/white"
+          android:gravity="center"
+          android:drawableStart="@drawable/ic_pin"
+          android:drawablePadding="8dp"
+          android:paddingLeft="12dp"
+          android:paddingRight="12dp"
+          android:layout_marginTop="6dp"
+          android:background="@drawable/tile_orange_selector" />
+
+      <!-- تفاصيل التوصيل -->
+      <EditText
+          android:id="@+id/txtFloor"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="رقم الشقة/الدور (اختياري)"
+          android:inputType="text"
+          android:textSize="15sp"
+          android:padding="12dp"
+          android:layout_marginTop="10dp"
+          android:background="@drawable/edit_rounded" />
+
+      <!-- تفاوض السعر -->
+      <CheckBox
+          android:id="@+id/chkBidding"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="تفعيل التفاوض على السعر (السائقون يقدمون عروضاً)"
+          android:textSize="14sp"
+          android:layout_marginTop="10dp" />
+
+      <EditText
+          android:id="@+id/txtOfferedPrice"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="سعرك المقترح (ج.م) - اتركه فارغاً للسعر التقديري"
+          android:inputType="numberDecimal"
+          android:textSize="15sp"
+          android:padding="12dp"
+          android:layout_marginTop="6dp"
+          android:background="@drawable/edit_rounded" />
+
+      <EditText
+          android:id="@+id/txtSplitPhone"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="مشاركة الأجرة مع رقم (اختياري)"
+          android:inputType="phone"
+          android:textSize="15sp"
+          android:padding="12dp"
+          android:layout_marginTop="8dp"
+          android:background="@drawable/edit_rounded" />
+
+      <EditText
+          android:id="@+id/txtNote"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="ملاحظات (اختياري)"
+          android:inputType="textMultiLine"
+          android:minLines="2"
+          android:textSize="16sp"
+          android:padding="12dp"
+          android:layout_marginTop="18dp"
+          android:background="@drawable/edit_rounded" />
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="أقصي وقت للانتظار (بالدقائق)"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/black"
+          android:layout_marginTop="14dp"
+          android:layout_marginBottom="4dp" />
+
+      <EditText
+          android:id="@+id/txtMaxWait"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="30"
+          android:hint="بالدقائق (افتراضي 30)"
+          android:inputType="number"
+          android:textSize="15sp"
+          android:padding="12dp"
+          android:background="@drawable/edit_rounded" />
+
+      <TextView
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="بعد انتهاء الوقت يُخفى الطلب من شاشة السائقين تلقائياً"
+          android:textSize="12sp"
+          android:textColor="@color/gray"
+          android:layout_marginTop="4dp" />
+
+      <TextView
+          android:id="@+id/txtEstimate"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:textSize="15sp"
+          android:textColor="@color/text_secondary"
+          android:gravity="center"
+          android:layout_marginTop="14dp" />
+
+      <TextView
+          android:id="@+id/txtLoyaltyInfo"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:textSize="14sp"
+          android:textColor="@color/accent"
+          android:gravity="center"
+          android:layout_marginTop="6dp" />
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="نوع الخدمة"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:textColor="@color/black"
+          android:layout_marginTop="16dp"
+          android:layout_marginBottom="6dp" />
+
+      <Button
+          android:id="@+id/btnChooseService"
+          android:layout_width="match_parent"
+          android:layout_height="48dp"
+          android:text="توصيلة عادية"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/white"
+          android:gravity="center"
+          android:drawableStart="@drawable/ic_bell"
+          android:drawablePadding="10dp"
+          android:paddingLeft="14dp"
+          android:paddingRight="14dp"
+          android:background="@drawable/tile_orange_selector" />
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="طريقة الدفع"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:textColor="@color/black"
+          android:layout_marginTop="16dp"
+          android:layout_marginBottom="6dp" />
+
+      <Button
+          android:id="@+id/btnChoosePayment"
+          android:layout_width="match_parent"
+          android:layout_height="48dp"
+          android:text="نقدي"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/white"
+          android:gravity="center"
+          android:drawableStart="@drawable/ic_money"
+          android:drawablePadding="10dp"
+          android:paddingLeft="14dp"
+          android:paddingRight="14dp"
+          android:background="@drawable/tile_orange_selector" />
+
+      <!-- الأماكن المفضلة -->
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="أماكن مفضلة"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:textColor="@color/black"
+          android:layout_marginTop="16dp"
+          android:layout_marginBottom="6dp" />
+
+      <Spinner
+          android:id="@+id/spinSaved"
+          android:layout_width="match_parent"
+          android:layout_height="48dp"
+          android:background="@drawable/edit_rounded" />
+
+      <Button
+          android:id="@+id/btnSavePlace"
+          android:layout_width="match_parent"
+          android:layout_height="42dp"
+          android:text="حفظ الانطلاق كمكان مفضّل"
+          android:textSize="14sp"
+          android:textColor="@color/white"
+          android:gravity="center"
+          android:drawableStart="@drawable/ic_save"
+          android:drawablePadding="8dp"
+          android:paddingLeft="12dp"
+          android:paddingRight="12dp"
+          android:layout_marginTop="8dp"
+          android:background="@drawable/tile_orange_selector" />
+
+      <!-- الطلب المجدول -->
+      <CheckBox
+          android:id="@+id/chkScheduled"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="طلب مجدول (في وقت لاحق)"
+          android:textSize="15sp"
+          android:textColor="@color/black"
+          android:layout_marginTop="14dp" />
+
+      <Button
+          android:id="@+id/btnPickTime"
+          android:layout_width="match_parent"
+          android:layout_height="44dp"
+          android:text="اختيار موعد التنفيذ"
+          android:textSize="14sp"
+          android:textColor="@color/white"
+          android:gravity="center"
+          android:drawableStart="@drawable/ic_clock"
+          android:drawablePadding="8dp"
+          android:paddingLeft="12dp"
+          android:paddingRight="12dp"
+          android:layout_marginTop="6dp"
+          android:visibility="gone"
+          android:background="@drawable/tile_orange_selector" />
+
+      <TextView
+          android:id="@+id/txtScheduled"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:textSize="14sp"
+          android:textColor="@color/text_secondary"
+          android:gravity="center"
+          android:layout_marginTop="4dp" />
+
+      <!-- كوبون الخصم -->
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="كود الخصم"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:textColor="@color/black"
+          android:layout_marginTop="16dp"
+          android:layout_marginBottom="6dp" />
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/txtCoupon"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="أدخل الكود"
+            android:inputType="text"
+            android:textSize="15sp"
+            android:padding="12dp"
+            android:background="@drawable/edit_rounded" />
+
+        <Button
+            android:id="@+id/btnApplyCoupon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="تطبيق"
+            android:textSize="14sp"
+            android:layout_marginStart="8dp"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:drawableStart="@drawable/ic_ticket"
+            android:drawablePadding="6dp"
+            android:paddingLeft="12dp"
+            android:paddingRight="8dp"
+            android:background="@drawable/tile_orange_selector" />
+      </LinearLayout>
+
+      <TextView
+          android:id="@+id/txtCouponInfo"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:textSize="14sp"
+          android:textColor="@color/primary"
+          android:layout_marginTop="4dp" />
+
+      <!-- إكرامية -->
+      <TextView
+          android:id="@+id/txtTipLabel"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="إكرامية (اختياري)"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:textColor="@color/black"
+          android:layout_marginTop="16dp"
+          android:layout_marginBottom="6dp" />
+
+      <EditText
+          android:id="@+id/txtTip"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="مبلغ الإكرامية بالج.م"
+          android:inputType="numberDecimal"
+          android:textSize="15sp"
+          android:padding="12dp"
+          android:background="@drawable/edit_rounded" />
+
+      <TextView
+          android:id="@+id/txtMessage"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:textSize="14sp"
+          android:textColor="@color/red"
+          android:gravity="center"
+          android:layout_marginTop="8dp" />
+
+      <!-- تكلفة الرحلة -->
+      <LinearLayout
+          android:id="@+id/cardFare"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:background="@drawable/edit_rounded"
+          android:padding="16dp"
+          android:layout_marginTop="12dp"
+          android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="تكلفة الرحلة"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary" />
+
+        <TextView
+            android:id="@+id/txtTripFare"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="—"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:id="@+id/txtFareDetails"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="4dp" />
+      </LinearLayout>
+
+      <Button
+          android:id="@+id/btnSubmit"
+          android:layout_width="match_parent"
+          android:layout_height="56dp"
+          android:text="إرسال الطلب"
+          android:textSize="17sp"
+          android:textStyle="bold"
+          android:textColor="@color/white"
+          android:gravity="center"
+          android:drawableStart="@drawable/ic_taxi"
+          android:drawablePadding="10dp"
+          android:paddingLeft="14dp"
+          android:paddingRight="14dp"
+          android:layout_marginTop="14dp"
+          android:background="@drawable/tile_orange_selector" />
+    </LinearLayout>
+  </LinearLayout>
+</ScrollView>

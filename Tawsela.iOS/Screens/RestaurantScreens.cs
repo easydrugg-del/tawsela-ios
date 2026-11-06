@@ -31,13 +31,14 @@ namespace Tawsela.iOS.Screens
         private readonly List<Street> _streets = new List<Street>();
         private bool _showAllStreets;
         private int _areaSeq, _streetSeq;
+        private VoiceInput _voice;
 
         public RestaurantNewDeliveryViewController(List<Dictionary<string, object>> areas)
             : this(areas, null) { }
 
         /// <summary>إن مُرِّرت توصيلة سابقة تُملأ نفس البيانات (إعادة الطلب).</summary>
         public RestaurantNewDeliveryViewController(List<Dictionary<string, object>> areas, Dictionary<string, object> repeat)
-            : base("توصيلة جديدة")
+            : base("طلب توصيل جديد")
         {
             _areas = areas ?? new List<Dictionary<string, object>>();
             _repeat = repeat;
@@ -146,12 +147,25 @@ namespace Tawsela.iOS.Screens
             /* ---------- العناوين ---------- */
             stack.AddArrangedSubview(Controls.SectionTitle("العناوين"));
 
-            _pickup = Controls.TextField("عنوان الاستلام (المطعم)");
+            _pickup = Controls.TextField("عنوان المطعم");
             stack.AddArrangedSubview(_pickup);
 
             _pickupCoords = MakeLabel("جارٍ تحميل موقع المطعم…", 11f, Theme.TextSecondary,
                 UIFontWeight.Regular, UITextAlignment.Right);
             stack.AddArrangedSubview(_pickupCoords);
+
+            var pickPickup = Controls.OutlineButton("📍 تحديد على الخريطة", null, 40f);
+            pickPickup.TouchUpInside += (s, e) =>
+            {
+                Push(MapViewController.Pick(_pickupLat, _pickupLng, (lat, lng, address) =>
+                {
+                    _pickupLat = lat; _pickupLng = lng;
+                    _pickupCoords.Text = string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "الإحداثيات: {0:0.0000}, {1:0.0000}", lat, lng);
+                    if (!string.IsNullOrWhiteSpace(address)) _pickup.Text = address;
+                }));
+            };
+            stack.AddArrangedSubview(pickPickup);
 
             _delivery = Controls.TextField("عنوان التوصيل");
             stack.AddArrangedSubview(_delivery);
@@ -159,7 +173,7 @@ namespace Tawsela.iOS.Screens
             _coords = MakeLabel("", 11f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
             stack.AddArrangedSubview(_coords);
 
-            var pick = Controls.OutlineButton("تحديد موقع التوصيل على الخريطة");
+            var pick = Controls.OutlineButton("📍 تحديد على الخريطة", null, 40f);
             pick.TouchUpInside += (s, e) =>
             {
                 Push(MapViewController.Pick(_deliveryLat, _deliveryLng, (lat, lng, address) =>
@@ -202,6 +216,17 @@ namespace Tawsela.iOS.Screens
                 BuildStreetGrid(_streetSearch.Text);
             };
             stack.AddArrangedSubview(_streetSearch);
+
+            // بحث صوتي عن الشارع (بديل btnRestVoiceStreet في أندرويد)
+            var voice = Controls.OutlineButton("بحث بالصوت", null, 38f);
+            voice.AccessibilityLabel = "بحث بالصوت";
+            voice.TouchUpInside += (s, e) => Voice(text =>
+            {
+                _streetSearch.Text = text;
+                _showAllStreets = false;
+                BuildStreetGrid(text);
+            });
+            stack.AddArrangedSubview(voice);
 
             _streetGrid = new UIStackView
             {
@@ -508,6 +533,42 @@ namespace Tawsela.iOS.Screens
             return card;
         }
 
+        /// <summary>بحث صوتي عن الشارع (بديل btnRestVoiceStreet في أندرويد).</summary>
+        private void Voice(Action<string> apply)
+        {
+            if (!VoiceInput.IsAvailable)
+            {
+                Ui.Toast("التعرّف الصوتي غير متاح على هذا الجهاز");
+                return;
+            }
+
+            if (_voice != null && _voice.IsRunning)
+            {
+                _voice.Stop();
+                _voice = null;
+                Ui.Toast("تم إيقاف التسجيل");
+                return;
+            }
+
+            _voice = new VoiceInput();
+            Ui.Toast("تحدّث الآن… اضغط الزر مرة أخرى للإيقاف");
+
+            _voice.Start(this, text =>
+            {
+                if (apply != null) apply(text);
+            }, err =>
+            {
+                Ui.Toast(err);
+                _voice = null;
+            });
+        }
+
+        public override void ViewWillDisappear(bool animated)
+        {
+            base.ViewWillDisappear(animated);
+            if (_voice != null) { _voice.Stop(); _voice = null; }
+        }
+
         private void Submit()
         {
             if (_area == null) { Ui.Toast("اختر منطقة التوصيل"); return; }
@@ -545,11 +606,27 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class RestaurantRequestsViewController : ListViewController<Dictionary<string, object>>
     {
-        public RestaurantRequestsViewController() : base("توصيلات متاحة") { }
+        public RestaurantRequestsViewController() : base("توصيلات المطاعم المتاحة")
+        {
+        }
 
         protected override string EmptyText
         {
-            get { return "لا توجد توصيلات متاحة الآن"; }
+            get { return "لا توجد توصيلات متاحة حالياً"; }
+        }
+
+        protected override string Subtitle
+        {
+            get { return "اختر توصيلاً قريباً منك لقبوله وتنفيذه"; }
+        }
+
+        public override void ViewDidLoad()
+        {
+            base.ViewDidLoad();
+
+            // «تحديث القائمة» (بديل btnRefresh في أندرويد)
+            NavigationItem.RightBarButtonItem = new UIBarButtonItem("تحديث القائمة",
+                UIBarButtonItemStyle.Plain, (s, e) => Reload());
         }
 
         protected override List<Dictionary<string, object>> Fetch()
@@ -603,7 +680,7 @@ namespace Tawsela.iOS.Screens
         private UIStackView _stack;
         private UILabel _status;
 
-        public RestaurantDeliveryExecuteViewController(int id) : base("تنفيذ التوصيلة")
+        public RestaurantDeliveryExecuteViewController(int id) : base("تنفيذ توصيل المطعم")
         {
             _id = id;
         }
@@ -642,13 +719,17 @@ namespace Tawsela.iOS.Screens
             }
 
             var status = Row.Str(o, "Status");
-            _status.Text = string.IsNullOrEmpty(status) ? "توصيلة مطعم" : status;
+            _status.Text = "الحالة: " + (string.IsNullOrEmpty(status) ? "—" : status);
 
+            var restName = Row.Str(o, "RestaurantName");
+            _stack.AddArrangedSubview(Controls.InfoRow("المطعم",
+                string.IsNullOrEmpty(restName) ? "—" : restName));
             _stack.AddArrangedSubview(Controls.InfoRow("العميل", Row.Str(o, "CustomerName")));
             _stack.AddArrangedSubview(Controls.InfoRow("الهاتف", Row.Str(o, "CustomerPhone")));
-            _stack.AddArrangedSubview(Controls.InfoRow("الاستلام", Row.Str(o, "PickupAddress")));
-            _stack.AddArrangedSubview(Controls.InfoRow("التوصيل", Row.Str(o, "DeliveryAddress")));
-            _stack.AddArrangedSubview(Controls.InfoRow("السعر", Row.Num(o, "Fare").ToString("0.00") + " ج.م"));
+            _stack.AddArrangedSubview(Controls.InfoRow("نقطة الاستلام", Row.Str(o, "PickupAddress")));
+            _stack.AddArrangedSubview(Controls.InfoRow("نقطة التسليم", Row.Str(o, "DeliveryAddress")));
+            _stack.AddArrangedSubview(Controls.InfoRow("سعر التوصيل",
+                Row.Num(o, "Fare").ToString("0.00") + " ج.م"));
 
             var phone = Row.Str(o, "CustomerPhone");
             if (!string.IsNullOrEmpty(phone))
@@ -659,17 +740,17 @@ namespace Tawsela.iOS.Screens
             }
 
             if (string.IsNullOrEmpty(status) || status == "قيد الانتظار")
-                Action("قبول التوصيلة", () => Api.AcceptRestaurantDelivery(_id));
+                Action("قبول التوصيل", () => Api.AcceptRestaurantDelivery(_id));
             else if (status == "مخصص للسائق")
                 Action("وصلت للمحل", () => Api.ArrivedAtRestaurant(_id));
             else if (status == "وصل للمحل")
-                Action("تم استلام الطلب", () => Api.PickedUpRestaurantDelivery(_id));
+                Action("استلمت الطلب", () => Api.PickedUpRestaurantDelivery(_id));
             else if (status == "استلمت الطلب")
-                Action("تم التسليم للعميل", () => Api.DeliveredRestaurantDelivery(_id));
+                Action("وصلت للعميل", () => Api.DeliveredRestaurantDelivery(_id));
             else if (status == "تم التسليم")
             {
-                // بديل btnComplete → Finish في أندرويد
-                var close = Controls.OutlineButton("إغلاق");
+                // بديل btnCompleteDelivery في أندرويد
+                var close = Controls.OutlineButton("إنهاء التوصيل");
                 close.TouchUpInside += (s, e) => Back();
                 _stack.AddArrangedSubview(close);
             }

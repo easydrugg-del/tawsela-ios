@@ -16,7 +16,7 @@ namespace Tawsela.iOS.Screens
     {
         private readonly bool _admin;
 
-        public TopUpHistoryViewController() : base("سجل شحن الرصيد")
+        public TopUpHistoryViewController() : base("سجل تأكيدات الدفع")
         {
             _admin = Session.IsAdmin;
         }
@@ -30,7 +30,12 @@ namespace Tawsela.iOS.Screens
 
         protected override string EmptyText
         {
-            get { return "لا توجد طلبات شحن بعد"; }
+            get { return "لا يوجد سجل بعد"; }
+        }
+
+        protected override string Subtitle
+        {
+            get { return "من اعتمد كل شحنة ومتى"; }
         }
 
         protected override List<Dictionary<string, object>> Fetch()

@@ -19,19 +19,26 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class NewOrderViewController : BaseViewController
     {
-        private UITextField _fromField, _toField, _stopField, _noteField;
+        private UITextField _fromField, _toField, _noteField;
         private UITextField _couponField, _tipField, _splitPhoneField, _maxWaitField;
         private UITextField _offeredField, _floorField;
-        private UILabel _fromCoords, _toCoords, _stopCoords;
-        private UILabel _fareLabel, _distanceLabel, _couponInfo, _scheduleInfo, _driversInfo;
+        private UITextField _stopField;
+        private double _stopLat, _stopLng;
+        private UILabel _fromCoords, _toCoords;
+        private UILabel _fareLabel, _distanceLabel, _couponInfo, _scheduleInfo, _loyaltyInfo;
+        private UILabel _tripFareLabel, _fareDetailsLabel;
+        private UILabel _nearbyLabel, _streetsTitle;
         private UILabel _govValue, _cityValue;
         private UIButton _btnService, _btnPayment, _btnCreate, _btnPickTime;
         private UISwitch _scheduledSwitch, _biddingSwitch;
-        private UIStackView _areaRow, _streetRow, _savedRow, _biddingBox;
+        private UIStackView _areaRow, _savedRow, _biddingBox;
+        private UIStackView _streetGrid, _nearbyBox;
+        private UITextField _streetSearch;
+        private readonly List<Street> _streets = new List<Street>();
+        private bool _showAllStreets;
 
         private double _fromLat, _fromLng;
         private double _toLat, _toLng;
-        private double _stopLat, _stopLng;
 
         private string _governorate = "";
         private string _city = "";
@@ -41,12 +48,13 @@ namespace Tawsela.iOS.Screens
         private decimal _discount;
         private int _tierPercent;
         private decimal _tierAmount;
-        private UILabel _loyaltyInfo;
         private Coupon _coupon;
         private DateTime _scheduledAt = default(DateTime);
 
         private int _areaSeq, _streetSeq, _driversSeq;
         private UIStackView _recentRow;
+        private UIScrollView _recentScroll;
+        private UILabel _recentTitle;
         private VoiceInput _voice;
 
         // إعادة آخر رحلة (بديل prefFrom/prefTo/prefServiceId في أندرويد)
@@ -122,10 +130,10 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(12f, 16f);
 
-            /* ---------- الانطلاق ---------- */
-            stack.AddArrangedSubview(Controls.SectionTitle("نقطة الانطلاق"));
+            /* ---------- موقع الانطلاق ---------- */
+            stack.AddArrangedSubview(Controls.SectionTitle("موقع الانطلاق"));
 
-            _fromField = Controls.TextField("اكتب عنوان الانطلاق");
+            _fromField = Controls.TextField("من أين؟ (العنوان)");
             _fromField.ReturnKeyType = UIReturnKeyType.Done;
             _fromField.EditingDidEnd += (s, e) => ResolveFrom();
 
@@ -140,11 +148,7 @@ namespace Tawsela.iOS.Screens
             _fromCoords = MakeLabel("", 11f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
             stack.AddArrangedSubview(_fromCoords);
 
-            var useGps = Controls.OutlineButton("استخدم موقعي الحالي");
-            useGps.TouchUpInside += (s, e) => RequestLocation(true);
-            stack.AddArrangedSubview(useGps);
-
-            var pickFrom = Controls.IconButton("اختيار الانطلاق من الخريطة", "ic_pin", Theme.Primary);
+            var pickFrom = Controls.IconButton("تحديد موقع الانطلاق على الخريطة", "ic_pin", Theme.Primary);
             pickFrom.TouchUpInside += (s, e) =>
             {
                 var start = LocationService.LastKnown;
@@ -162,23 +166,25 @@ namespace Tawsela.iOS.Screens
             };
             stack.AddArrangedSubview(pickFrom);
 
-            // أماكن محفوظة (بديل Spinner الأماكن المحفوظة)
-            _savedRow = new UIStackView
-            {
-                Axis = UILayoutConstraintAxis.Horizontal,
-                Spacing = 8,
-                TranslatesAutoresizingMaskIntoConstraints = false
-            };
-            stack.AddArrangedSubview(_savedRow);
+            // «السائقون القريبون منك:» (بديل rowNearbyDrivers في أندرويد)
+            _nearbyLabel = MakeLabel("السائقون القريبون منك:", 13f, Theme.TextPrimary,
+                UIFontWeight.Medium, UITextAlignment.Right);
+            _nearbyLabel.Hidden = true;
+            stack.AddArrangedSubview(_nearbyLabel);
 
-            var savePlace = Controls.IconButton("حفظ الانطلاق كمكان مفضّل", "ic_save", Theme.Primary);
-            savePlace.TouchUpInside += (s, e) => SaveCurrentPlace();
-            stack.AddArrangedSubview(savePlace);
+            _nearbyBox = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 6,
+                TranslatesAutoresizingMaskIntoConstraints = false,
+                Hidden = true
+            };
+            stack.AddArrangedSubview(_nearbyBox);
 
             /* ---------- الوجهة ---------- */
             stack.AddArrangedSubview(Controls.SectionTitle("الوجهة"));
 
-            _toField = Controls.TextField("اكتب عنوان الوجهة");
+            _toField = Controls.TextField("إلى أين؟ (العنوان)");
             _toField.EditingDidEnd += (s, e) => ResolveTo();
 
             var toMic = Controls.SquareIconButton("ic_mic", Theme.Primary, () => Voice(text =>
@@ -204,48 +210,18 @@ namespace Tawsela.iOS.Screens
             };
             stack.AddArrangedSubview(pickTo);
 
-            // وجهات سابقة (بديل اقتراحات Api.GetOrders في أندرويد)
-            _recentRow = new UIStackView
-            {
-                Axis = UILayoutConstraintAxis.Vertical,
-                Spacing = 6,
-                TranslatesAutoresizingMaskIntoConstraints = false
-            };
-            _recentRow.Hidden = true;
-            stack.AddArrangedSubview(_recentRow);
+            /* ---------- اختيار سريع للوجهة ---------- */
+            stack.AddArrangedSubview(Controls.SectionTitle("اختيار سريع للوجهة"));
 
-            /* ---------- نقطة إضافية ---------- */
-            stack.AddArrangedSubview(Controls.SectionTitle("نقطة إضافية (اختياري)"));
-
-            _stopField = Controls.TextField("عنوان التوقف في الطريق");
-
-            var stopMic = Controls.SquareIconButton("ic_mic", Theme.Primary, () => Voice(text => { _stopField.Text = text; }));
-            stack.AddArrangedSubview(Controls.FieldWithAction(_stopField, stopMic));
-
-            _stopCoords = MakeLabel("", 11f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
-            stack.AddArrangedSubview(_stopCoords);
-
-            var pickStop = Controls.IconButton("تحديد المحطة على الخريطة", "ic_pin", Theme.Primary);
-            pickStop.TouchUpInside += (s, e) =>
-            {
-                Push(MapViewController.Pick(_stopLat, _stopLng, (plat, plng, address) =>
-                {
-                    _stopLat = plat; _stopLng = plng;
-                    _stopCoords.Text = Coords(plat, plng);
-                    if (!string.IsNullOrWhiteSpace(address)) _stopField.Text = address;
-                }));
-            };
-            stack.AddArrangedSubview(pickStop);
-
-            /* ---------- المحافظة / المدينة ---------- */
             var govCard = MakeSelectorCard("المحافظة", out _govValue, () => PickGovernorate());
             stack.AddArrangedSubview(govCard);
 
             var cityCard = MakeSelectorCard("المدينة", out _cityValue, () => PickCity());
             stack.AddArrangedSubview(cityCard);
 
-            /* ---------- المناطق والشوارع ---------- */
-            stack.AddArrangedSubview(Controls.SectionTitle("المناطق"));
+            stack.AddArrangedSubview(MakeLabel("المناطق:", 13f, Theme.TextPrimary,
+                UIFontWeight.Medium, UITextAlignment.Right));
+
             _areaRow = new UIStackView
             {
                 Axis = UILayoutConstraintAxis.Horizontal,
@@ -254,28 +230,178 @@ namespace Tawsela.iOS.Screens
             };
             stack.AddArrangedSubview(_areaRow);
 
-            stack.AddArrangedSubview(Controls.SectionTitle("أهم الشوارع"));
-            _streetRow = new UIStackView
+            _streetsTitle = MakeLabel("أهم شوارع المدينة:", 13f, Theme.TextPrimary,
+                UIFontWeight.Medium, UITextAlignment.Right);
+            stack.AddArrangedSubview(_streetsTitle);
+
+            // بحث الشوارع + الإدخال الصوتي (بديل txtStreetSearch/btnVoiceStreet)
+            _streetSearch = Controls.TextField("ابحث عن شارع (جزء من الاسم)");
+            _streetSearch.EditingChanged += (s, e) =>
+            {
+                _showAllStreets = false;
+                BuildStreetGrid(_streetSearch.Text);
+            };
+
+            var streetMic = Controls.SquareIconButton("ic_mic", Theme.Primary, () => Voice(text =>
+            {
+                _streetSearch.Text = text;
+                _showAllStreets = false;
+                BuildStreetGrid(text);
+            }));
+            streetMic.AccessibilityLabel = "بحث بالصوت";
+            stack.AddArrangedSubview(Controls.FieldWithAction(_streetSearch, streetMic));
+
+            // شبكة 3 في السطر (بديل rowCityToChips في أندرويد)
+            _streetGrid = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 8,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            stack.AddArrangedSubview(_streetGrid);
+
+            /* ---------- محطة وسيطة (اختياري) ---------- */
+            stack.AddArrangedSubview(Controls.SectionTitle("محطة وسيطة (اختياري)"));
+
+            _stopField = Controls.TextField("عنوان المحطة الوسطى");
+            stack.AddArrangedSubview(_stopField);
+
+            var pickStop = Controls.OutlineButton("تحديد المحطة على الخريطة");
+            pickStop.TouchUpInside += (s, e) =>
+            {
+                Push(MapViewController.Pick(_stopLat, _stopLng, (lat, lng, address) =>
+                {
+                    _stopLat = lat;
+                    _stopLng = lng;
+                    if (!string.IsNullOrWhiteSpace(address)) _stopField.Text = address;
+                }));
+            };
+            stack.AddArrangedSubview(pickStop);
+
+            /* ---------- تفاصيل الطلب ---------- */
+            _splitPhoneField = Controls.TextField("مشاركة الأجرة مع رقم (اختياري)");
+            _splitPhoneField.KeyboardType = UIKeyboardType.PhonePad;
+            stack.AddArrangedSubview(_splitPhoneField);
+
+            _floorField = Controls.TextField("رقم الشقة/الدور (اختياري)");
+            stack.AddArrangedSubview(_floorField);
+
+            _noteField = Controls.TextField("ملاحظات (اختياري)");
+            stack.AddArrangedSubview(_noteField);
+
+            stack.AddArrangedSubview(MakeLabel("أقصي وقت للانتظار (بالدقائق)", 13f, Theme.TextPrimary,
+                UIFontWeight.Medium, UITextAlignment.Right));
+
+            _maxWaitField = Controls.TextField("بالدقائق (افتراضي 30)");
+            _maxWaitField.KeyboardType = UIKeyboardType.NumberPad;
+            _maxWaitField.Text = "30";
+            stack.AddArrangedSubview(_maxWaitField);
+
+            stack.AddArrangedSubview(MakeLabel("بعد انتهاء الوقت يُخفى الطلب من شاشة السائقين تلقائياً",
+                11f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right));
+
+            /* ---------- التقدير (txtEstimate + txtLoyaltyInfo) ---------- */
+            _distanceLabel = MakeLabel("حدد الانطلاق والوجهة لحساب المسافة", 12f, Theme.TextSecondary,
+                UIFontWeight.Regular, UITextAlignment.Right);
+            stack.AddArrangedSubview(_distanceLabel);
+
+            _fareLabel = MakeLabel("—", 15f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
+            _fareLabel.Lines = 0;
+            stack.AddArrangedSubview(_fareLabel);
+
+            _loyaltyInfo = MakeLabel("", 12f, Theme.Green, UIFontWeight.Medium, UITextAlignment.Right);
+            _loyaltyInfo.Hidden = true;
+            stack.AddArrangedSubview(_loyaltyInfo);
+
+            /* ---------- نوع الخدمة ---------- */
+            stack.AddArrangedSubview(MakeLabel("نوع الخدمة", 13f, Theme.TextPrimary,
+                UIFontWeight.Medium, UITextAlignment.Right));
+
+            _btnService = Controls.IconButton("توصيلة عادية", "ic_bell", Theme.Primary);
+            _btnService.TouchUpInside += (s, e) => PickService();
+            stack.AddArrangedSubview(_btnService);
+
+            /* ---------- طريقة الدفع ---------- */
+            stack.AddArrangedSubview(MakeLabel("طريقة الدفع", 13f, Theme.TextPrimary,
+                UIFontWeight.Medium, UITextAlignment.Right));
+
+            _btnPayment = Controls.IconButton("نقدي", "ic_money", Theme.Primary);
+            _btnPayment.TouchUpInside += (s, e) => PickPayment();
+            stack.AddArrangedSubview(_btnPayment);
+
+            /* ---------- أماكن مفضلة ---------- */
+            stack.AddArrangedSubview(Controls.SectionTitle("أماكن مفضلة"));
+
+            _savedRow = new UIStackView
             {
                 Axis = UILayoutConstraintAxis.Horizontal,
                 Spacing = 8,
                 TranslatesAutoresizingMaskIntoConstraints = false
             };
-            stack.AddArrangedSubview(_streetRow);
+            stack.AddArrangedSubview(_savedRow);
 
-            /* ---------- الخدمة والدفع ---------- */
-            _btnService = Controls.IconButton("اختر نوع الخدمة", "ic_bell", Theme.Primary);
-            _btnService.TouchUpInside += (s, e) => PickService();
-            stack.AddArrangedSubview(_btnService);
+            // وجهاتك السابقة: آخر 5 وجهات كأزرار سريعة
+            // (بديل قائمة «آخر وجهات» في أندرويد — تظهر فقط لو فيه طلبات سابقة)
+            _recentTitle = MakeLabel("وجهاتك السابقة:", 13f, Theme.TextPrimary,
+                UIFontWeight.Medium, UITextAlignment.Right);
+            _recentTitle.Hidden = true;
+            stack.AddArrangedSubview(_recentTitle);
 
-            _btnPayment = Controls.IconButton("الدفع: نقدي", "ic_money", Theme.Primary);
-            _btnPayment.TouchUpInside += (s, e) => PickPayment();
-            stack.AddArrangedSubview(_btnPayment);
+            // صف أفقي قابل للتمرير حتى لا تخرج الشرائح الطويلة عن الشاشة
+            _recentScroll = new UIScrollView
+            {
+                TranslatesAutoresizingMaskIntoConstraints = false,
+                ShowsHorizontalScrollIndicator = false,
+                DirectionalLockEnabled = true,
+                Hidden = true
+            };
+            _recentRow = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Horizontal,
+                Spacing = 8,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            _recentScroll.AddSubview(_recentRow);
+            _recentScroll.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(_recentRow, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _recentScroll, NSLayoutAttribute.Top, 1, 0),
+                NSLayoutConstraint.Create(_recentRow, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, _recentScroll, NSLayoutAttribute.Bottom, 1, 0),
+                NSLayoutConstraint.Create(_recentRow, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, _recentScroll, NSLayoutAttribute.Leading, 1, 0),
+                NSLayoutConstraint.Create(_recentRow, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, _recentScroll, NSLayoutAttribute.Trailing, 1, 0),
+            });
+            _recentScroll.HeightAnchor.ConstraintEqualTo(44f).Active = true;
+            stack.AddArrangedSubview(_recentScroll);
+
+            var savePlace = Controls.IconButton("حفظ الانطلاق كمكان مفضّل", "ic_save", Theme.Primary);
+            savePlace.TouchUpInside += (s, e) => SaveCurrentPlace();
+            stack.AddArrangedSubview(savePlace);
+
+            /* ---------- الجدولة ---------- */
+            _scheduledSwitch = new UISwitch { OnTintColor = Theme.Primary, TranslatesAutoresizingMaskIntoConstraints = false };
+            _scheduledSwitch.ValueChanged += (s, e) =>
+            {
+                _btnPickTime.Enabled = _scheduledSwitch.On;
+                if (!_scheduledSwitch.On)
+                {
+                    _scheduledAt = default(DateTime);
+                    _scheduleInfo.Text = "";
+                    UpdateEstimate();
+                }
+            };
+            stack.AddArrangedSubview(Row("طلب مجدول (في وقت لاحق)", _scheduledSwitch));
+
+            _btnPickTime = Controls.IconButton("اختيار موعد التنفيذ", "ic_clock", Theme.Primary);
+            _btnPickTime.Enabled = false;
+            _btnPickTime.TouchUpInside += (s, e) => PickScheduleTime();
+            stack.AddArrangedSubview(_btnPickTime);
+
+            _scheduleInfo = MakeLabel("", 12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
+            stack.AddArrangedSubview(_scheduleInfo);
 
             /* ---------- كود الخصم ---------- */
             stack.AddArrangedSubview(Controls.SectionTitle("كود الخصم"));
 
-            _couponField = Controls.TextField("أدخل كود الخصم");
+            _couponField = Controls.TextField("أدخل الكود");
             _couponField.AutocapitalizationType = UITextAutocapitalizationType.AllCharacters;
 
             var applyCoupon = Controls.PrimaryButton("تطبيق", 48f);
@@ -286,40 +412,8 @@ namespace Tawsela.iOS.Screens
             _couponInfo = MakeLabel("", 12f, Theme.Green, UIFontWeight.Medium, UITextAlignment.Right);
             stack.AddArrangedSubview(_couponInfo);
 
-            /* ---------- الجدولة ---------- */
-            stack.AddArrangedSubview(Controls.SectionTitle("جدولة الطلب"));
-
-            _scheduledSwitch = new UISwitch { OnTintColor = Theme.Primary, TranslatesAutoresizingMaskIntoConstraints = false };
-            _scheduledSwitch.ValueChanged += (s, e) =>
-            {
-                _btnPickTime.Enabled = _scheduledSwitch.On;
-                if (!_scheduledSwitch.On)
-                {
-                    _scheduledAt = default(DateTime);
-                    _scheduleInfo.Text = "الطلب الآن";
-                    UpdateEstimate();
-                }
-            };
-            stack.AddArrangedSubview(Row("طلب مجدول لاحقًا", _scheduledSwitch));
-
-            _btnPickTime = Controls.IconButton("اختيار موعد التنفيذ", "ic_clock", Theme.Primary);
-            _btnPickTime.Enabled = false;
-            _btnPickTime.TouchUpInside += (s, e) => PickScheduleTime();
-            stack.AddArrangedSubview(_btnPickTime);
-
-            _scheduleInfo = MakeLabel("الطلب الآن", 12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
-            stack.AddArrangedSubview(_scheduleInfo);
-
-            /* ---------- المزايدة ---------- */
-            stack.AddArrangedSubview(Controls.SectionTitle("المزايدة على السعر"));
-
+            /* ---------- حقول مخفية زي أندرويد (تفاوض/إكرامية) ---------- */
             _biddingSwitch = new UISwitch { OnTintColor = Theme.Primary, TranslatesAutoresizingMaskIntoConstraints = false };
-            _biddingSwitch.ValueChanged += (s, e) =>
-            {
-                _biddingBox.Hidden = !_biddingSwitch.On;
-            };
-            stack.AddArrangedSubview(Row("اطلب بمزايدة (السائقون يقدّمون عروضهم)", _biddingSwitch));
-
             _biddingBox = new UIStackView
             {
                 Axis = UILayoutConstraintAxis.Vertical,
@@ -327,68 +421,44 @@ namespace Tawsela.iOS.Screens
                 TranslatesAutoresizingMaskIntoConstraints = false,
                 Hidden = true
             };
-            _offeredField = Controls.TextField("السعر الذي تعرضه (ج.م)");
-            _offeredField.KeyboardType = UIKeyboardType.DecimalPad;
-            _floorField = Controls.TextField("أقل سعر تقبله (اختياري)");
-            _floorField.KeyboardType = UIKeyboardType.DecimalPad;
-            _biddingBox.AddArrangedSubview(_offeredField);
-            _biddingBox.AddArrangedSubview(_floorField);
-            stack.AddArrangedSubview(_biddingBox);
+            _offeredField = Controls.TextField("سعرك المقترح (ج.م) - اتركه فارغاً للسعر التقديري");
 
-            /* ---------- الإكرامية والملاحظة ---------- */
-            stack.AddArrangedSubview(Controls.SectionTitle("تفاصيل إضافية"));
-
-            _tipField = Controls.TextField("إكرامية للسائق (اختياري)");
+            _tipField = Controls.TextField("مبلغ الإكرامية بالج.م");
             _tipField.KeyboardType = UIKeyboardType.DecimalPad;
+
+            /* ---------- إكرامية (اختياري) ---------- */
+            stack.AddArrangedSubview(Controls.SectionTitle("إكرامية (اختياري)"));
             stack.AddArrangedSubview(_tipField);
 
-            _noteField = Controls.TextField("ملاحظة للسائق (اختياري)");
-            stack.AddArrangedSubview(_noteField);
-
-            _splitPhoneField = Controls.TextField("رقم مشاركة الأجرة (اختياري)");
-            _splitPhoneField.KeyboardType = UIKeyboardType.PhonePad;
-            stack.AddArrangedSubview(_splitPhoneField);
-
-            _maxWaitField = Controls.TextField("أقصى مدة انتظار للسائق (دقيقة)");
-            _maxWaitField.KeyboardType = UIKeyboardType.NumberPad;
-            _maxWaitField.Text = "30";
-            stack.AddArrangedSubview(_maxWaitField);
-
-            /* ---------- السائقون المتاحون ---------- */
-            _driversInfo = MakeLabel("جارٍ البحث عن سائقين قريبين…", 12f, Theme.TextSecondary,
+            /* ---------- تكلفة الرحلة ---------- */
+            var fareCard = Controls.Card();
+            var fareTitle = MakeLabel("تكلفة الرحلة", 12f, Theme.TextSecondary,
                 UIFontWeight.Regular, UITextAlignment.Right);
-            stack.AddArrangedSubview(_driversInfo);
+            _tripFareLabel = MakeLabel("—", 22f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
+            _fareDetailsLabel = MakeLabel("", 12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
+            _fareDetailsLabel.Lines = 0;
 
-            /* ---------- التقدير ---------- */
-            var estimateCard = Controls.Card();
-            _distanceLabel = MakeLabel("—", 13f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
-            _fareLabel = MakeLabel("—", 20f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
-
-            // سطر خصم الولاء حسب المستوى (بديل txtLoyaltyInfo)
-            _loyaltyInfo = MakeLabel("", 12f, Theme.Green, UIFontWeight.Medium, UITextAlignment.Right);
-            _loyaltyInfo.Hidden = true;
-
-            estimateCard.AddSubview(_distanceLabel);
-            estimateCard.AddSubview(_fareLabel);
-            estimateCard.AddSubview(_loyaltyInfo);
-            estimateCard.AddConstraints(new[]
+            fareCard.AddSubview(fareTitle);
+            fareCard.AddSubview(_tripFareLabel);
+            fareCard.AddSubview(_fareDetailsLabel);
+            fareCard.AddConstraints(new[]
             {
-                NSLayoutConstraint.Create(_distanceLabel, NSLayoutAttribute.Top, NSLayoutRelation.Equal, estimateCard, NSLayoutAttribute.Top, 1, 10),
-                NSLayoutConstraint.Create(_distanceLabel, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, estimateCard, NSLayoutAttribute.Leading, 1, 12),
-                NSLayoutConstraint.Create(_distanceLabel, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, estimateCard, NSLayoutAttribute.Trailing, 1, -12),
+                NSLayoutConstraint.Create(fareTitle, NSLayoutAttribute.Top, NSLayoutRelation.Equal, fareCard, NSLayoutAttribute.Top, 1, 10),
+                NSLayoutConstraint.Create(fareTitle, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, fareCard, NSLayoutAttribute.Leading, 1, 12),
+                NSLayoutConstraint.Create(fareTitle, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, fareCard, NSLayoutAttribute.Trailing, 1, -12),
 
-                NSLayoutConstraint.Create(_fareLabel, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _distanceLabel, NSLayoutAttribute.Bottom, 1, 4),
-                NSLayoutConstraint.Create(_fareLabel, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, estimateCard, NSLayoutAttribute.Leading, 1, 12),
-                NSLayoutConstraint.Create(_fareLabel, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, estimateCard, NSLayoutAttribute.Trailing, 1, -12),
+                NSLayoutConstraint.Create(_tripFareLabel, NSLayoutAttribute.Top, NSLayoutRelation.Equal, fareTitle, NSLayoutAttribute.Bottom, 1, 4),
+                NSLayoutConstraint.Create(_tripFareLabel, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, fareCard, NSLayoutAttribute.Leading, 1, 12),
+                NSLayoutConstraint.Create(_tripFareLabel, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, fareCard, NSLayoutAttribute.Trailing, 1, -12),
 
-                NSLayoutConstraint.Create(_loyaltyInfo, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _fareLabel, NSLayoutAttribute.Bottom, 1, 4),
-                NSLayoutConstraint.Create(_loyaltyInfo, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, estimateCard, NSLayoutAttribute.Leading, 1, 12),
-                NSLayoutConstraint.Create(_loyaltyInfo, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, estimateCard, NSLayoutAttribute.Trailing, 1, -12),
-                NSLayoutConstraint.Create(_loyaltyInfo, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, estimateCard, NSLayoutAttribute.Bottom, 1, -12),
+                NSLayoutConstraint.Create(_fareDetailsLabel, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _tripFareLabel, NSLayoutAttribute.Bottom, 1, 4),
+                NSLayoutConstraint.Create(_fareDetailsLabel, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, fareCard, NSLayoutAttribute.Leading, 1, 12),
+                NSLayoutConstraint.Create(_fareDetailsLabel, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, fareCard, NSLayoutAttribute.Trailing, 1, -12),
+                NSLayoutConstraint.Create(_fareDetailsLabel, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, fareCard, NSLayoutAttribute.Bottom, 1, -12),
             });
-            stack.AddArrangedSubview(estimateCard);
+            stack.AddArrangedSubview(fareCard);
 
-            _btnCreate = Controls.PrimaryButton("اطلب التوصيلة");
+            _btnCreate = Controls.PrimaryButton("إرسال الطلب");
             _btnCreate.TouchUpInside += (s, e) => CreateOrder();
             stack.AddArrangedSubview(_btnCreate);
 
@@ -654,7 +724,8 @@ namespace Tawsela.iOS.Screens
                 _city = "";
                 _cityValue.Text = "اختر المدينة";
                 ClearChips(_areaRow);
-                ClearChips(_streetRow);
+                _streets.Clear();
+                ClearStreetGrid();
             });
         }
 
@@ -750,46 +821,104 @@ namespace Tawsela.iOS.Screens
 
         private void RenderStreets(List<Street> streets)
         {
-            ClearChips(_streetRow);
-            if (streets == null || streets.Count == 0)
+            _streets.Clear();
+            if (streets != null) _streets.AddRange(streets);
+
+            _showAllStreets = false;
+            if (_streetsTitle != null)
+                _streetsTitle.Text = string.IsNullOrEmpty(_city)
+                    ? "أهم شوارع المدينة:"
+                    : "أهم شوارع " + _city + ":";
+
+            BuildStreetGrid(_streetSearch != null ? _streetSearch.Text : null);
+        }
+
+        /// <summary>اختيار شارع كوجهة (مشترك بين الشبكة والبحث).</summary>
+        private void ApplyStreet(Street s)
+        {
+            _toField.Text = s.Name;
+            _toLat = s.Lat;
+            _toLng = s.Lng;
+            _toCoords.Text = Coords(s.Lat, s.Lng);
+            UpdateEstimate();
+        }
+
+        /// <summary>شبكة الشوارع: 3 في السطر + فلترة فورية + «عرض كل الشوارع» (بديل BuildStreetGrid في أندرويد).</summary>
+        private void BuildStreetGrid(string filter)
+        {
+            if (_streetGrid == null) return;
+            ClearStreetGrid();
+
+            var q = (filter ?? "").Trim();
+            var list = new List<Street>();
+            foreach (var s in _streets)
             {
-                _streetRow.AddArrangedSubview(MakeLabel("لا توجد شوارع مسجلة لهذه المدينة",
+                if (string.IsNullOrWhiteSpace(s.Name)) continue;
+                if (q.Length > 0 && s.Name.IndexOf(q, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                list.Add(s);
+            }
+
+            if (list.Count == 0)
+            {
+                _streetGrid.AddArrangedSubview(MakeLabel(
+                    q.Length > 0 ? "لا يوجد شارع بهذا الاسم" : "لا توجد شوارع مسجلة لهذه المدينة",
                     12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right));
                 return;
             }
 
-            var count = Math.Min(3, streets.Count);
-            for (int i = 0; i < count; i++)
+            var max = _showAllStreets ? int.MaxValue : 18;
+            var shown = list.Count > max ? list.GetRange(0, max) : list;
+
+            UIStackView row = null;
+            var inRow = 0;
+            foreach (var s in shown)
             {
-                var s = streets[i];
-                var chip = Controls.StreetChip(s.Name, () =>
+                if (row == null)
                 {
-                    _toField.Text = s.Name;
-                    _toLat = s.Lat;
-                    _toLng = s.Lng;
-                    _toCoords.Text = Coords(s.Lat, s.Lng);
-                    UpdateEstimate();
-                });
-                _streetRow.AddArrangedSubview(chip);
+                    row = new UIStackView
+                    {
+                        Axis = UILayoutConstraintAxis.Horizontal,
+                        Distribution = UIStackViewDistribution.FillEqually,
+                        Spacing = 8,
+                        TranslatesAutoresizingMaskIntoConstraints = false
+                    };
+                    _streetGrid.AddArrangedSubview(row);
+                    inRow = 0;
+                }
+
+                var st = s;
+                var chip = Controls.StreetChip(st.Name, () => ApplyStreet(st));
+                chip.TitleLabel.LineBreakMode = UILineBreakMode.WordWrap;
+                chip.TitleLabel.Lines = 2;
+                chip.TitleLabel.TextAlignment = UITextAlignment.Center;
+                chip.TitleLabel.Font = Theme.FontBold(11);
+                chip.HeightAnchor.ConstraintEqualTo(46f).Active = true;
+                row.AddArrangedSubview(chip);
+
+                inRow++;
+                if (inRow >= 3) row = null;
             }
 
-            if (streets.Count > 3)
+            if (shown.Count < list.Count)
             {
-                var more = Controls.StreetChip("الكل ▾", () =>
+                var more = Controls.OutlineButton("عرض كل الشوارع (" + list.Count + ")", Theme.Red, 40f);
+                more.TouchUpInside += (s, e) =>
                 {
-                    var names = new List<string>();
-                    foreach (var s in streets) names.Add(s.Name);
-                    Ui.Choose("كل الشوارع", names, index =>
-                    {
-                        var s = streets[index];
-                        _toField.Text = s.Name;
-                        _toLat = s.Lat;
-                        _toLng = s.Lng;
-                        _toCoords.Text = Coords(s.Lat, s.Lng);
-                        UpdateEstimate();
-                    });
-                });
-                _streetRow.AddArrangedSubview(more);
+                    _showAllStreets = true;
+                    BuildStreetGrid(_streetSearch != null ? _streetSearch.Text : null);
+                };
+                _streetGrid.AddArrangedSubview(more);
+            }
+        }
+
+        private void ClearStreetGrid()
+        {
+            if (_streetGrid == null) return;
+            for (int i = _streetGrid.ArrangedSubviews.Length - 1; i >= 0; i--)
+            {
+                var v = _streetGrid.ArrangedSubviews[i];
+                _streetGrid.RemoveArrangedSubview(v);
+                v.RemoveFromSuperview();
             }
         }
 
@@ -829,10 +958,10 @@ namespace Tawsela.iOS.Screens
             var names = new List<string>();
             foreach (var s in _services) names.Add(s.Name);
 
-            Ui.Choose("نوع الخدمة", names, index =>
+            Ui.Choose("اختار نوع التوصيلة", names, index =>
             {
                 _service = _services[index];
-                _btnService.SetTitle("الخدمة: " + _service.Name, UIControlState.Normal);
+                _btnService.SetTitle(_service.Name, UIControlState.Normal);
                 UpdateEstimate();
             });
         }
@@ -855,8 +984,8 @@ namespace Tawsela.iOS.Screens
                     {
                         _payment = index == 0 ? "نقدي" : "محفظة";
                         _btnPayment.SetTitle(index == 0
-                            ? "الدفع: نقدي"
-                            : "الدفع: محفظة — رصيد " + balance.ToString("0.00") + " ج.م", UIControlState.Normal);
+                            ? "نقدي"
+                            : "محفظة — رصيد " + balance.ToString("0.00") + " ج.م", UIControlState.Normal);
 
                         if (index == 1 && balance <= 0)
                             Ui.Toast("رصيد المحفظة صفر — اشحن المحفظة أولًا أو ادفع نقدًا");
@@ -934,34 +1063,79 @@ namespace Tawsela.iOS.Screens
 
             Ui.Run(() =>
             {
-                // بدون إحداثيات لا يمكن الاستعلام عن القريبين (بديل AvailableDrivers في أندرويد)
+                // بدون إحداثيات تُخفى القائمة بالكامل (نفس أندرويد)
                 if (lat == 0 && lng == 0)
                 {
                     Ui.BeginOnMain(() =>
                     {
                         if (seq != _driversSeq) return;
-                        _driversInfo.Text = "حدد نقطة الانطلاق لعرض السائقين القريبين";
-                        _driversInfo.TextColor = Theme.TextSecondary;
+                        if (_nearbyLabel != null) _nearbyLabel.Hidden = true;
+                        if (_nearbyBox != null) _nearbyBox.Hidden = true;
                     });
                     return;
                 }
 
-                int count;
+                List<Driver> drivers;
                 try
                 {
-                    count = (Api.AvailableDrivers(lat, lng, _governorate, _city) ?? new List<Driver>()).Count;
+                    drivers = Api.AvailableDrivers(lat, lng, _governorate, _city) ?? new List<Driver>();
                 }
-                catch { count = 0; }
+                catch { drivers = null; }
 
                 if (seq != _driversSeq) return;
                 Ui.BeginOnMain(() =>
                 {
-                    _driversInfo.Text = count > 0
-                        ? "سائقون متاحون الآن: " + count
-                        : "لا يوجد سائقون متاحون حاليًا — يمكنك الطلب وسيُبلَّغ السائقون";
-                    _driversInfo.TextColor = count > 0 ? Theme.Green : Theme.TextSecondary;
+                    if (seq != _driversSeq) return;
+                    if (drivers == null) { ShowNearby(null, "تعذر تحميل السائقين حاليًا"); return; }
+                    if (drivers.Count == 0) { ShowNearby(null, "لا يوجد سائقون متاحون قريبون حاليًا"); return; }
+                    ShowNearby(drivers, null);
                 });
             }, null, ex => AppServices.Log("TawselaNewOrder", "drivers: " + ex.Message));
+        }
+
+        /// <summary>أول 3 سائقين قريبين تحت خانة الانطلاق (بديل BuildNearbyRow في أندرويد).</summary>
+        private void ShowNearby(List<Driver> drivers, string hint)
+        {
+            if (_nearbyBox == null) return;
+
+            while (_nearbyBox.ArrangedSubviews.Length > 0)
+            {
+                var v = _nearbyBox.ArrangedSubviews[0];
+                _nearbyBox.RemoveArrangedSubview(v);
+                v.RemoveFromSuperview();
+            }
+
+            if (_nearbyLabel != null) _nearbyLabel.Hidden = false;
+            _nearbyBox.Hidden = false;
+
+            if (hint != null)
+            {
+                _nearbyBox.AddArrangedSubview(MakeLabel(hint, 12f, Theme.TextSecondary,
+                    UIFontWeight.Regular, UITextAlignment.Right));
+                return;
+            }
+
+            var shown = 0;
+            foreach (var d in drivers)
+            {
+                if (shown >= 3) break;
+
+                var km = Geo.DistanceKm(_fromLat, _fromLng, d.Lat, d.Lng);
+                var name = string.IsNullOrWhiteSpace(d.FullName) ? "سائق" : d.FullName;
+
+                // نص السيارة: الموديل + اللون + اللوحة (نفس CarText في أندرويد)
+                var car = "";
+                if (!string.IsNullOrWhiteSpace(d.CarModel)) car = d.CarModel;
+                if (!string.IsNullOrWhiteSpace(d.CarColor)) car += (car == "" ? "" : " · ") + d.CarColor;
+                if (!string.IsNullOrWhiteSpace(d.CarPlate)) car += (car == "" ? "" : " · ") + "لوحة " + d.CarPlate;
+
+                var text = name + (car == "" ? "" : " · " + car) + " · " +
+                           Geo.KmText(km) + " · " + Geo.EtaMinutes(km) + " دقيقة";
+
+                _nearbyBox.AddArrangedSubview(MakeLabel(text, 12f, Theme.TextPrimary,
+                    UIFontWeight.Regular, UITextAlignment.Right));
+                shown++;
+            }
         }
 
         /* ---------- التقدير ---------- */
@@ -987,12 +1161,7 @@ namespace Tawsela.iOS.Screens
 
                 Ui.BeginOnMain(() =>
                 {
-                    while (_recentRow.ArrangedSubviews.Length > 0)
-                    {
-                        var v = _recentRow.ArrangedSubviews[0];
-                        _recentRow.RemoveArrangedSubview(v);
-                        v.RemoveFromSuperview();
-                    }
+                    ClearChips(_recentRow);
 
                     var seen = new HashSet<string>();
 
@@ -1006,22 +1175,32 @@ namespace Tawsela.iOS.Screens
                         var lat = o.ToLat;
                         var lng = o.ToLng;
 
-                        var chip = Controls.OutlineButton("↺ " + address, null, 38f);
-                        chip.ContentEdgeInsets = new UIEdgeInsets(0, 12, 0, 12);
-                        chip.TouchUpInside += (s, e) =>
+                        var chip = Controls.ChipButton("↺ " + ShortAddress(address), () =>
                         {
                             _toField.Text = address;
                             _toLat = lat;
                             _toLng = lng;
                             _toCoords.Text = Coords(lat, lng);
                             UpdateEstimate();
-                        };
+                        });
                         _recentRow.AddArrangedSubview(chip);
                     }
 
-                    _recentRow.Hidden = _recentRow.ArrangedSubviews.Length == 0;
+                    var empty = _recentRow.ArrangedSubviews.Length == 0;
+                    if (_recentScroll != null) _recentScroll.Hidden = empty;
+                    if (_recentTitle != null) _recentTitle.Hidden = empty;
                 });
             }, null, ex => AppServices.Log("TawselaNewOrder", "recent: " + ex.Message));
+        }
+
+        /// <summary>اختصار عنوان طويل للعرض في الشريحة: أول جزئين وبحد أقصى 40 حرفًا (نفس ShortAddr).</summary>
+        private static string ShortAddress(string full)
+        {
+            var parts = (full ?? "").Split(new[] { "،", "," }, StringSplitOptions.RemoveEmptyEntries);
+            var text = parts.Length > 0 ? parts[0].Trim() : (full ?? "");
+            if (parts.Length > 1) text += "، " + parts[1].Trim();
+            if (text.Length > 40) text = text.Substring(0, 40) + "…";
+            return text;
         }
 
         /// <summary>
@@ -1087,6 +1266,9 @@ namespace Tawsela.iOS.Screens
             {
                 _distanceLabel.Text = "حدد الانطلاق والوجهة لحساب المسافة";
                 _fareLabel.Text = "—";
+                _tripFareLabel.Text = "—";
+                _fareDetailsLabel.Text = "";
+                _loyaltyInfo.Hidden = true;
                 return;
             }
 
@@ -1096,6 +1278,8 @@ namespace Tawsela.iOS.Screens
             if (_service == null)
             {
                 _fareLabel.Text = "—";
+                _tripFareLabel.Text = "—";
+                _fareDetailsLabel.Text = "";
                 return;
             }
 
@@ -1123,6 +1307,19 @@ namespace Tawsela.iOS.Screens
             if (net < fare) text += "\nالصافي: " + net.ToString("0.00") + " ج.م";
 
             _fareLabel.Text = text;
+
+            // بطاقة «تكلفة الرحلة» أسفل الشاشة (بديل cardFare في أندرويد)
+            _tripFareLabel.Text = net.ToString("0.00") + " ج.م";
+
+            var details = _service.Name + " · " + Geo.KmText(km) + (night ? " · ليل 🌙" : "");
+            if (_discount > 0) details += "\nخصم الكوبون: " + _discount.ToString("0.00") + " ج.م";
+            if (_tierAmount > 0)
+                details += "\nخصم الولاء (" + _tierPercent + "%): " + _tierAmount.ToString("0.00") + " ج.م";
+            _fareDetailsLabel.Text = details;
+
+            _loyaltyInfo.Hidden = _tierAmount <= 0;
+            if (_tierAmount > 0)
+                _loyaltyInfo.Text = "خصم الولاء (" + _tierPercent + "%): " + _tierAmount.ToString("0.00") + " ج.م";
         }
 
         /* ---------- الإنشاء ---------- */
@@ -1136,7 +1333,7 @@ namespace Tawsela.iOS.Screens
 
             if (fromAddr == "") { Ui.Toast("حدد نقطة الانطلاق"); return; }
             if (toAddr == "") { Ui.Toast("حدد الوجهة"); return; }
-            if (_fromLat == 0 && _fromLng == 0) { Ui.Toast("اضغط «استخدم موقعي الحالي» أولًا"); return; }
+            if (_fromLat == 0 && _fromLng == 0) { Ui.Toast("حدد موقع الانطلاق على الخريطة أولًا"); return; }
             if (_toLat == 0 && _toLng == 0) { Ui.Toast("اختر منطقة أو شارعًا محددًا للوجهة"); return; }
             if (_service == null) { Ui.Toast("اختر نوع الخدمة"); return; }
 
@@ -1160,7 +1357,10 @@ namespace Tawsela.iOS.Screens
             _tierAmount = ComputeTierAmount(fare);
 
             var note = (_noteField.Text ?? "").Trim();
-            var stopAddr = (_stopField.Text ?? "").Trim();
+
+            // محطة وسيطة (بديل txtStopAddress / btnPickStop)
+            var stopAddr = (_stopField == null ? "" : (_stopField.Text ?? "").Trim());
+
             var couponCode = _coupon != null ? _coupon.Code : "";
             var discount = _discount + _tierAmount;
             var floor = (_floorField.Text ?? "").Trim();

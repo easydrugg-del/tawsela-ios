@@ -48,7 +48,7 @@ namespace Tawsela.iOS.Screens
             stack.Alignment = UIStackViewAlignment.Fill;
 
             var skip = new UIButton(UIButtonType.System);
-            skip.SetTitle("تخطي", UIControlState.Normal);
+            skip.SetTitle("تخطّي", UIControlState.Normal);
             skip.SetTitleColor(Theme.TextSecondary, UIControlState.Normal);
             skip.TitleLabel.Font = Theme.Font(14);
             skip.TranslatesAutoresizingMaskIntoConstraints = false;

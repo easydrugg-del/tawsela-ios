@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical">
+
+    <!-- الترويسة: اسم المطعم + بياناته + حالته -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_header"
+        android:padding="20dp">
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="🏪 لوحة المطعم"
+          android:textSize="22sp"
+          android:textStyle="bold"
+          android:textColor="@color/white" />
+
+      <TextView
+          android:id="@+id/txtRestaurantName"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="مرحباً"
+          android:textSize="15sp"
+          android:textColor="#ccffffff"
+          android:layout_marginTop="6dp" />
+
+      <TextView
+          android:id="@+id/txtRestaurantInfo"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text=""
+          android:textSize="13sp"
+          android:textColor="#b3ffffff"
+          android:layout_marginTop="4dp" />
+
+      <TextView
+          android:id="@+id/txtRestaurantStatus"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text=""
+          android:textSize="12sp"
+          android:textStyle="bold"
+          android:textColor="#ddffffff"
+          android:layout_marginTop="4dp" />
+    </LinearLayout>
+
+    <!-- ملخص التوصيلات -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/edit_rounded"
+        android:padding="14dp"
+        android:layout_margin="16dp">
+
+      <LinearLayout
+          android:layout_width="0dp"
+          android:layout_weight="1"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:gravity="center">
+
+        <TextView
+            android:id="@+id/txtStatsToday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="اليوم"
+            android:textSize="12sp"
+            android:textColor="#666666" />
+      </LinearLayout>
+
+      <LinearLayout
+          android:layout_width="0dp"
+          android:layout_weight="1"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:gravity="center">
+
+        <TextView
+            android:id="@+id/txtStatsPending"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#E65100" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="قيد الانتظار"
+            android:textSize="12sp"
+            android:textColor="#666666" />
+      </LinearLayout>
+
+      <LinearLayout
+          android:layout_width="0dp"
+          android:layout_weight="1"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:gravity="center">
+
+        <TextView
+            android:id="@+id/txtStatsDelivered"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#2E7D32" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="تم التسليم"
+            android:textSize="12sp"
+            android:textColor="#666666" />
+      </LinearLayout>
+
+      <LinearLayout
+          android:layout_width="0dp"
+          android:layout_weight="1"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:gravity="center">
+
+        <TextView
+            android:id="@+id/txtStatsRevenue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="الإيراد"
+            android:textSize="12sp"
+            android:textColor="#666666" />
+      </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="16dp">
+
+      <!-- الإجراء الأساسي -->
+      <Button
+          android:id="@+id/btnNewRestaurantDelivery"
+          android:layout_width="match_parent"
+          android:layout_height="60dp"
+          android:layout_marginStart="4dp"
+          android:layout_marginEnd="4dp"
+          android:text="＋ طلب توصيل جديد"
+          android:textSize="17sp"
+          android:textStyle="bold"
+          android:textColor="@color/white"
+          android:background="@drawable/tile_orange_selector" />
+
+      <!-- الأقسام: بلاطات بيضاء بنفس شكل لوحة الإدارة -->
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="الأقسام"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/primary"
+          android:padding="4dp"
+          android:layout_marginTop="10dp" />
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:weightSum="2">
+
+        <LinearLayout
+            android:id="@+id/btnMyRestaurantDeliveries"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="📋"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="طلباتي"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnRestaurantProfile"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="👤"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="بيانات المطعم"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:weightSum="2">
+
+        <LinearLayout
+            android:id="@+id/btnRestaurantNotifications"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🔔"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="الإشعارات"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnRestaurantRefresh"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🔄"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="تحديث"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/text_primary"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:weightSum="2">
+
+        <LinearLayout
+            android:id="@+id/btnRestaurantLogout"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/tile_card_selector"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            android:padding="6dp">
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="🚪"
+              android:textSize="30sp" />
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="تسجيل الخروج"
+              android:textSize="12sp"
+              android:textStyle="bold"
+              android:textColor="@color/red"
+              android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <!-- فراغ لموازنة الصف -->
+        <View
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="96dp" />
+      </LinearLayout>
+
+    </LinearLayout>
+  </LinearLayout>
+</ScrollView>

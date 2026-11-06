@@ -74,14 +74,14 @@ namespace Tawsela.iOS.Screens
             var title = MakeLabel("توصيلة", 28f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Center);
             stack.AddArrangedSubview(title);
 
-            var subtitle = MakeLabel("خدمة توصيل سريعة", 15f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Center);
+            var subtitle = MakeLabel("توصيل سريع وآمن", 15f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Center);
             stack.AddArrangedSubview(subtitle);
             stack.SetCustomSpacing(26f, subtitle);
 
             var heading = MakeLabel("تسجيل الدخول", 18f, Theme.TextPrimary, UIFontWeight.Semibold, UITextAlignment.Right);
             stack.AddArrangedSubview(heading);
 
-            _username = Controls.TextField("اسم المستخدم أو رقم الهاتف");
+            _username = Controls.TextField("رقم الموبايل أو اسم المستخدم");
             _username.AutocapitalizationType = UITextAutocapitalizationType.None;
             _username.KeyboardType = UIKeyboardType.Default;
             stack.AddArrangedSubview(_username);
@@ -111,7 +111,7 @@ namespace Tawsela.iOS.Screens
             stack.AddArrangedSubview(btnRegister);
 
             // زر البصمة — يظهر فقط إذا كان الجهاز يدعمها
-            _btnFingerprint = Controls.IconButton("تسجيل بالبصمة", "ic_shield", Theme.White, Theme.Primary);
+            _btnFingerprint = Controls.IconButton("الدخول بالبصمة", "ic_shield", Theme.White, Theme.Primary);
             _btnFingerprint.Layer.BorderWidth = 1f;
             _btnFingerprint.Layer.BorderColor = Theme.Primary.CGColor;
             _btnFingerprint.TouchUpInside += (s, e) => AuthenticateWithBiometric();
@@ -119,7 +119,7 @@ namespace Tawsela.iOS.Screens
             stack.AddArrangedSubview(_btnFingerprint);
 
             var legal = new UIButton(UIButtonType.System);
-            legal.SetTitle("سياسة الخصوصية · شروط الاستخدام", UIControlState.Normal);
+            legal.SetTitle("سياسة الخصوصية • شروط الاستخدام", UIControlState.Normal);
             legal.SetTitleColor(Theme.TextSecondary, UIControlState.Normal);
             legal.TitleLabel.Font = Theme.Font(13);
             legal.TranslatesAutoresizingMaskIntoConstraints = false;

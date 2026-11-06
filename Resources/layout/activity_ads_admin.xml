@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/bg_header"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="إدارة الإعلانات"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="الإعلانات المفعّلة تظهر للعميل والسائق في الشاشة الرئيسية"
+        android:textSize="13sp"
+        android:textColor="#DDDDDD"
+        android:layout_marginTop="4dp" />
+  </LinearLayout>
+
+  <ScrollView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/card_ripple"
+        android:padding="14dp">
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="إعلان جديد (صورة و/أو نص)"
+          android:textSize="15sp"
+          android:textStyle="bold"
+          android:textColor="@color/black"
+          android:layout_marginBottom="8dp" />
+
+      <EditText
+          android:id="@+id/txtAdTitle"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="عنوان الإعلان"
+          android:textSize="14sp"
+          android:padding="10dp"
+          android:background="@drawable/edit_rounded" />
+
+      <EditText
+          android:id="@+id/txtAdBody"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="نص الإعلان (اختياري)"
+          android:textSize="14sp"
+          android:padding="10dp"
+          android:layout_marginTop="8dp"
+          android:minLines="2"
+          android:gravity="top"
+          android:background="@drawable/edit_rounded" />
+
+      <EditText
+          android:id="@+id/txtAdLink"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="رابط عند الضغط (اختياري)"
+          android:textSize="14sp"
+          android:padding="10dp"
+          android:layout_marginTop="8dp"
+          android:inputType="textUri"
+          android:background="@drawable/edit_rounded" />
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="يظهر الإعلان لـ:"
+          android:textSize="14sp"
+          android:textStyle="bold"
+          android:textColor="@color/black"
+          android:layout_marginTop="10dp"
+          android:layout_marginBottom="4dp" />
+
+      <Spinner
+          android:id="@+id/spnAdScope"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content" />
+
+      <Spinner
+          android:id="@+id/spnAdGov"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="8dp"
+          android:visibility="gone" />
+
+      <LinearLayout
+          android:id="@+id/rowAdCity"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:gravity="center_vertical"
+          android:layout_marginTop="8dp"
+          android:visibility="gone"
+          android:weightSum="3">
+
+        <Spinner
+            android:id="@+id/spnAdCity"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/btnAdAddCity"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="44dp"
+            android:text="➕ إضافة"
+            android:textSize="13sp"
+            android:textColor="@color/white"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/tile_orange_selector" />
+      </LinearLayout>
+
+      <EditText
+          android:id="@+id/txtAdCities"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="المدن المختارة (تضاف من القائمة)"
+          android:textSize="14sp"
+          android:padding="10dp"
+          android:layout_marginTop="8dp"
+          android:background="@drawable/edit_rounded"
+          android:visibility="gone" />
+
+      <Button
+          android:id="@+id/btnAdClearCities"
+          android:layout_width="wrap_content"
+          android:layout_height="40dp"
+          android:text="مسح المدن"
+          android:textSize="12sp"
+          android:textColor="@color/white"
+          android:layout_marginTop="6dp"
+          android:background="@drawable/tile_red_selector"
+          android:visibility="gone" />
+
+      <ImageView
+          android:id="@+id/imgAdPreview"
+          android:layout_width="match_parent"
+          android:layout_height="140dp"
+          android:scaleType="centerCrop"
+          android:layout_marginTop="8dp"
+          android:visibility="gone" />
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:layout_marginTop="8dp"
+          android:weightSum="2">
+
+        <Button
+            android:id="@+id/btnAdPickImage"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:text="اختيار صورة"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/tile_card_selector" />
+
+        <Button
+            android:id="@+id/btnAdSave"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:text="نشر الإعلان"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/tile_card_selector" />
+      </LinearLayout>
+    </LinearLayout>
+  </ScrollView>
+
+  <ListView
+      android:id="@+id/lstAds"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:divider="@null"
+      android:dividerHeight="0dp" />
+
+  <TextView
+      android:id="@+id/txtAdsEmpty"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="لا توجد إعلانات بعد"
+      android:textSize="14sp"
+      android:textColor="@color/gray"
+      android:gravity="center"
+      android:padding="16dp"
+      android:visibility="gone" />
+</LinearLayout>

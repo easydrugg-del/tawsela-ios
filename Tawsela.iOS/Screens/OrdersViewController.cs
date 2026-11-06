@@ -17,6 +17,7 @@ namespace Tawsela.iOS.Screens
     public class OrdersViewController : BaseViewController
     {
         private readonly string _scope;
+        private readonly string _emptyText;
         private readonly string _status;
         private UIScrollView _scroll;
         private UIStackView _stack;
@@ -29,10 +30,12 @@ namespace Tawsela.iOS.Screens
         private DateTime? _dateFrom, _dateTo;
 
         /// <summary>scope: "customer" أو "driver". status: "" لكل الحالات.</summary>
-        public OrdersViewController(string scope, string status, string title) : base(title ?? "الطلبات")
+        public OrdersViewController(string scope, string status, string title, string emptyText = null)
+            : base(title ?? "الطلبات")
         {
             _scope = scope;
             _status = status ?? "";
+            _emptyText = string.IsNullOrEmpty(emptyText) ? "لا توجد طلبات حاليًا" : emptyText;
         }
 
         public override void ViewDidLoad()
@@ -54,7 +57,7 @@ namespace Tawsela.iOS.Screens
             var filters = new UIView { TranslatesAutoresizingMaskIntoConstraints = false };
             View.AddSubview(filters);
 
-            _search = Controls.TextField("بحث برقم الطلب أو العنوان");
+            _search = Controls.TextField("بحث برقم الطلب أو العنوان أو الحالة");
             _search.EditingChanged += (s, e) => ApplyFilter();
             _search.ReturnKeyType = UIReturnKeyType.Search;
             filters.AddSubview(_search);
@@ -135,7 +138,7 @@ namespace Tawsela.iOS.Screens
                 NSLayoutConstraint.Create(_stack, NSLayoutAttribute.Width, NSLayoutRelation.Equal, _scroll, NSLayoutAttribute.Width, 1, -28),
             });
 
-            _empty = MakeLabel("لا توجد طلبات حاليًا", 15f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Center);
+            _empty = MakeLabel(_emptyText, 15f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Center);
             _empty.Hidden = true;
             _stack.AddArrangedSubview(_empty);
         }
@@ -227,7 +230,7 @@ namespace Tawsela.iOS.Screens
 
             if (list == null || list.Count == 0)
             {
-                _empty.Text = _all.Count == 0 ? "لا توجد طلبات حاليًا" : "لا توجد طلبات مطابقة للبحث";
+                _empty.Text = _all.Count == 0 ? _emptyText : "لا توجد طلبات مطابقة للبحث";
                 _empty.Hidden = false;
                 _stack.AddArrangedSubview(_empty);
                 return;

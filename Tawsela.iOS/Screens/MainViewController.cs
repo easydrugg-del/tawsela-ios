@@ -22,8 +22,8 @@ namespace Tawsela.iOS.Screens
         private UILabel _balanceBadge;
         private UIButton _logoutBtn;
         private decimal _driverBalance = -1m;
-        private UISwitch _availability;
-        private UILabel _availabilityState;
+        private UIButton _btnOnline;
+        private bool _online;
         private UILabel _notifBadge;
         private UIStackView _grid;
 
@@ -223,30 +223,19 @@ namespace Tawsela.iOS.Screens
             // إعلان نشط للمحافظة/المدينة (بديل Api.ActiveAdsList في MainActivity)
             LoadAd(content);
 
-            // مفتاح الاستقبال للسائق
+            // زر الاستقبال للسائق (بديل btnOnlineToggle في أندرويد)
             if (Session.IsDriver)
             {
-                var card = Controls.Card();
-                _availabilityState = MakeLabel("غير متاح", 14f, Theme.TextSecondary, UIFontWeight.Medium, UITextAlignment.Right);
-                _availability = new UISwitch { OnTintColor = Theme.Green, TranslatesAutoresizingMaskIntoConstraints = false };
-                _availability.ValueChanged += (s, e) => SetAvailability(_availability.On);
+                content.AddArrangedSubview(Controls.SectionTitle("🟢 حالة الاستقبال"));
 
-                card.AddSubview(_availabilityState);
-                card.AddSubview(_availability);
-                card.AddConstraints(new[]
-                {
-                    NSLayoutConstraint.Create(_availability, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, card, NSLayoutAttribute.Leading, 1, 12),
-                    NSLayoutConstraint.Create(_availability, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, card, NSLayoutAttribute.CenterY, 1, 0),
-                    NSLayoutConstraint.Create(_availabilityState, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, card, NSLayoutAttribute.CenterY, 1, 0),
-                    NSLayoutConstraint.Create(_availabilityState, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, _availability, NSLayoutAttribute.Trailing, 1, 10),
-                    NSLayoutConstraint.Create(_availabilityState, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -12),
-                    NSLayoutConstraint.Create(card, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 56),
-                });
-                content.AddArrangedSubview(card);
+                _btnOnline = Controls.PrimaryButton("تفعيل الاستقبال (غير متصل)");
+                _btnOnline.TouchUpInside += (s, e) => SetAvailability(!_online);
+                content.AddArrangedSubview(_btnOnline);
+
                 LoadAvailability();
             }
 
-            content.AddArrangedSubview(Controls.SectionTitle(Session.IsDriver ? "الأقسام" : "القائمة الرئيسية"));
+            content.AddArrangedSubview(Controls.SectionTitle(Session.IsDriver ? "لوحة الكابتن" : "القائمة الرئيسية"));
 
             _grid = new UIStackView
             {
@@ -317,42 +306,38 @@ namespace Tawsela.iOS.Screens
 
             if (Session.IsDriver)
             {
-                AddRow(
-                    Tile("ic_taxi", "طلبات متاحة", Theme.Blue, Theme.PrimaryDark, OpenDriverOrders),
-                    Tile("ic_inbox", "طلباتي", Theme.Accent, Theme.PrimaryDark,
-                        () => Push(new OrdersViewController("driver", "", "طلباتي"))));
+                // ===== نفس أزرار صفحة السائق في أندرويد بالضبط =====
+                Func<string, string, UIColor, Action, UIView> driverRow = (text, icon, color, act) =>
+                {
+                    var b = Controls.IconButton(text, icon, color);
+                    b.TouchUpInside += (s, e) => act();
+                    return b;
+                };
 
-                AddRow(
-                    Tile("ic_wallet", "المحفظة", Theme.Green, Theme.PrimaryDark,
-                        () => Push(new WalletViewController())),
-                    Tile("ic_bell", "الإشعارات", Theme.Hex(0xEF6C00), Theme.PrimaryDark,
-                        () => Push(new NotificationsViewController())));
+                _grid.AddArrangedSubview(Controls.SectionTitle("📥 التوصيلات"));
+                _grid.AddArrangedSubview(driverRow("الواردة (الجديدة)", "ic_inbox", Theme.Blue, OpenDriverOrders));
+                _grid.AddArrangedSubview(driverRow("توصيلاتي (المنتهية)", "ic_taxi", Theme.Accent,
+                    () => Push(new OrdersViewController("driver", "", "توصيلاتي"))));
 
-                AddRow(
-                    Tile("ic_person", "حسابي", Theme.Hex(0x8E24AA), Theme.PrimaryDark,
-                        () => Push(new ProfileViewController())),
-                    Tile("ic_action_receipt", "تقرير الأرباح", Theme.Hex(0x00897B), Theme.PrimaryDark,
-                        () => Push(new DriverEarningsReportViewController())));
+                _grid.AddArrangedSubview(Controls.SectionTitle("🏪 توصيلات المطاعم"));
+                _grid.AddArrangedSubview(driverRow("توصيلات المطاعم", "ic_action_receipt", Theme.Hex(0x00897B),
+                    () => Push(new RestaurantRequestsViewController())));
 
-                _grid.AddArrangedSubview(Controls.SectionTitle("عملي"));
+                _grid.AddArrangedSubview(Controls.SectionTitle("🗺️ الشغل والأرباح"));
+                _grid.AddArrangedSubview(driverRow("الأرباح", "ic_action_receipt", Theme.Blue,
+                    () => Push(new DriverStatsViewController())));
 
-                AddRow(
-                    Tile("ic_action_receipt", "إحصائياتي", Theme.Blue, Theme.PrimaryDark,
-                        () => Push(new DriverStatsViewController())),
-                    Tile("ic_clock", "الورديات", Theme.Accent, Theme.PrimaryDark,
-                        () => Push(new DriverShiftsViewController())));
-
-                AddRow(
-                    Tile("ic_doc", "مستنداتي", Theme.Hex(0x8E24AA), Theme.PrimaryDark,
-                        () => Push(new DriverDocsViewController())),
-                    Tile("ic_money", "كشف الحساب", Theme.Green, Theme.PrimaryDark,
-                        () => Push(new DriverStatementViewController())));
-
-                AddRow(
-                    Tile("ic_work", "الاشتراك", Theme.Hex(0x00897B), Theme.PrimaryDark,
-                        () => Push(new SubscriptionViewController())),
-                    Tile("ic_action_warning", "الطوارئ", Theme.Red, Theme.PrimaryDark,
-                        () => Push(new EmergencyViewController())));
+                _grid.AddArrangedSubview(Controls.SectionTitle("👤 حسابي"));
+                _grid.AddArrangedSubview(driverRow("المحفظة / شحن الرصيد", "ic_wallet", Theme.Green,
+                    () => Push(new WalletViewController())));
+                _grid.AddArrangedSubview(driverRow("الإشعارات", "ic_bell", Theme.Hex(0xEF6C00),
+                    () => Push(new NotificationsViewController())));
+                _grid.AddArrangedSubview(driverRow("إعادة إرسال الوثائق", "ic_doc", Theme.Hex(0x8E24AA),
+                    () => Push(new DriverDocsViewController())));
+                _grid.AddArrangedSubview(driverRow("النوبات", "ic_clock", Theme.Accent,
+                    () => Push(new DriverShiftsViewController())));
+                _grid.AddArrangedSubview(driverRow("زر الطوارئ SOS", "ic_action_warning", Theme.Red,
+                    () => Push(new EmergencyViewController())));
             }
             else
             {
@@ -411,17 +396,18 @@ namespace Tawsela.iOS.Screens
                     }
                 }));
 
-                // أزرار أسفل الشاشة زي أندرويد
-                _grid.AddArrangedSubview(IconFullButton("الملف الشخصي", "ic_person", Theme.Primary,
-                    () => Push(new ProfileViewController())));
-                _grid.AddArrangedSubview(IconFullButton("الإعدادات", "ic_settings", Theme.TextPrimary,
-                    () => Push(new SettingsViewController())));
-
-                var credit = MakeLabel("Designed @ Ahmed Ali", 10f, Theme.TextSecondary,
-                    UIFontWeight.Regular, UITextAlignment.Center);
-                credit.Alpha = 0.6f;
-                _grid.AddArrangedSubview(credit);
             }
+
+            // أزرار أسفل الشاشة زي أندرويد (لكل الأدوار)
+            _grid.AddArrangedSubview(IconFullButton("ملفي الشخصي", "ic_person", Theme.Primary,
+                () => Push(new ProfileViewController())));
+            _grid.AddArrangedSubview(IconFullButton("الإعدادات", "ic_settings", Theme.TextPrimary,
+                () => Push(new SettingsViewController())));
+
+            var credit = MakeLabel("Designed @ Ahmed Ali", 10f, Theme.TextSecondary,
+                UIFontWeight.Regular, UITextAlignment.Center);
+            credit.Alpha = 0.6f;
+            _grid.AddArrangedSubview(credit);
 
             // الإدارة
             if (Session.IsAdmin)
@@ -657,7 +643,7 @@ namespace Tawsela.iOS.Screens
 
             if (_driverBalance > 0)
             {
-                Push(new OrdersViewController("", "جديد", "طلبات متاحة"));
+                Push(new OrdersViewController("", "جديد", "التوصيلات الواردة", "لا توجد توصيلات حالياً"));
                 return;
             }
 
@@ -708,7 +694,7 @@ namespace Tawsela.iOS.Screens
             if (_greeting != null)
             {
                 var name = string.IsNullOrEmpty(Session.FullName) ? Session.UserName : Session.FullName;
-                _greeting.Text = "أهلًا " + name;
+                _greeting.Text = "أهلاً " + name;
             }
 
             if (_roleBadge != null)
@@ -788,9 +774,8 @@ namespace Tawsela.iOS.Screens
                 Api.GetDriverStatus(out status, out available);
                 Ui.BeginOnMain(() =>
                 {
-                    _availability.On = available;
-                    _availabilityState.Text = available ? "متاح لاستقبال الطلبات" : "غير متاح";
-                    _availabilityState.TextColor = available ? Theme.Green : Theme.TextSecondary;
+                    _online = available;
+                    ApplyOnlineButton();
                 });
             }, null, ex => AppServices.Log("TawselaMain", "status: " + ex.Message));
         }
@@ -808,7 +793,7 @@ namespace Tawsela.iOS.Screens
                     if (!granted)
                     {
                         Ui.Toast("لازم تسمح بالوصول للموقع لتستقبل الطلبات");
-                        _availability.On = false;
+                        ApplyOnlineButton();
                         return;
                     }
                     DoSetAvailability(true);
@@ -827,14 +812,23 @@ namespace Tawsela.iOS.Screens
 
             Ui.Run(() => Api.SetAvailability(available, lat, lng), () =>
             {
-                _availabilityState.Text = available ? "متاح لاستقبال الطلبات" : "غير متاح";
-                _availabilityState.TextColor = available ? Theme.Green : Theme.TextSecondary;
-                Ui.Toast(available ? "تم تفعيل استقبال الطلبات" : "تم إيقاف استقبال الطلبات");
+                _online = available;
+                ApplyOnlineButton();
+                Ui.Toast(available ? "أصبحت متاحاً لاستقبال التوصيلات" : "أصبحت غير متصل");
             }, ex =>
             {
-                _availability.On = !available;
+                ApplyOnlineButton();
                 Ui.Toast(ex.Message);
             });
+        }
+
+        /// <summary>نص ولون زر الاستقبال (بديل UpdateOnlineButton في أندرويد).</summary>
+        private void ApplyOnlineButton()
+        {
+            if (_btnOnline == null) return;
+            _btnOnline.SetTitle(_online ? "إيقاف الاستقبال (متصل)" : "تفعيل الاستقبال (غير متصل)",
+                UIControlState.Normal);
+            _btnOnline.BackgroundColor = _online ? Theme.Green : Theme.Gray;
         }
     }
 }

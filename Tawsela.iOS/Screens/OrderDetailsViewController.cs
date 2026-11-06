@@ -113,19 +113,19 @@ namespace Tawsela.iOS.Screens
 
             if (!string.IsNullOrEmpty(o.CustomerPhone))
             {
-                var call = Controls.IconButton("اتصال بالعميل", "ic_action_call", Theme.Green);
+                var call = Controls.IconButton("اتصال", "ic_action_call", Theme.Green);
                 call.TouchUpInside += (s, e) => AppServices.OpenUrl("tel:" + o.CustomerPhone.Replace(" ", ""));
                 _stack.AddArrangedSubview(call);
             }
 
-            var chat = Controls.OutlineButton("محادثة الطلب");
+            var chat = Controls.OutlineButton("محادثة");
             chat.TouchUpInside += (s, e) => Push(new ChatViewController(o.Id));
             _stack.AddArrangedSubview(chat);
 
             // عرض مسار الطلب على الخريطة (بديل btnOpenOrderMap في أندرويد)
             if (o.FromLat != 0 || o.ToLat != 0)
             {
-                var mapBtn = Controls.OutlineButton("عرض المسار على الخريطة");
+                var mapBtn = Controls.OutlineButton("عرض على الخريطة");
                 mapBtn.TouchUpInside += (s, e) => Push(MapViewController.ShowRoute(
                     o.FromLat, o.FromLng, o.FromAddress, o.ToLat, o.ToLng, o.ToAddress));
                 _stack.AddArrangedSubview(mapBtn);
@@ -137,13 +137,15 @@ namespace Tawsela.iOS.Screens
                 if (!string.IsNullOrEmpty(_driverNumber))
                     _stack.AddArrangedSubview(Controls.InfoRow("رقم السائق", _driverNumber));
 
-                var favBtn = Controls.OutlineButton(_isFavorite ? "★ إزالة من المفضلة" : "☆ إضافة للمفضلة");
+                var favBtn = Controls.OutlineButton(_isFavorite
+                    ? "إزالة السائق من المفضلة"
+                    : "إضافة السائق للمفضلة");
                 favBtn.TouchUpInside += (s, e) => ToggleFavorite(o.DriverId);
                 _stack.AddArrangedSubview(favBtn);
 
                 if (o.Status != "مكتمل" && o.Status != "ملغي")
                 {
-                    var track = Controls.OutlineButton("تتبع السائق على الخريطة");
+                    var track = Controls.OutlineButton("موقع السائق");
                     var driverId = o.DriverId;
                     track.TouchUpInside += (s, e) => Push(MapViewController.TrackDriver(
                         o.FromLat, o.FromLng, o.FromAddress,
@@ -151,7 +153,28 @@ namespace Tawsela.iOS.Screens
                         () => Api.GetDriverLocation(driverId)));
                     _stack.AddArrangedSubview(track);
 
-                    var notArrived = Controls.DangerButton("السائق لم يصل");
+                    var trackOrder = Controls.OutlineButton("تتبع الطلب مباشرة");
+                    trackOrder.TouchUpInside += (s, e) => Push(new TrackOrderViewController(o.Id));
+                    _stack.AddArrangedSubview(trackOrder);
+
+                    // تأكيد وصول السائق (بديل btnCustomerArrived)
+                    var arrivedBtn = Controls.OutlineButton("السائق وصل");
+                    arrivedBtn.TouchUpInside += (s, e) =>
+                    {
+                        Ui.Confirm("تأكيد وصول السائق", "هل وصل السائق فعلاً؟", "نعم وصل", () =>
+                        {
+                            var p = Ui.ShowProgress("جارٍ التأكيد…");
+                            Ui.Run(() => Api.ConfirmArrival(o.Id), () =>
+                            {
+                                p.Dismiss();
+                                Ui.Toast("تم تأكيد وصول السائق");
+                                Load();
+                            }, ex => { p.Dismiss(); Ui.Toast(ex.Message); });
+                        });
+                    };
+                    _stack.AddArrangedSubview(arrivedBtn);
+
+                    var notArrived = Controls.DangerButton("لم يصل");
                     notArrived.TouchUpInside += (s, e) => ReportNotArrived(o);
                     _stack.AddArrangedSubview(notArrived);
 
@@ -333,15 +356,31 @@ namespace Tawsela.iOS.Screens
             // قبول الطلب (إسناد السائق الحالي) — مع تنبيه عمولة القبول إن وُجدت
             if (o.Status == "جديد" && o.DriverId == 0 && !o.BiddingEnabled)
             {
-                var accept = Controls.PrimaryButton("قبول الطلب");
+                var accept = Controls.PrimaryButton("قبول الطلب والذهاب");
                 accept.TouchUpInside += (s, e) => AcceptOrder(o);
                 _stack.AddArrangedSubview(accept);
+            }
+
+            // رفض الطلب (بديل btnReject في أندرويد)
+            if (Session.IsDriver && (o.Status == "جديد" || o.Status == "قيد_التنفيذ"))
+            {
+                var reject = Controls.DangerButton("رفض الطلب");
+                reject.TouchUpInside += (s, e) =>
+                {
+                    Ui.Confirm("رفض الطلب", "سيتم رفض هذا الطلب. تأكيد؟", "رفض", () =>
+                    {
+                        Ui.Toast("تم رفض الطلب");
+                        if (NavigationController != null && NavigationController.ViewControllers.Length > 1)
+                            NavigationController.PopViewController(true);
+                    });
+                };
+                _stack.AddArrangedSubview(reject);
             }
 
             // بدء الرحلة برمز PIN
             if (o.Status == "وصل_السائق" || o.Status == "قيد_التنفيذ" || o.Status == "جديد")
             {
-                var start = Controls.PrimaryButton("بدء الرحلة (رمز PIN)");
+                var start = Controls.PrimaryButton("انطلقت الرحلة");
                 start.TouchUpInside += (s, e) =>
                 {
                     Ui.Prompt("رمز بدء الرحلة", "أدخل الرمز الذي يظهر للعميل", "", "PIN",
@@ -422,10 +461,10 @@ namespace Tawsela.iOS.Screens
             // إكمال الرحلة
             if (o.Status == "أثناء_الرحله" || o.Status == "في_الطريق" || o.Status == "وصلت_الوجهة")
             {
-                var done = Controls.PrimaryButton("إكمال الرحلة");
+                var done = Controls.PrimaryButton("إنهاء الطلب (وصلت الوجهة)");
                 done.TouchUpInside += (s, e) =>
                 {
-                    Ui.Confirm("إكمال الرحلة", "تأكيد إكمال الرحلة وتحصيل الأجرة؟", "إكمال", () =>
+                    Ui.Confirm("إنهاء الطلب", "تأكيد إنهاء الطلب وتحصيل الأجرة؟", "إنهاء", () =>
                     {
                         var fare = o.ActualFare > 0 ? o.ActualFare : o.EstimatedFare;
                         Ui.Run(() => Api.CompleteOrder(o.Id, fare), () =>
@@ -441,7 +480,7 @@ namespace Tawsela.iOS.Screens
             // مشاركة الفاتورة بعد الانتهاء (بديل btnShareReceipt → ReceiptActivity)
             if (o.Status == "مكتمل")
             {
-                var receipt = Controls.OutlineButton("مشاركة الفاتورة");
+                var receipt = Controls.OutlineButton("مشاركة الإيصال");
                 receipt.TouchUpInside += (s, e) => Push(new ReceiptViewController(o.Id));
                 _stack.AddArrangedSubview(receipt);
             }
@@ -461,7 +500,7 @@ namespace Tawsela.iOS.Screens
                 var rateeId = Session.IsDriver ? o.CustomerId : o.DriverId;
                 if (rateeId > 0)
                 {
-                    var rate = Controls.OutlineButton(Session.IsDriver ? "تقييم العميل" : "تقييم السائق");
+                    var rate = Controls.OutlineButton(Session.IsDriver ? "تقييم العميل" : "تقييم الرحلة");
                     rate.TouchUpInside += (s, e) => Push(new RateViewController(rateeId, o.Id));
                     _stack.AddArrangedSubview(rate);
                 }

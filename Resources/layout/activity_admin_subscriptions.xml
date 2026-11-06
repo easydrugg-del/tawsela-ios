@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/bg_header"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="إدارة الاشتراكات"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:padding="10dp"
+        android:gravity="center"
+        android:layout_marginEnd="4dp">
+
+      <TextView
+          android:id="@+id/txtActiveCount"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="0"
+          android:textSize="22sp"
+          android:textStyle="bold"
+          android:textColor="@color/primary" />
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="اشتراك نشط"
+          android:textSize="12sp"
+          android:textColor="@color/text_secondary" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:padding="10dp"
+        android:gravity="center"
+        android:layout_marginStart="4dp">
+
+      <TextView
+          android:id="@+id/txtRevenue"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="0"
+          android:textSize="22sp"
+          android:textStyle="bold"
+          android:textColor="#28A745" />
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="إجمالي الإيراد"
+          android:textSize="12sp"
+          android:textColor="@color/text_secondary" />
+    </LinearLayout>
+  </LinearLayout>
+
+  <Button
+      android:id="@+id/btnEditSettings"
+      android:layout_width="match_parent"
+      android:layout_height="42dp"
+      android:text="تعديل الأسعار والخصومات"
+      android:textSize="13sp"
+      android:textColor="@color/text_primary"
+      android:background="@drawable/tile_card_selector"
+      android:layout_marginStart="12dp"
+      android:layout_marginEnd="12dp" />
+
+  <EditText
+      android:id="@+id/edtSearch"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:hint="بحث باسم العميل..."
+      android:textSize="14sp"
+      android:background="@drawable/bg_search"
+      android:paddingStart="12dp"
+      android:paddingEnd="12dp"
+      android:layout_marginStart="12dp"
+      android:layout_marginEnd="12dp"
+      android:layout_marginTop="8dp"
+      android:drawableStart="@android:drawable/ic_menu_search"
+      android:drawablePadding="8dp"
+      android:singleLine="true"
+      android:inputType="text" />
+
+  <TextView
+      android:id="@+id/txtCount"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text=""
+      android:textSize="12sp"
+      android:textColor="@color/gray"
+      android:gravity="end"
+      android:paddingStart="16dp"
+      android:paddingEnd="16dp"
+      android:layout_marginTop="4dp" />
+
+  <TextView
+      android:id="@+id/txtEmpty"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="لا توجد اشتراكات"
+      android:textSize="15sp"
+      android:textColor="@color/gray"
+      android:gravity="center"
+      android:padding="24dp"
+      android:visibility="gone" />
+
+  <ListView
+      android:id="@+id/lst"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:divider="@null"
+      android:dividerHeight="0dp" />
+</LinearLayout>

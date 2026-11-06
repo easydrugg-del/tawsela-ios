@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white"
+    android:padding="16dp">
+
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="المستحقات"
+      android:textSize="22sp"
+      android:textStyle="bold"
+      android:textColor="@color/primary"
+      android:gravity="center" />
+
+  <TextView
+      android:id="@+id/txtDuesAmount"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="0.00 ج.م"
+      android:textSize="30sp"
+      android:textStyle="bold"
+      android:textColor="@color/green"
+      android:gravity="center"
+      android:paddingTop="18dp"
+      android:paddingBottom="4dp" />
+
+  <TextView
+      android:id="@+id/txtDuesHint"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="يتم خصم العمولات من أرباحك. لا يوجد شحن أو تحويل رصيد داخل التطبيق."
+      android:textSize="13sp"
+      android:textColor="@color/text_secondary"
+      android:gravity="center"
+      android:paddingBottom="12dp" />
+
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="آخر الحركات"
+      android:textSize="16sp"
+      android:textStyle="bold"
+      android:textColor="@color/text_primary"
+      android:paddingTop="8dp"
+      android:paddingBottom="6dp" />
+
+  <ListView
+      android:id="@+id/lstDues"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:divider="@android:color/transparent"
+      android:dividerHeight="0dp" />
+
+  <Button
+      android:id="@+id/btnDuesBack"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:text="رجوع"
+      android:background="@drawable/btn_gray_selector"
+      android:textColor="@color/text_primary"
+      android:layout_marginTop="8dp" />
+</LinearLayout>

@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="إدارة العملاء"
+      android:textSize="20sp"
+      android:textStyle="bold"
+      android:textColor="@color/primary"
+      android:padding="16dp" />
+
+  <TextView
+      android:id="@+id/txtEmpty"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="لا يوجد عملاء"
+      android:textSize="15sp"
+      android:textColor="@color/gray"
+      android:gravity="center"
+      android:padding="24dp"
+      android:visibility="gone" />
+
+  <ListView
+      android:id="@+id/lstDrivers"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:divider="@null"
+      android:dividerHeight="0dp"
+      android:padding="8dp" />
+
+  <Button
+      android:id="@+id/btnDeletedCustomers"
+      android:layout_width="match_parent"
+      android:layout_height="52dp"
+      android:text="🗑️ العملاء المحذوفون"
+      android:textSize="14sp"
+      android:textStyle="bold"
+      android:textColor="@color/white"
+      android:layout_margin="8dp"
+      android:background="@drawable/tile_red_selector"
+      android:visibility="gone" />
+
+  
+
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="Designed @ Ahmed Ali"
+      android:textSize="10sp"
+      android:textColor="@color/text_secondary"
+      android:gravity="center"
+      android:layout_marginTop="8dp"
+      android:layout_marginBottom="8dp"
+      android:alpha="0.6" />
+</LinearLayout>

@@ -29,7 +29,7 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(14f, 16f);
 
-            stack.AddArrangedSubview(Controls.SectionTitle("نظرة عامة"));
+            stack.AddArrangedSubview(Controls.SectionTitle("🛠️ لوحة الإدارة"));
 
             _stats = new UIStackView
             {
@@ -41,57 +41,75 @@ namespace Tawsela.iOS.Screens
             _stats.AddArrangedSubview(MakeLabel("جارٍ التحميل…", 14f, Theme.TextSecondary,
                 UIFontWeight.Regular, UITextAlignment.Right));
 
-            stack.AddArrangedSubview(Controls.SectionTitle("الأقسام"));
+            // ===== نفس ترتيب أقسام لوحة الإدارة في أندرويد =====
+            _sections = NewGroup(stack);
+            AddSection("🎟️ إدارة الأكواد والخصومات", "ic_ticket", () => Push(new CouponsAdminViewController()));
 
-            _sections = new UIStackView
-            {
-                Axis = UILayoutConstraintAxis.Vertical,
-                Spacing = 10,
-                TranslatesAutoresizingMaskIntoConstraints = false
-            };
-            stack.AddArrangedSubview(_sections);
-
-            AddSection("الطلبات", "ic_inbox", () => Push(new OrdersViewController("", "", "الطلبات")));
+            stack.AddArrangedSubview(Controls.SectionTitle("إدارة المستخدمين"));
+            _sections = NewGroup(stack);
             AddSection("السائقون", "ic_taxi", () => Push(new DriversAdminViewController()));
             AddSection("العملاء", "ic_group", () => Push(new CustomersAdminViewController()));
+            AddSection("بحث سائق", "ic_search", () => Push(new DriverSearchViewController()));
+            AddSection("مشرفو التكاتك", "ic_group", () => Push(new SupervisorAdminViewController()));
+            AddSection("حركات سائق", "ic_action_map", () => Push(new DriverMovementsViewController()));
+            AddSection("كشف حساب", "ic_money", () => Push(new DriverStatementPickerViewController()));
+
+            stack.AddArrangedSubview(Controls.SectionTitle("الخدمات والعروض"));
+            _sections = NewGroup(stack);
+            AddSection("إدارة الأكواد", "ic_ticket", () => Push(new CouponsAdminViewController()));
+            AddSection("الخدمات", "ic_work", () => Push(new ServiceAdminViewController()));
+            AddSection("الاشتراكات", "ic_work", () => Push(new SubscriptionsAdminViewController()));
             AddSection("المناطق", "ic_action_map", () => Push(new AreasAdminViewController()));
             AddSection("الشوارع", "ic_pin", () => Push(new StreetsAdminViewController()));
-            AddSection("الكوبونات", "ic_ticket", () => Push(new CouponsAdminViewController()));
-            AddSection("أنواع الطوارئ", "ic_action_warning", () => Push(new EmergencyTypesAdminViewController()));
-            AddSection("مراجعة المستندات", "ic_doc", () => Push(new DocsAdminViewController()));
+            AddSection("توصيلات المطاعم", "ic_action_receipt", () => Push(new RestaurantDeliveryAdminViewController()));
+
+            stack.AddArrangedSubview(Controls.SectionTitle("المتابعة والدعم"));
+            _sections = NewGroup(stack);
             AddSection("الشكاوى", "ic_support", () => Push(new ComplaintsAdminViewController()));
-            AddSection("الاشتراكات", "ic_work", () => Push(new SubscriptionsAdminViewController()));
+            AddSection("التوثيق", "ic_doc", () => Push(new DocsAdminViewController()));
+            AddSection("تحليلات", "ic_action_receipt", () => Push(new AdminAnalyticsViewController()));
+
+            stack.AddArrangedSubview(Controls.SectionTitle("الخرائط والتقارير"));
+            _sections = NewGroup(stack);
+            AddSection("الحرارية", "ic_action_map", () => Push(new HeatmapViewController()));
+            AddSection("خريطة السائقين", "ic_action_map", () => Push(new DriverMovementsViewController()));
+            AddSection("تقرير الرحلات", "ic_doc", () => Push(new TripReportViewController()));
+
+            stack.AddArrangedSubview(Controls.SectionTitle("المالية والإعلانات"));
+            _sections = NewGroup(stack);
             AddSection("طلبات الشحن", "ic_money", () => Push(new TopUpsAdminViewController()));
+            AddSection("خصم السائق", "ic_money", () => Push(new DriverFeeAdminViewController()));
+            AddSection("الإعلانات", "ic_bell", () => Push(new AdsAdminViewController()));
+
+            stack.AddArrangedSubview(Controls.SectionTitle("الطوارئ والنظام"));
+            _sections = NewGroup(stack);
+            AddSection("بيانات الطوارئ", "ic_action_warning", () => Push(new EmergencyTypesAdminViewController()));
+            AddSection("تفاصيل الطوارئ", "ic_action_warning", () => Push(new EmergenciesAdminViewController()));
+            AddSection("المديرين", "ic_person", () => Push(new AdminAccountsViewController()));
+            AddSection("⬆️ تحديث الاصدار", "ic_work", () => Push(new AppUpdateAdminViewController()));
+
+            // شاشات إضافية موجودة في iOS (مش في لوحة أندرويد الرئيسية)
+            stack.AddArrangedSubview(Controls.SectionTitle("إضافي"));
+            _sections = NewGroup(stack);
+            AddSection("الطلبات", "ic_inbox", () => Push(new OrdersViewController("", "", "الطلبات")));
+            AddSection("المطاعم وحساباتها", "ic_work", () => Push(new RestaurantsAdminViewController()));
+            AddSection("السائقون المحظورون", "ic_action_close", () => Push(new BlockedDriversViewController()));
+            AddSection("سجل تأكيدات الدفع", "ic_action_receipt", () => Push(new TopUpHistoryViewController(true)));
             AddSection("الإشعارات", "ic_bell", () => Push(new NotificationsViewController()));
             AddSection("حسابي", "ic_person", () => Push(new ProfileViewController()));
+        }
 
-            // شاشات الإدارة الإضافية (بديل Activities/Admin* و*AdminActivity)
-            stack.AddArrangedSubview(Controls.SectionTitle("الإدارة والتقارير"));
-
-            var extra = new UIStackView
+        /// <summary>حاوية قسم جديدة داخل الصفحة (بديل LinearLayout لكل قسم في أندرويد).</summary>
+        private static UIStackView NewGroup(UIStackView stack)
+        {
+            var g = new UIStackView
             {
                 Axis = UILayoutConstraintAxis.Vertical,
                 Spacing = 10,
                 TranslatesAutoresizingMaskIntoConstraints = false
             };
-            stack.AddArrangedSubview(extra);
-
-            AddExtra(extra, "التحليلات", "ic_action_receipt", () => Push(new AdminAnalyticsViewController()));
-            AddExtra(extra, "إدارة الخدمات والأسعار", "ic_work", () => Push(new ServiceAdminViewController()));
-            AddExtra(extra, "حسابات الإدارة", "ic_person", () => Push(new AdminAccountsViewController()));
-            AddExtra(extra, "المشرفون", "ic_group", () => Push(new SupervisorAdminViewController()));
-            AddExtra(extra, "الإعلانات", "ic_bell", () => Push(new AdsAdminViewController()));
-            AddExtra(extra, "مناطق توصيل المطاعم", "ic_action_map", () => Push(new RestaurantDeliveryAdminViewController()));
-            AddExtra(extra, "المطاعم وحساباتها", "ic_work", () => Push(new RestaurantsAdminViewController()));
-            AddExtra(extra, "رسم قبول الطلب", "ic_money", () => Push(new DriverFeeAdminViewController()));
-            AddExtra(extra, "تحديث التطبيق", "ic_work", () => Push(new AppUpdateAdminViewController()));
-            AddExtra(extra, "السائقون المحظورون", "ic_action_close", () => Push(new BlockedDriversViewController()));
-            AddExtra(extra, "بحث عن سائق", "ic_search", () => Push(new DriverSearchViewController()));
-            AddExtra(extra, "كشف حساب سائق", "ic_money", () => Push(new DriverStatementPickerViewController()));
-            AddExtra(extra, "سجل تأكيدات الدفع", "ic_action_receipt", () => Push(new TopUpHistoryViewController(true)));
-            AddExtra(extra, "تحركات السائقين", "ic_action_map", () => Push(new DriverMovementsViewController()));
-            AddExtra(extra, "الخريطة الحرارية", "ic_action_map", () => Push(new HeatmapViewController()));
-            AddExtra(extra, "تقرير الرحلات", "ic_doc", () => Push(new TripReportViewController()));
+            stack.AddArrangedSubview(g);
+            return g;
         }
 
         private void AddSection(string title, string icon, Action onTap)

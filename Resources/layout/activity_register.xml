@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="إنشاء حساب جديد"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/primary"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/card_ripple"
+        android:padding="20dp">
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="أنا:"
+          android:textSize="15sp"
+          android:textColor="@color/black"
+          android:layout_marginBottom="10dp" />
+
+      <RadioGroup
+          android:id="@+id/rgRole"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:layout_marginBottom="8dp">
+
+        <RadioButton
+            android:id="@+id/rbCustomer"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="48dp"
+            android:text="عميل"
+            android:textSize="16sp"
+            android:checked="true"
+            android:textColor="@color/black"
+            android:gravity="center"
+            android:buttonTint="@color/primary" />
+
+        <RadioButton
+            android:id="@+id/rbDriver"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="48dp"
+            android:text="سائق"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:gravity="center"
+            android:buttonTint="@color/primary" />
+
+        <RadioButton
+            android:id="@+id/rbRestaurant"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="48dp"
+            android:text="مطعم"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:gravity="center"
+            android:buttonTint="@color/primary" />
+      </RadioGroup>
+
+      <EditText
+          android:id="@+id/txtFullName"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="الاسم الكامل"
+          android:inputType="text"
+          android:textSize="16sp"
+          android:padding="12dp"
+          android:layout_marginTop="14dp"
+          android:background="@drawable/edit_rounded" />
+
+      <EditText
+          android:id="@+id/txtPhone"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="رقم الهاتف"
+          android:inputType="phone"
+          android:textSize="16sp"
+          android:padding="12dp"
+          android:layout_marginTop="12dp"
+          android:background="@drawable/edit_rounded" />
+
+      <EditText
+          android:id="@+id/txtUserName"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="اسم المستخدم (للدخول)"
+          android:inputType="text"
+          android:textSize="16sp"
+          android:padding="12dp"
+          android:layout_marginTop="12dp"
+          android:background="@drawable/edit_rounded" />
+
+      <EditText
+          android:id="@+id/txtPassword"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="كلمة المرور"
+          android:inputType="textPassword"
+          android:textSize="16sp"
+          android:padding="12dp"
+          android:layout_marginTop="12dp"
+          android:background="@drawable/edit_rounded" />
+
+      <!-- قسم موقع العميل (يظهر عند اختيار عميل) -->
+      <LinearLayout
+          android:id="@+id/linerCustomerLocation"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:visibility="visible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="موقعك"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="10dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="المحافظة"
+            android:textSize="15sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinnerGovCustomer"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/edit_rounded"
+            android:padding="8dp"
+            android:spinnerMode="dropdown" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="المدينة"
+            android:textSize="15sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinnerCityCustomer"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/edit_rounded"
+            android:padding="8dp"
+            android:spinnerMode="dropdown" />
+      </LinearLayout>
+
+      <!-- قسم بيانات المطعم (يظهر عند اختيار مطعم) -->
+      <LinearLayout
+          android:id="@+id/linerRestaurant"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="بيانات المطعم"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="10dp" />
+
+        <EditText
+            android:id="@+id/txtRestaurantName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="اسم المطعم"
+            android:inputType="text"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:background="@drawable/edit_rounded" />
+
+        <EditText
+            android:id="@+id/txtRestaurantAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="عنوان المطعم"
+            android:inputType="text"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/edit_rounded" />
+
+        <Button
+            android:id="@+id/btnRegisterRestMap"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="تحديد موقع المطعم على الخريطة"
+            android:textSize="15sp"
+            android:textColor="@color/white"
+            android:background="@drawable/tile_blue_selector"
+            android:layout_marginTop="12dp" />
+
+        <TextView
+            android:id="@+id/txtRegisterRestCoords"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="لم يُحدَّد الموقع بعد — لا بد من تحديده مرة واحدة عند التسجيل"
+            android:textSize="13sp"
+            android:textColor="#666666"
+            android:layout_marginTop="6dp" />
+      </LinearLayout>
+
+      <!-- قسم بيانات السيارة (يظهر عند اختيار سائق) -->
+      <LinearLayout
+          android:id="@+id/linerCarDetails"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="بيانات المركبة"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="10dp" />
+
+        <EditText
+            android:id="@+id/txtCarModel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="موديل السيارة"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:background="@drawable/edit_rounded" />
+
+        <EditText
+            android:id="@+id/txtCarPlate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="رقم اللوحة"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/edit_rounded" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="نوع المركبة"
+            android:textSize="15sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinnerVehicleType"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/edit_rounded"
+            android:padding="8dp"
+            android:spinnerMode="dropdown" />
+
+        <EditText
+            android:id="@+id/txtSupervisorCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="كود المشرف (رقمين - اختياري)"
+            android:inputType="number"
+            android:maxLength="2"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/edit_rounded" />
+
+        <TextView
+            android:id="@+id/txtSupervisorName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="14sp"
+            android:textColor="#2E7D32"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="المحافظة"
+            android:textSize="15sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinnerGovernorate"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/edit_rounded"
+            android:padding="8dp"
+            android:spinnerMode="dropdown" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="المدينة"
+            android:textSize="15sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinnerCity"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/edit_rounded"
+            android:padding="8dp"
+            android:spinnerMode="dropdown" />
+      </LinearLayout>
+
+      <LinearLayout
+          android:id="@+id/linerReferral"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/txtReferral"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="كود الإحالة (اختياري)"
+            android:textSize="15sp"
+            android:padding="12dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/edit_rounded" />
+      </LinearLayout>
+
+      <!-- وثائق السائق -->
+      <LinearLayout
+          android:id="@+id/linerDriverDocs"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="وثائق السائق (مطلوبة)"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="10dp" />
+
+        <Button
+            android:id="@+id/btnPickBill"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="📷 صورة الفاتورة *"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            android:background="@drawable/tile_card_selector" />
+        <TextView android:id="@+id/txtBillStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="12sp" android:textColor="@color/text_secondary" android:text="لم تُرفع" android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/txtOperatingLicense"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="رقم التشغيل *"
+            android:inputType="text"
+            android:textSize="15sp"
+            android:padding="12dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/edit_rounded" />
+
+        <Button
+            android:id="@+id/btnPickTraffic"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="📷 ترخيص المرور (اختياري)"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            android:background="@drawable/tile_card_selector" />
+        <TextView android:id="@+id/txtTrafficStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="12sp" android:textColor="@color/text_secondary" android:text="لم تُرفع" android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnPickDriverCard"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="📷 بطاقة السائق *"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            android:background="@drawable/tile_card_selector" />
+        <TextView android:id="@+id/txtDriverCardStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="12sp" android:textColor="@color/text_secondary" android:text="لم تُرفع" android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnPickOwnerCard"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="📷 بطاقة المالك *"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            android:background="@drawable/tile_card_selector" />
+        <TextView android:id="@+id/txtOwnerCardStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="12sp" android:textColor="@color/text_secondary" android:text="لم تُرفع" android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnPickReceipt"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="📷 أصل الفيش *"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            android:background="@drawable/tile_card_selector" />
+        <TextView android:id="@+id/txtReceiptStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="12sp" android:textColor="@color/text_secondary" android:text="لم تُرفع" android:layout_marginBottom="8dp" />
+      </LinearLayout>
+
+      <CheckBox
+          android:id="@+id/chkTerms"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="أوافق على شروط الاستخدام وسياسة الخصوصية"
+          android:textSize="14sp"
+          android:textColor="@color/black"
+          android:layout_marginTop="14dp"
+          android:buttonTint="@color/primary" />
+
+      <TextView
+          android:id="@+id/txtTerms"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="عرض الشروط وسياسة الخصوصية"
+          android:textColor="@color/primary"
+          android:textSize="13sp"
+          android:gravity="center"
+          android:paddingBottom="4dp" />
+
+      <TextView
+          android:id="@+id/txtMessage"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:textSize="14sp"
+          android:textColor="@color/red"
+          android:gravity="center"
+          android:layout_marginTop="12dp" />
+
+      <Button
+          android:id="@+id/btnCreate"
+          android:layout_width="match_parent"
+          android:layout_height="52dp"
+          android:text="إنشاء الحساب"
+          android:textSize="16sp"
+          android:textStyle="bold"
+          android:textColor="@color/white"
+          android:layout_marginTop="14dp"
+          android:background="@drawable/tile_orange_selector" />
+    </LinearLayout>
+  
+  
+
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="Designed @ Ahmed Ali"
+      android:textSize="10sp"
+      android:textColor="@color/text_secondary"
+      android:gravity="center"
+      android:layout_marginTop="8dp"
+      android:layout_marginBottom="8dp"
+      android:alpha="0.6" />
+</LinearLayout></ScrollView>

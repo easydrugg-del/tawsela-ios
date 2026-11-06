@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/bg_header"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="مراجعة وثائق السائقين"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+  </LinearLayout>
+
+  <EditText
+      android:id="@+id/edtSearch"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:hint="بحث بالاسم أو رقم السيارة..."
+      android:textSize="14sp"
+      android:background="@drawable/bg_search"
+      android:paddingStart="12dp"
+      android:paddingEnd="12dp"
+      android:layout_marginStart="12dp"
+      android:layout_marginEnd="12dp"
+      android:layout_marginTop="10dp"
+      android:drawableStart="@android:drawable/ic_menu_search"
+      android:drawablePadding="8dp"
+      android:singleLine="true"
+      android:inputType="text" />
+
+  <TextView
+      android:id="@+id/txtCount"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text=""
+      android:textSize="12sp"
+      android:textColor="@color/gray"
+      android:gravity="end"
+      android:paddingStart="16dp"
+      android:paddingEnd="16dp"
+      android:layout_marginTop="4dp" />
+
+  <ListView
+      android:id="@+id/lst"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:divider="@null"
+      android:dividerHeight="0dp" />
+</LinearLayout>

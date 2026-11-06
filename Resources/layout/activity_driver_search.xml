@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/bg_header"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="البحث عن السائقين"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="برقم الهاتف أو باسم السائق/صاحب المركبة"
+        android:textSize="13sp"
+        android:textColor="#DDDDDD"
+        android:layout_marginTop="4dp" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:padding="12dp">
+
+    <EditText
+        android:id="@+id/txtDriverQuery"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:hint="هاتف أو اسم..."
+        android:textSize="14sp"
+        android:padding="10dp"
+        android:background="@drawable/edit_rounded" />
+
+    <Button
+        android:id="@+id/btnDriverSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="بحث"
+        android:textColor="@color/text_primary"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/tile_card_selector" />
+  </LinearLayout>
+
+  <ListView
+      android:id="@+id/lstDriverResults"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:divider="@null"
+      android:dividerHeight="0dp" />
+
+  <TextView
+      android:id="@+id/txtDriverSearchEmpty"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="اكتب رقم الهاتف أو الاسم ثم اضغط بحث"
+      android:textSize="14sp"
+      android:textColor="@color/gray"
+      android:gravity="center"
+      android:padding="20dp" />
+</LinearLayout>

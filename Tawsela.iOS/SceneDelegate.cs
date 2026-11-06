@@ -24,6 +24,14 @@ namespace Tawsela.iOS
 
             Window = new UIWindow(windowScene);
 
+            if (ScreenshotRunner.Enabled)
+            {
+                Window.RootViewController = new UIViewController();
+                Window.MakeKeyAndVisible();
+                ScreenshotRunner.Start(Window);
+                return;
+            }
+
             var splash = new SplashViewController();
             var nav = new UINavigationController(splash);
             nav.SetNavigationBarHidden(true, false);

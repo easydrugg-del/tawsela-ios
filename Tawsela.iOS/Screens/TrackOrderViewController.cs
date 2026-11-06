@@ -27,7 +27,7 @@ namespace Tawsela.iOS.Screens
         private int _eta;
         private string _driverNumber = "";
 
-        public TrackOrderViewController(int orderId) : base("متابعة الطلب")
+        public TrackOrderViewController(int orderId) : base("تتبع الطلب")
         {
             _orderId = orderId;
         }
@@ -55,10 +55,10 @@ namespace Tawsela.iOS.Screens
         {
             _stack = CreateScrollContent(12f, 16f);
 
-            _statusLabel = MakeLabel("جارٍ التحميل…", 18f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Center);
+            _statusLabel = MakeLabel("جاري البحث عن سائق...", 18f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Center);
             _stack.AddArrangedSubview(_statusLabel);
 
-            var refresh = Controls.OutlineButton("تحديث");
+            var refresh = Controls.OutlineButton("تحديث الحالة");
             refresh.TouchUpInside += (s, e) => Load();
             _stack.AddArrangedSubview(refresh);
         }
@@ -148,14 +148,14 @@ namespace Tawsela.iOS.Screens
             // أزرار التواصل مع السائق
             if (!string.IsNullOrEmpty(o.DriverPhone) && o.Status != "مكتمل" && o.Status != "ملغي")
             {
-                var call = Controls.IconButton("اتصال بالسائق", "ic_action_call", Theme.Green);
+                var call = Controls.IconButton("اتصال", "ic_action_call", Theme.Green);
                 call.TouchUpInside += (s, e) => Call(o.DriverPhone);
                 _stack.AddArrangedSubview(call);
             }
 
             if (o.Id > 0)
             {
-                var chat = Controls.OutlineButton("محادثة الطلب");
+                var chat = Controls.OutlineButton("رسالة");
                 chat.TouchUpInside += (s, e) => Push(new ChatViewController(o.Id));
                 _stack.AddArrangedSubview(chat);
             }
@@ -166,7 +166,7 @@ namespace Tawsela.iOS.Screens
                 var driverId = o.DriverId;
                 var trackable = driverId > 0 && o.Status != "مكتمل" && o.Status != "ملغي";
 
-                var map = Controls.OutlineButton(trackable ? "تتبع السائق على الخريطة" : "عرض المسار على الخريطة");
+                var map = Controls.OutlineButton(trackable ? "موقع السائق" : "مسار الرحلة");
                 map.TouchUpInside += (s, e) =>
                 {
                     if (trackable)
@@ -188,7 +188,7 @@ namespace Tawsela.iOS.Screens
             // السائق لم يصل — إبلاغ الإدارة (بديل Api.ReportNotArrived)
             if (o.DriverId > 0 && (o.Status == "في_الطريق" || o.Status == "وصل_السائق"))
             {
-                var notArrived = Controls.DangerButton("السائق لم يصل");
+                var notArrived = Controls.DangerButton("لم يصل ⚠️");
                 notArrived.TouchUpInside += (s, e) => ReportNotArrived(o);
                 _stack.AddArrangedSubview(notArrived);
             }
@@ -238,7 +238,7 @@ namespace Tawsela.iOS.Screens
             _stack.AddArrangedSubview(share);
 
             // زر الطوارئ من داخل الرحلة (بديل btnEmergency → SendEmergencyDetail)
-            var emergency = Controls.DangerButton("الطوارئ");
+            var emergency = Controls.DangerButton("زر الطوارئ");
             emergency.TouchUpInside += (s, e) =>
             {
                 Ui.Confirm("بلاغ طوارئ", "إرسال بلاغ طوارئ للإدارة مع بيانات هذه الرحلة؟", "إرسال", () =>
@@ -263,7 +263,7 @@ namespace Tawsela.iOS.Screens
             if (o.DriverId > 0 && o.Status != "مكتمل" && o.Status != "ملغي")
             {
                 var fareForSplit = o.ActualFare > 0 ? o.ActualFare : o.EstimatedFare;
-                var split = Controls.OutlineButton("تقسيم الأجرة");
+                var split = Controls.OutlineButton("تقسيم الفاتورة");
                 split.TouchUpInside += (s, e) => Push(new SplitFareViewController(o.Id, fareForSplit));
                 _stack.AddArrangedSubview(split);
             }
@@ -271,7 +271,7 @@ namespace Tawsela.iOS.Screens
             // تأكيد وصول السائق (إن لم يؤكد)
             if (!o.CustomerConfirmedArrival && (o.Status == "وصل_السائق" || o.Status == "في_الطريق"))
             {
-                var confirm = Controls.PrimaryButton("تأكيد وصول السائق");
+                var confirm = Controls.PrimaryButton("السائق وصل ✅");
                 confirm.TouchUpInside += (s, e) =>
                 {
                     Ui.Confirm("تأكيد الوصول", "هل وصل السائق فعلاً؟", "نعم وصل", () =>

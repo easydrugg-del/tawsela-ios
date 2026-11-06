@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/bg_header"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="طلبات شحن العملاء"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="لا يظهر الرصيد للعميل إلا بعد تأكيد الدفع"
+        android:textSize="13sp"
+        android:textColor="#DDDDDD"
+        android:layout_marginTop="4dp" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="12dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="رقم هاتف الدفع (يحوّل عليه العملاء)"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/black" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="6dp">
+
+      <EditText
+          android:id="@+id/txtPayPhone"
+          android:layout_width="0dp"
+          android:layout_weight="1"
+          android:layout_height="wrap_content"
+          android:hint="01xxxxxxxxx"
+          android:inputType="phone"
+          android:textSize="15sp"
+          android:padding="10dp"
+          android:background="@drawable/edit_rounded" />
+
+      <Button
+          android:id="@+id/btnSavePayPhone"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="حفظ"
+          android:textColor="@color/white"
+          android:layout_marginStart="8dp"
+          android:background="@drawable/tile_orange_selector" />
+    </LinearLayout>
+  </LinearLayout>
+
+  <Button
+      android:id="@+id/btnTopupHistory"
+      android:layout_width="match_parent"
+      android:layout_height="44dp"
+      android:text="سجل تأكيدات الدفع"
+      android:textSize="14sp"
+      android:textColor="@color/white"
+      android:layout_marginStart="12dp"
+      android:layout_marginEnd="12dp"
+      android:layout_marginBottom="4dp"
+      android:background="@drawable/tile_orange_selector"
+      android:visibility="gone" />
+
+  <TextView
+      android:id="@+id/txtTopupEmpty"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="لا توجد طلبات معلقة"
+      android:textSize="14sp"
+      android:textColor="@color/gray"
+      android:gravity="center"
+      android:padding="20dp" />
+
+  <ListView
+      android:id="@+id/lstTopups"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:divider="@null"
+      android:dividerHeight="0dp" />
+</LinearLayout>

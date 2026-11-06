@@ -11,9 +11,104 @@ namespace Tawsela.iOS.Screens
     /// <summary>
     /// بديل Activities/AreasAdminActivity.cs — إدارة المناطق.
     /// </summary>
+    /// <summary>
+    /// نموذج موحّد لإضافة/تعديل منطقة أو شارع
+    /// (بديل حقول activity_areas_admin / activity_streets_admin).
+    /// </summary>
+    public class PlaceFormViewController : BaseViewController
+    {
+        private readonly string _nameHint, _mapText, _saveText;
+        private readonly Action<string, double, double, bool> _onSave;
+        private readonly string _initialName;
+        private readonly bool _initialActive;
+        private double _lat, _lng;
+
+        private UITextField _name;
+        private UILabel _coords;
+        private UISwitch _active;
+
+        public PlaceFormViewController(string title, string nameHint, string mapText, string saveText,
+            string initialName, double lat, double lng, bool active,
+            Action<string, double, double, bool> onSave)
+            : base(title)
+        {
+            _nameHint = nameHint;
+            _mapText = mapText;
+            _saveText = saveText;
+            _initialName = initialName ?? "";
+            _lat = lat;
+            _lng = lng;
+            _initialActive = active;
+            _onSave = onSave;
+        }
+
+        public override void ViewDidLoad()
+        {
+            base.ViewDidLoad();
+            var stack = CreateScrollContent(12f, 16f);
+
+            _name = Controls.TextField(_nameHint);
+            _name.Text = _initialName;
+            stack.AddArrangedSubview(_name);
+
+            _coords = MakeLabel(CoordsText(), 12f, Theme.TextSecondary,
+                UIFontWeight.Regular, UITextAlignment.Right);
+            _coords.Lines = 0;
+            stack.AddArrangedSubview(_coords);
+
+            var pick = Controls.OutlineButton(_mapText);
+            pick.TouchUpInside += (s, e) =>
+            {
+                Push(MapViewController.Pick(_lat, _lng, (lat, lng, address) =>
+                {
+                    _lat = lat;
+                    _lng = lng;
+                    _coords.Text = CoordsText();
+                }));
+            };
+            stack.AddArrangedSubview(pick);
+
+            var activeRow = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Horizontal,
+                Spacing = 10,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            _active = new UISwitch
+            {
+                On = _initialActive,
+                OnTintColor = Theme.Primary,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            activeRow.AddArrangedSubview(_active);
+            activeRow.AddArrangedSubview(MakeLabel("مفعّلة (تظهر للعملاء)", 13f, Theme.TextPrimary,
+                UIFontWeight.Regular, UITextAlignment.Right));
+            stack.AddArrangedSubview(activeRow);
+
+            var save = Controls.PrimaryButton(_saveText);
+            save.TouchUpInside += (s, e) =>
+            {
+                var name = (_name.Text ?? "").Trim();
+                if (name.Length < 2) { Ui.Toast("اكتب الاسم"); return; }
+
+                _onSave(name, _lat, _lng, _active.On);
+                Back();
+            };
+            stack.AddArrangedSubview(save);
+        }
+
+        private string CoordsText()
+        {
+            if (_lat == 0 && _lng == 0) return "الإحداثيات: لم تُحدَّد بعد";
+
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "الإحداثيات: {0:0.0000}, {1:0.0000}", _lat, _lng);
+        }
+    }
+
     public class AreasAdminViewController : ListViewController<Area>
     {
-        public AreasAdminViewController() : base("إدارة المناطق") { }
+        public AreasAdminViewController() : base("المناطق المسجلة") { }
 
         protected override string EmptyText
         {
@@ -64,24 +159,20 @@ namespace Tawsela.iOS.Screens
         {
             PickPlace((gov, city) =>
             {
-                Ui.Prompt("منطقة جديدة", "اسم المنطقة", "", "الاسم", name =>
-                {
-                    if (string.IsNullOrWhiteSpace(name)) return;
-
-                    Push(MapViewController.Pick(0, 0, (lat, lng, address) =>
-                    {
-                        Run(() => Api.AddArea(name, city, gov, lat, lng, true), "تمت إضافة المنطقة");
-                    }));
-                });
+                Push(new PlaceFormViewController("منطقة جديدة", "اسم المنطقة",
+                    "تحديد الموقع على الخريطة", "حفظ المنطقة", "", 0, 0, true,
+                    (name, lat, lng, active) =>
+                        Run(() => Api.AddArea(name, city, gov, lat, lng, active), "تمت إضافة المنطقة")));
             });
         }
 
         private void Edit(Area a)
         {
-            Push(MapViewController.Pick(a.Lat, a.Lng, (lat, lng, address) =>
-            {
-                Run(() => Api.UpdateArea(a.Id, a.Name, a.City, a.Governorate, lat, lng, a.IsActive), "تم تحديث المنطقة");
-            }));
+            Push(new PlaceFormViewController("تعديل المنطقة", "اسم المنطقة",
+                "تحديد الموقع على الخريطة", "حفظ المنطقة", a.Name, a.Lat, a.Lng, a.IsActive,
+                (name, lat, lng, active) =>
+                    Run(() => Api.UpdateArea(a.Id, name, a.City, a.Governorate, lat, lng, active),
+                        "تم تحديث المنطقة")));
         }
 
         private void Delete(Area a)
@@ -122,7 +213,7 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class StreetsAdminViewController : ListViewController<Street>
     {
-        public StreetsAdminViewController() : base("إدارة الشوارع") { }
+        public StreetsAdminViewController() : base("الشوارع المسجلة") { }
 
         protected override string EmptyText
         {
@@ -147,11 +238,7 @@ namespace Tawsela.iOS.Screens
                 {
                     if (index == 0)
                     {
-                        Push(MapViewController.Pick(s.Lat, s.Lng, (lat, lng, address) =>
-                        {
-                            Run(() => Api.UpdateStreet(s.Id, s.Name, s.City, s.Governorate, lat, lng, s.IsActive),
-                                "تم تحديث الشارع");
-                        }));
+                        Edit(s);
                     }
                     else
                     {
@@ -179,14 +266,11 @@ namespace Tawsela.iOS.Screens
                     Ui.Choose("المدينة", cities, ci =>
                     {
                         var city = cities[ci];
-                        Ui.Prompt("شارع جديد", "اسم الشارع", "", "الاسم", name =>
-                        {
-                            if (string.IsNullOrWhiteSpace(name)) return;
-                            Push(MapViewController.Pick(0, 0, (lat, lng, address) =>
-                            {
-                                Run(() => Api.AddStreet(name, city, gov, lat, lng, true), "تمت إضافة الشارع");
-                            }));
-                        });
+                        Push(new PlaceFormViewController("شارع جديد", "اسم الشارع",
+                            "تحديد موقع الشارع على الخريطة", "حفظ الشارع", "", 0, 0, true,
+                            (name, lat, lng, active) =>
+                                Run(() => Api.AddStreet(name, city, gov, lat, lng, active),
+                                    "تمت إضافة الشارع")));
                     });
                 });
             };
@@ -198,6 +282,16 @@ namespace Tawsela.iOS.Screens
                 NSLayoutConstraint.Create(add, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Bottom, 1, -12),
             });
             List.Scroll.ContentInset = new UIEdgeInsets(0, 0, 84, 0);
+        }
+
+        private void Edit(Street s)
+        {
+            Push(new PlaceFormViewController("تعديل الشارع", "اسم الشارع",
+                "تحديد موقع الشارع على الخريطة", "حفظ الشارع",
+                s.Name, s.Lat, s.Lng, s.IsActive,
+                (name, lat, lng, active) =>
+                    Run(() => Api.UpdateStreet(s.Id, name, s.City, s.Governorate, lat, lng, active),
+                        "تم تحديث الشارع")));
         }
 
         private void Run(Action action, string success)
@@ -221,7 +315,7 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class CouponsAdminViewController : ListViewController<Coupon>
     {
-        public CouponsAdminViewController() : base("إدارة الكوبونات") { }
+        public CouponsAdminViewController() : base("إدارة أكواد الخصم") { }
 
         protected override string EmptyText
         {
@@ -385,11 +479,11 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class EmergencyTypesAdminViewController : ListViewController<Dictionary<string, object>>
     {
-        public EmergencyTypesAdminViewController() : base("أنواع الطوارئ") { }
+        public EmergencyTypesAdminViewController() : base("بيانات زر الطوارئ") { }
 
         protected override string EmptyText
         {
-            get { return "لا توجد أنواع طوارئ"; }
+            get { return "لا توجد حالات مسجلة"; }
         }
 
         protected override List<Dictionary<string, object>> Fetch()
@@ -432,7 +526,7 @@ namespace Tawsela.iOS.Screens
             var add = Controls.PrimaryButton("إضافة نوع");
             add.TouchUpInside += (s, e) =>
             {
-                Ui.Prompt("نوع طوارئ جديد", "الاسم", "", "الاسم", title =>
+                Ui.Prompt("حالة جديدة (مثال: اختطاف)", "الاسم", "", "الاسم", title =>
                 {
                     if (string.IsNullOrWhiteSpace(title)) return;
                     var progress = Ui.ShowProgress("جارٍ الحفظ…");
@@ -456,6 +550,35 @@ namespace Tawsela.iOS.Screens
                 NSLayoutConstraint.Create(add, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Bottom, 1, -12),
             });
             List.Scroll.ContentInset = new UIEdgeInsets(0, 0, 84, 0);
+        }
+    }
+    /// <summary>بديل EmergencyListActivity — بلاغات السائقين (الأحدث أولاً).</summary>
+    public class EmergenciesAdminViewController : ListViewController<Dictionary<string, object>>
+    {
+        public EmergenciesAdminViewController() : base("تفاصيل الطوارئ") { }
+
+        protected override string EmptyText
+        {
+            get { return "لا توجد بلاغات طوارئ"; }
+        }
+
+        protected override List<Dictionary<string, object>> Fetch()
+        {
+            return Api.AllEmergencies();
+        }
+
+        protected override UIView BuildRow(Dictionary<string, object> r)
+        {
+            var name = Row.Str(r, "DriverName");
+            var type = Row.Str(r, "Type");
+            var address = Row.Str(r, "Address");
+            var date = Row.Date(r, "CreatedAt");
+            var line = (string.IsNullOrEmpty(type) ? "بلاغ" : type) +
+                       (string.IsNullOrEmpty(address) ? "" : " · " + address);
+
+            return Controls.InfoRow(
+                (string.IsNullOrEmpty(name) ? "سائق" : name) + " — " + date,
+                line);
         }
     }
 }

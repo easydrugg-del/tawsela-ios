@@ -145,7 +145,7 @@ namespace Tawsela.iOS.Screens
 
             if (_mode == MapMode.Pick)
             {
-                _btnGps = Controls.OutlineButton("استخدم موقعي");
+                _btnGps = Controls.OutlineButton("توسيط الخريطة على موقعي (GPS)");
                 _btnGps.TouchUpInside += (s, e) => GetGps();
                 bottom.AddSubview(_btnGps);
 
@@ -302,7 +302,7 @@ namespace Tawsela.iOS.Screens
 
             var lat = _curLat;
             var lng = _curLng;
-            Ui.BeginOnMain(() => _addressLabel.Text = "جارٍ تحديد اسم الشارع…");
+            Ui.BeginOnMain(() => _addressLabel.Text = "اسم الشارع: جاري تحديد اسم الشارع...");
 
             Ui.Run(
                 () =>
@@ -316,7 +316,7 @@ namespace Tawsela.iOS.Screens
                         if (!string.IsNullOrWhiteSpace(addr))
                         {
                             _address = addr;
-                            _addressLabel.Text = addr;
+                            _addressLabel.Text = "اسم الشارع: " + addr;
                         }
                         else
                         {

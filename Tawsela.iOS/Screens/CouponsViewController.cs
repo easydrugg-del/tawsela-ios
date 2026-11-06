@@ -14,11 +14,11 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class CouponsViewController : ListViewController<Coupon>
     {
-        public CouponsViewController() : base("العروض والكوبونات") { }
+        public CouponsViewController() : base("العروض والخصومات") { }
 
         protected override string EmptyText
         {
-            get { return "لا توجد كوبونات متاحة حاليًا"; }
+            get { return "لا توجد عروض حالياً"; }
         }
 
         protected override List<Coupon> Fetch()

@@ -18,7 +18,7 @@ namespace Tawsela.iOS.Screens
         private UITextField _phone1, _phone2, _amount1, _amount2;
         private UILabel _hint;
 
-        public SplitFareViewController(int orderId, decimal fare) : base("تقسيم الأجرة")
+        public SplitFareViewController(int orderId, decimal fare) : base("تقسيم الفاتورة")
         {
             _orderId = orderId;
             _fare = fare;
@@ -34,31 +34,31 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(12f, 16f);
 
-            _hint = MakeLabel("إجمالي الأجرة: " + _fare.ToString("0.00") + " ج.م",
+            _hint = MakeLabel("الأجرة: " + _fare.ToString("0.00") + " ج.م",
                 16f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
             stack.AddArrangedSubview(_hint);
 
-            stack.AddArrangedSubview(Controls.SectionTitle("الطرف الأول"));
-            _phone1 = Controls.TextField("رقم هاتف صاحب الحساب الأول");
+            stack.AddArrangedSubview(Controls.SectionTitle("الشخص الأول:"));
+            _phone1 = Controls.TextField("رقم الهاتف الأول");
             _phone1.KeyboardType = UIKeyboardType.PhonePad;
             _phone1.SemanticContentAttribute = UISemanticContentAttribute.ForceLeftToRight;
             stack.AddArrangedSubview(_phone1);
 
-            _amount1 = Controls.TextField("المبلغ المطلوب منه");
+            _amount1 = Controls.TextField("المبلغ (ج.م)");
             _amount1.KeyboardType = UIKeyboardType.DecimalPad;
             stack.AddArrangedSubview(_amount1);
 
-            stack.AddArrangedSubview(Controls.SectionTitle("الطرف الثاني"));
-            _phone2 = Controls.TextField("رقم هاتف صاحب الحساب الثاني");
+            stack.AddArrangedSubview(Controls.SectionTitle("الشخص الثاني:"));
+            _phone2 = Controls.TextField("رقم الهاتف الثاني");
             _phone2.KeyboardType = UIKeyboardType.PhonePad;
             _phone2.SemanticContentAttribute = UISemanticContentAttribute.ForceLeftToRight;
             stack.AddArrangedSubview(_phone2);
 
-            _amount2 = Controls.TextField("المبلغ المطلوب منه");
+            _amount2 = Controls.TextField("المبلغ (ج.م)");
             _amount2.KeyboardType = UIKeyboardType.DecimalPad;
             stack.AddArrangedSubview(_amount2);
 
-            var submit = Controls.PrimaryButton("تأكيد التقسيم");
+            var submit = Controls.PrimaryButton("💰 تقسيم الفاتورة");
             submit.TouchUpInside += (s, e) => Submit();
             stack.AddArrangedSubview(submit);
         }

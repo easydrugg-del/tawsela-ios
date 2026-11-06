@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/bg_header"
+      android:padding="16dp">
+
+    <TextView
+        android:id="@+id/txtWalletTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="المحفظة / Wallet"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="شحن خارجي بتحويل يدوي — External top-up with manual review"
+        android:textSize="13sp"
+        android:textColor="#DDDDDD"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/txtBalance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0 ج.م"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+  </LinearLayout>
+
+  <ScrollView
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+      <!-- بطاقة طلب الشحن -->
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:background="@drawable/card_ripple"
+          android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+          <TextView
+              android:layout_width="0dp"
+              android:layout_weight="1"
+              android:layout_height="wrap_content"
+              android:text="شحن المحفظة (خارجي) / Wallet Top-up (External)"
+              android:textSize="16sp"
+              android:textStyle="bold"
+              android:textColor="@color/primary" />
+
+          <TextView
+              android:id="@+id/txtPayNumber"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text=""
+              android:textSize="16sp"
+              android:textStyle="bold"
+              android:textColor="@color/primary"
+              android:background="@drawable/edit_rounded"
+              android:paddingLeft="12dp"
+              android:paddingRight="12dp"
+              android:paddingTop="4dp"
+              android:paddingBottom="4dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtPayPhoneInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="حوّل المبلغ إلى رقم الشركة أعلاه من أي محفظة إلكترونية، ثم أدخل بيانات التحويل. لا تشارك OTP. تتم المراجعة يدويًا قبل إضافة الرصيد.\nTransfer to the official company number above, then submit the transaction details. Manual review is required before the balance is credited."
+            android:textSize="12sp"
+            android:textColor="@color/gray"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="الخطوات / Steps:&#10;1) حوّل المبلغ إلى رقم الشركة من محفظتك الإلكترونية.&#10;2) احتفظ برسالة التأكيد أو الإيصال.&#10;3) أدخل رقم العملية أو أرفق صورة الإيصال.&#10;4) انتظر مراجعة الإدارة؛ لا يُضاف الرصيد تلقائيًا.&#10;1) Transfer to the company number using your e-wallet.&#10;2) Keep the confirmation message or receipt.&#10;3) Enter the transaction reference or attach the receipt image.&#10;4) Wait for manual approval; the balance is not added automatically."
+            android:textSize="12sp"
+            android:textColor="@color/gray"
+            android:lineSpacingExtra="2dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="تنبيه: لا تشارك رمز OTP أو بيانات البطاقة مع أي شخص. / Never share OTP or card details with anyone."
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/red"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="المبلغ (ج.م) / Amount (EGP)"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/txtTopup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="مثال: 100"
+            android:inputType="numberDecimal"
+            android:background="@drawable/edit_rounded"
+            android:padding="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="رقم المحفظة المحوَّل منها / Sender wallet number"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/txtTopupSender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="01xxxxxxxxx"
+            android:inputType="phone"
+            android:background="@drawable/edit_rounded"
+            android:padding="12dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="رقم العملية أو صورة الإيصال (أحدهما مطلوب): رقم التحويل في رسالة التأكيد — تستخدمه الإدارة للتحقق قبل التأكيد.&#10;Transaction reference or receipt image (one is required)."
+            android:textSize="12sp"
+            android:textColor="@color/gray"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/txtTopupRef"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="رقم العملية"
+            android:inputType="text"
+            android:background="@drawable/edit_rounded"
+            android:padding="12dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:weightSum="2">
+
+          <Button
+              android:id="@+id/btnPickReceipt"
+              android:layout_width="0dp"
+              android:layout_weight="1"
+              android:layout_height="48dp"
+              android:text="📷 صورة الإيصال"
+              android:textSize="14sp"
+              android:textColor="@color/text_primary"
+              android:layout_marginEnd="4dp"
+              android:background="@drawable/tile_card_selector" />
+
+          <ImageView
+              android:id="@+id/imgReceiptPreview"
+              android:layout_width="0dp"
+              android:layout_weight="1"
+              android:layout_height="100dp"
+              android:scaleType="centerCrop"
+              android:visibility="gone" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnTopup"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="إرسال طلب الشحن للمراجعة / Submit for review"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/tile_orange_selector" />
+
+        <TextView
+            android:id="@+id/txtTopupStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="13sp"
+            android:textColor="@color/primary"
+            android:gravity="center"
+            android:layout_marginTop="8dp" />
+      </LinearLayout>
+
+      <!-- بطاقة طلبات الشحن -->
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:background="@drawable/card_ripple"
+          android:padding="16dp"
+          android:layout_marginTop="12dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🧾 طلبات الشحن وحالتها"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:layout_marginBottom="8dp" />
+
+        <ListView
+            android:id="@+id/lstTopupReqs"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:divider="@null"
+            android:dividerHeight="0dp" />
+      </LinearLayout>
+
+      <!-- بطاقة حركة المحفظة -->
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:background="@drawable/card_ripple"
+          android:padding="16dp"
+          android:layout_marginTop="12dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🧾 حركة المحفظة / Wallet activity"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:layout_marginBottom="8dp" />
+
+        <ListView
+            android:id="@+id/lstWalletTxns"
+            android:layout_width="match_parent"
+            android:layout_height="260dp"
+            android:divider="@null"
+            android:dividerHeight="0dp" />
+      </LinearLayout>
+
+      <!-- بطاقة التحويل الداخلي (تظهر فقط لدفع طلب حالي) -->
+      <LinearLayout
+          android:id="@+id/cardTransfer"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:background="@drawable/card_ripple"
+          android:padding="16dp"
+          android:layout_marginTop="12dp"
+          android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔄 تحويل لحظي (دفع حق التوصيلة)"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="تحويل داخلي داخل التطبيق لحساب آخر مسجل في التطبيق — وليس تحويلاً لحساب خارجي (فودافون كاش/بنوك)"
+            android:textSize="12sp"
+            android:textColor="@color/gray"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="رقم موبايل المستلم"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/txtTransferPhone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="01xxxxxxxxx"
+            android:inputType="phone"
+            android:background="@drawable/edit_rounded"
+            android:padding="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="المبلغ (ج.م)"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/txtTransferAmount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="مثال: 50"
+            android:inputType="numberDecimal"
+            android:background="@drawable/edit_rounded"
+            android:padding="12dp" />
+
+        <Button
+            android:id="@+id/btnTransfer"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="تحويل الآن — يسمع فوراً"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/tile_card_selector" />
+      </LinearLayout>
+
+    </LinearLayout>
+  </ScrollView>
+
+</LinearLayout>

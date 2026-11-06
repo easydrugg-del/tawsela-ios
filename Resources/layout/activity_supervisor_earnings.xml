@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/bg_header"
+      android:padding="16dp">
+
+    <TextView
+        android:id="@+id/txtSupervisorTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="أرباح المشرف"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:padding="12dp">
+
+    <Button
+        android:id="@+id/btnFromDate"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="44dp"
+        android:text="من:"
+        android:textSize="13sp"
+        android:textColor="@color/text_primary"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/tile_card_selector" />
+
+    <Button
+        android:id="@+id/btnToDate"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="44dp"
+        android:text="إلى:"
+        android:textSize="13sp"
+        android:textColor="@color/text_primary"
+        android:layout_marginStart="4dp"
+        android:background="@drawable/tile_card_selector" />
+
+    <Button
+        android:id="@+id/btnShowEarnings"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="44dp"
+        android:text="عرض"
+        android:textSize="13sp"
+        android:textColor="@color/text_primary"
+        android:layout_marginStart="4dp"
+        android:background="@drawable/tile_card_selector" />
+  </LinearLayout>
+
+  <TextView
+      android:id="@+id/txtSummary"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="—"
+      android:textSize="14sp"
+      android:textColor="@color/black"
+      android:background="@color/white"
+      android:padding="12dp"
+      android:layout_marginStart="12dp"
+      android:layout_marginEnd="12dp" />
+
+  <Button
+      android:id="@+id/btnRegisterPayout"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:text="💸 تسجيل صرف لهذه المدة"
+      android:textSize="15sp"
+      android:textColor="@color/white"
+      android:background="@drawable/tile_orange_selector"
+      android:layout_margin="12dp" />
+
+  <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="سجل الصرف"
+      android:textSize="15sp"
+      android:textStyle="bold"
+      android:textColor="@color/primary"
+      android:paddingStart="16dp"
+      android:paddingEnd="16dp"
+      android:paddingBottom="4dp" />
+
+  <TextView
+      android:id="@+id/txtEmpty"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="لا يوجد صرف مسجّل"
+      android:textSize="14sp"
+      android:textColor="@color/gray"
+      android:gravity="center"
+      android:padding="16dp"
+      android:visibility="gone" />
+
+  <ListView
+      android:id="@+id/lstPayouts"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:divider="#EEEEEE"
+      android:dividerHeight="1dp" />
+</LinearLayout>

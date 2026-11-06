@@ -37,6 +37,7 @@ namespace Tawsela.iOS.Screens
             report.TouchUpInside += (s, e) => Report();
             stack.AddArrangedSubview(report);
 
+            stack.AddArrangedSubview(Controls.SectionTitle("بلاغات السائقين (الأحدث أولاً)"));
             stack.AddArrangedSubview(Controls.SectionTitle("بلاغاتي السابقة"));
 
             _empty = MakeLabel("لا توجد بلاغات", 14f, Theme.TextSecondary,

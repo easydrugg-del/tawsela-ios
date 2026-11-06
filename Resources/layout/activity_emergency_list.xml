@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/bg_header"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="تفاصيل الطوارئ"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="بلاغات السائقين (الأحدث أولاً)"
+        android:textSize="13sp"
+        android:textColor="#DDDDDD"
+        android:layout_marginTop="4dp" />
+  </LinearLayout>
+
+  <ListView
+      android:id="@+id/lstEmergencies"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:divider="@null"
+      android:dividerHeight="0dp" />
+
+  <TextView
+      android:id="@+id/txtEmergenciesEmpty"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="لا توجد بلاغات"
+      android:textSize="14sp"
+      android:textColor="@color/gray"
+      android:gravity="center"
+      android:padding="20dp"
+      android:visibility="gone" />
+</LinearLayout>

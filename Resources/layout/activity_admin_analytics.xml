@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface">
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="16dp">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="تحليلات متقدمة"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/primary"
+        android:layout_marginBottom="14dp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2">
+      <Button
+          android:id="@+id/btnAnaFrom"
+          android:layout_width="0dp"
+          android:layout_weight="1"
+          android:layout_height="48dp"
+          android:textSize="13sp"
+          android:textColor="@color/text_primary"
+          android:layout_marginEnd="4dp"
+          android:background="@drawable/tile_card_selector" />
+      <Button
+          android:id="@+id/btnAnaTo"
+          android:layout_width="0dp"
+          android:layout_weight="1"
+          android:layout_height="48dp"
+          android:textSize="13sp"
+          android:textColor="@color/text_primary"
+          android:layout_marginStart="4dp"
+          android:background="@drawable/tile_card_selector" />
+    </LinearLayout>
+    <Button
+        android:id="@+id/btnAnaShow"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="عرض تحليلات الفترة"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/tile_card_selector" />
+    <TextView
+        android:id="@+id/txtStats"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="15sp"
+        android:background="@drawable/edit_rounded"
+        android:padding="16dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="رحلات وإيراد الفترة"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp" />
+    <TextView
+        android:id="@+id/txtPeriod"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="..."
+        android:textSize="14sp"
+        android:background="@drawable/edit_rounded"
+        android:padding="14dp"
+        android:layout_marginTop="6dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="أفضل السائقين"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp" />
+    <TextView
+        android:id="@+id/txtTopDrivers"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="..."
+        android:textSize="14sp"
+        android:background="@drawable/edit_rounded"
+        android:padding="14dp"
+        android:layout_marginTop="6dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="أفضل العملاء"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp" />
+    <TextView
+        android:id="@+id/txtTopCustomers"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="..."
+        android:textSize="14sp"
+        android:background="@drawable/edit_rounded"
+        android:padding="14dp"
+        android:layout_marginTop="6dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="التوزيع (الحالة / الخدمة / الدفع)"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp" />
+    <TextView
+        android:id="@+id/txtBreakdown"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="..."
+        android:textSize="14sp"
+        android:background="@drawable/edit_rounded"
+        android:padding="14dp"
+        android:layout_marginTop="6dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="المحافظ والعمولات"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp" />
+    <TextView
+        android:id="@+id/txtWallets"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="..."
+        android:textSize="14sp"
+        android:background="@drawable/edit_rounded"
+        android:padding="14dp"
+        android:layout_marginTop="6dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="تسعير الذروة"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+      <EditText
+          android:id="@+id/txtPeak"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:hint="مضاعف الذروة (1.0 = عادي)"
+          android:inputType="numberDecimal"
+          android:background="@drawable/edit_rounded"
+          android:padding="12dp" />
+      <Button
+          android:id="@+id/btnPeak"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="حفظ"
+          android:textColor="@color/white"
+          android:background="@drawable/tile_orange_selector"
+          android:layout_marginStart="8dp" />
+    </LinearLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="عمولة الدفع النقدي للسائق"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="إذا دفع العميل كاش، يُخصم من محفظة السائق ويُضاف لمحفظة الإدارة"
+        android:textSize="12sp"
+        android:textColor="@color/gray"
+        android:layout_marginTop="4dp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+      <EditText
+          android:id="@+id/txtCommPercent"
+          android:layout_width="0dp"
+          android:layout_weight="1"
+          android:layout_height="wrap_content"
+          android:hint="نسبة % (مثلاً 15)"
+          android:inputType="numberDecimal"
+          android:background="@drawable/edit_rounded"
+          android:padding="12dp" />
+      <EditText
+          android:id="@+id/txtCommFixed"
+          android:layout_width="0dp"
+          android:layout_weight="1"
+          android:layout_height="wrap_content"
+          android:hint="مبلغ ثابت (0=نسبة)"
+          android:inputType="numberDecimal"
+          android:background="@drawable/edit_rounded"
+          android:padding="12dp"
+          android:layout_marginStart="8dp" />
+      <Button
+          android:id="@+id/btnComm"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="حفظ"
+          android:textColor="@color/white"
+          android:background="@drawable/tile_orange_selector"
+          android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnExport"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="تصدير الطلبات (مشاركة نص)"
+        android:textColor="@color/text_primary"
+        android:background="@drawable/tile_card_selector"
+        android:layout_marginTop="16dp" />
+  </LinearLayout>
+</ScrollView>

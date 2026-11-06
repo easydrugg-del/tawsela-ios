@@ -23,7 +23,7 @@ namespace Tawsela.iOS.Screens
         private UIView _composer;
         private nfloat _composerBottom;
 
-        public ChatViewController(int orderId) : base("المحادثة")
+        public ChatViewController(int orderId) : base("محادثة الطلب")
         {
             _orderId = orderId;
         }
@@ -67,7 +67,7 @@ namespace Tawsela.iOS.Screens
             _composer = new UIView { BackgroundColor = Theme.White, TranslatesAutoresizingMaskIntoConstraints = false };
             View.AddSubview(_composer);
 
-            _input = Controls.TextField("اكتب رسالة…", false, 44f);
+            _input = Controls.TextField("اكتب رسالتك...", false, 44f);
             _composer.AddSubview(_input);
 
             _send = Controls.PrimaryButton("إرسال", 44f);

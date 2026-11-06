@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/bg_header"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="قيمة الخصم من السائق"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="تُخصم من محفظة السائق عند قبوله أي طلب (0 = بدون خصم)"
+        android:textSize="13sp"
+        android:textColor="#DDDDDD"
+        android:layout_marginTop="4dp" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="المبلغ بالجنيه"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginBottom="6dp" />
+
+    <EditText
+        android:id="@+id/txtDriverFee"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="مثال: 5"
+        android:inputType="numberDecimal"
+        android:textSize="16sp"
+        android:padding="12dp"
+        android:background="@drawable/edit_rounded" />
+
+    <Button
+        android:id="@+id/btnSaveDriverFee"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="حفظ"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/tile_orange_selector" />
+  </LinearLayout>
+</LinearLayout>

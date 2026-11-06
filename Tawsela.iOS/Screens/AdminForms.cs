@@ -62,7 +62,7 @@ namespace Tawsela.iOS.Screens
     {
         private bool _showNight;
 
-        public ServiceAdminViewController() : base("إدارة الخدمات") { }
+        public ServiceAdminViewController() : base("إدارة أنواع الخدمة") { }
 
         protected override string EmptyText
         {
@@ -142,7 +142,7 @@ namespace Tawsela.iOS.Screens
 
                 Ui.BeginOnMain(() =>
                 {
-                    Ui.Prompt("فترة الليل", "من الساعة (0-23)", from.ToString(), "22", fromText =>
+                    Ui.Prompt("🌙 فترة الليل (بالساعة)", "من الساعة (0-23)", from.ToString(), "22", fromText =>
                     {
                         int f;
                         if (!int.TryParse(fromText, out f) || f < 0 || f > 23)
@@ -151,7 +151,7 @@ namespace Tawsela.iOS.Screens
                             return;
                         }
 
-                        Ui.Prompt("فترة الليل", "إلى الساعة (0-23)", to.ToString(), "6", toText =>
+                        Ui.Prompt("🌙 فترة الليل (بالساعة)", "إلى الساعة (0-23)", to.ToString(), "6", toText =>
                         {
                             int t;
                             if (!int.TryParse(toText, out t) || t < 0 || t > 23)

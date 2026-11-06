@@ -17,7 +17,7 @@ namespace Tawsela.iOS.Screens
         private UILabel _countLabel;
         private UILabel _rewardLabel;
 
-        public ReferralViewController() : base("دعوة الأصدقاء") { }
+        public ReferralViewController() : base("نظام الإحالة") { }
 
         public override void ViewDidLoad()
         {
@@ -65,7 +65,7 @@ namespace Tawsela.iOS.Screens
             copy.TouchUpInside += (s, e) => CopyCode();
             stack.AddArrangedSubview(copy);
 
-            var share = Controls.PrimaryButton("مشاركة الكود");
+            var share = Controls.PrimaryButton("مشاركة كود الإحالة");
             share.TouchUpInside += (s, e) => ShareCode();
             stack.AddArrangedSubview(share);
         }

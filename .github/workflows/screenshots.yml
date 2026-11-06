@@ -1,0 +1,101 @@
+name: screenshots
+
+# يبني التطبيق للمحاكي ويشغّله بوضع --shots (داخل التطبيق)
+# ثم يرفع PNG لكل الشاشات كـ artifact — بلا tunnel أو نقر خارجي.
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'macOS runner'
+        required: false
+        default: 'xcode-27'
+      dotnet:
+        description: '.NET SDK'
+        required: false
+        default: '10.0.x'
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: '1'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+
+jobs:
+  shots:
+    name: Capture all screens
+    runs-on: ${{ inputs.runner || 'xcode-27' }}
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          if [ -d /Applications/Xcode_27.1.app ]; then
+            sudo xcode-select -s /Applications/Xcode_27.1.app
+          elif [ -d /Applications/Xcode.app ]; then
+            sudo xcode-select -s /Applications/Xcode.app
+          fi
+          xcodebuild -version
+
+      - name: Use the runner SDK
+        run: rm -f global.json
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet || '10.0.x' }}
+
+      - name: Install iOS workload
+        run: dotnet workload install ios
+
+      - name: Build (simulator)
+        run: |
+          dotnet build Tawsela.iOS/Tawsela.iOS.csproj \
+            -c Release -f net10.0-ios -r iossimulator-arm64 \
+            -m:1 -nr:false -p:CodesignKey=- -p:EnableFirebase=false
+
+      - name: Run with --shots and collect
+        run: |
+          set -e
+          APP="Tawsela.iOS/bin/Release/net10.0-ios/iossimulator-arm64/Tawsela.app"
+          UDID=$(xcrun simctl list devices available -j | jq -r '[.devices[][] | select(.name|test("iPhone"))][0].udid')
+          echo "Simulator: $UDID"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" "$APP"
+          xcrun simctl privacy "$UDID" grant photos com.tawsela.app || true
+          xcrun simctl privacy "$UDID" grant notifications com.tawsela.app || true
+
+          xcrun simctl launch "$UDID" com.tawsela.app --shots || true
+
+          DATA=""
+          for i in $(seq 1 80); do
+            DATA=$(xcrun simctl get_app_container "$UDID" com.tawsela.app data 2>/dev/null || true)
+            if [ -n "$DATA" ] && [ -f "$DATA/Documents/shots/done.txt" ]; then
+              echo "done after $((i*3))s"
+              break
+            fi
+            sleep 3
+          done
+
+          mkdir -p screenshots
+          if [ -n "$DATA" ] && [ -d "$DATA/Documents/shots" ]; then
+            cp -R "$DATA/Documents/shots/." screenshots/
+          fi
+          xcrun simctl io "$UDID" screenshot screenshots/99-final.png || true
+
+          echo "--- captured ---"
+          ls -la screenshots | head -60
+          cat screenshots/done.txt || true
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ github.run_number }}
+          path: screenshots/
+          if-no-files-found: warn
+          retention-days: 14

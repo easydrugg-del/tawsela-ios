@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/surface">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@drawable/bg_header"
+      android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="تتبع الطلب"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:id="@+id/txtOrderIdTop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="13sp"
+        android:textColor="#B0B5CC"
+        android:layout_marginTop="2dp" />
+  </LinearLayout>
+
+  <!-- بطاقة الحالة الرئيسية -->
+  <LinearLayout
+      android:id="@+id/statusContainer"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@color/white"
+      android:padding="16dp"
+      android:layout_margin="12dp"
+      android:elevation="2dp">
+
+    <TextView
+        android:id="@+id/txtCurrentStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="جاري البحث عن سائق..."
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/primary"
+        android:textAlignment="center" />
+
+    <TextView
+        android:id="@+id/txtStatusDetail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        android:textAlignment="center"
+        android:layout_marginTop="6dp" />
+
+    <!-- رمز الرحلة يظهر للعميل فقط — بارز أعلى الشاشة -->
+    <TextView
+        android:id="@+id/txtPin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/accent"
+        android:gravity="center"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:background="@drawable/edit_rounded" />
+
+    <!-- تأكيد وصول السائق: بديل للـ PIN بعد تحقق الموقع -->
+    <LinearLayout
+        android:id="@+id/arrivalActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:visibility="gone">
+
+      <Button
+          android:id="@+id/btnConfirmArrival"
+          android:layout_width="0dp"
+          android:layout_height="48dp"
+          android:layout_weight="1"
+          android:text="السائق وصل ✅"
+          android:textSize="14sp"
+          android:textStyle="bold"
+          android:textColor="@color/white"
+          android:background="@drawable/tile_green_selector"
+          android:layout_marginEnd="6dp" />
+
+      <Button
+          android:id="@+id/btnNotArrived"
+          android:layout_width="0dp"
+          android:layout_height="48dp"
+          android:layout_weight="1"
+          android:text="لم يصل ⚠️"
+          android:textSize="14sp"
+          android:textStyle="bold"
+          android:textColor="@color/white"
+          android:background="@drawable/tile_red_selector"
+          android:layout_marginStart="6dp" />
+    </LinearLayout>
+  </LinearLayout>
+
+  <!-- خريطة تتبع السائق المباشر -->
+  <FrameLayout
+      android:id="@+id/mapContainer"
+      android:layout_width="match_parent"
+      android:layout_height="220dp"
+      android:layout_marginLeft="12dp"
+      android:layout_marginRight="12dp"
+      android:background="#F1F3F5">
+
+    <WebView
+        android:id="@+id/mapView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/mapStatus"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="16dp"
+        android:background="#F1F3F5">
+
+      <ProgressBar
+          android:id="@+id/mapProgress"
+          android:layout_width="32dp"
+          android:layout_height="32dp"
+          android:indeterminate="true"
+          android:indeterminateTint="@color/primary" />
+
+      <TextView
+          android:id="@+id/txtMapStatus"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="8dp"
+          android:gravity="center"
+          android:text="جاري تحميل الخريطة..."
+          android:textColor="@color/text_secondary"
+          android:textSize="13sp" />
+
+      <Button
+          android:id="@+id/btnMapRetry"
+          android:layout_width="wrap_content"
+          android:layout_height="42dp"
+          android:layout_marginTop="8dp"
+          android:paddingLeft="18dp"
+          android:paddingRight="18dp"
+          android:text="إعادة المحاولة"
+          android:textColor="@color/white"
+          android:textSize="13sp"
+          android:visibility="gone"
+          android:background="@drawable/tile_green_selector" />
+    </LinearLayout>
+  </FrameLayout>
+
+  <!-- شريط التتبع العمودي الواضح -->
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:background="@color/white"
+      android:padding="16dp"
+      android:layout_marginLeft="12dp"
+      android:layout_marginRight="12dp"
+      android:layout_marginTop="8dp"
+      android:elevation="2dp"
+      android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="مسار الرحلة"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="12dp" />
+
+    <LinearLayout
+        android:id="@+id/linearProgress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:background="@color/white"
+      android:padding="16dp">
+    <TextView
+        android:id="@+id/txtOrderInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="15sp"
+        android:textColor="@color/primary" />
+  </LinearLayout>
+
+  <TextView
+      android:id="@+id/txtEta"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:textSize="15sp"
+      android:textStyle="bold"
+      android:textColor="@color/accent"
+      android:gravity="center"
+      android:layout_marginTop="8dp"
+      android:layout_marginLeft="16dp"
+      android:layout_marginRight="16dp" />
+
+  <TextView
+      android:id="@+id/txtContact"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:textSize="15sp"
+      android:textColor="@color/primary"
+      android:gravity="center"
+      android:layout_marginTop="10dp"
+      android:layout_marginLeft="16dp"
+      android:layout_marginRight="16dp" />
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:layout_marginLeft="16dp"
+      android:layout_marginRight="16dp">
+
+    <Button
+        android:id="@+id/btnCall"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:text="اتصال"
+        android:textSize="15sp"
+        android:textColor="@color/text_primary"
+        android:background="@drawable/tile_card_selector"
+        android:layout_marginEnd="8dp" />
+
+    <Button
+        android:id="@+id/btnSms"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:text="رسالة"
+        android:textSize="15sp"
+        android:textColor="@color/text_primary"
+        android:background="@drawable/tile_card_selector"
+        android:layout_marginStart="8dp" />
+  </LinearLayout>
+
+  <Button
+      android:id="@+id/btnShareTrip"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:text="مشاركة الرحلة"
+      android:textSize="15sp"
+      android:textColor="@color/text_primary"
+      android:background="@drawable/tile_card_selector"
+      android:layout_marginLeft="16dp"
+      android:layout_marginRight="16dp"
+      android:layout_marginTop="10dp" />
+
+  <Button
+      android:id="@+id/btnEmergency"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:text="زر الطوارئ"
+      android:textSize="15sp"
+      android:textStyle="bold"
+      android:textColor="@color/white"
+      android:background="@drawable/tile_red_selector"
+      android:layout_marginLeft="16dp"
+      android:layout_marginRight="16dp"
+      android:layout_marginTop="8dp" />
+
+  <Button
+      android:id="@+id/btnOffers"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:text="عروض السائقين"
+      android:textColor="@color/text_primary"
+      android:background="@drawable/tile_card_selector"
+      android:layout_marginLeft="16dp"
+      android:layout_marginRight="16dp"
+      android:layout_marginTop="8dp"
+      android:visibility="gone" />
+
+  <Button
+      android:id="@+id/btnPlaceOffer"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:text="قدّم عرض سعر"
+      android:textColor="@color/text_primary"
+      android:background="@drawable/tile_card_selector"
+      android:layout_marginLeft="16dp"
+      android:layout_marginRight="16dp"
+      android:layout_marginTop="8dp"
+      android:visibility="gone" />
+
+  <Button
+      android:id="@+id/btnPayWallet"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:text="💳 دفع حق التوصيلة لمحفظة السائق"
+      android:textColor="@color/white"
+      android:background="@drawable/tile_orange_selector"
+      android:layout_marginLeft="16dp"
+      android:layout_marginRight="16dp"
+      android:layout_marginTop="8dp"
+      android:visibility="gone" />
+
+  <Button
+      android:id="@+id/btnRefresh"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="تحديث الحالة"
+      android:background="@drawable/tile_card_selector"
+      android:textColor="@color/text_primary"
+      android:layout_margin="16dp" />
+  </LinearLayout>
+</ScrollView>

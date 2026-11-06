@@ -17,6 +17,7 @@ namespace Tawsela.iOS
         public readonly UIRefreshControl Refresh;
         private readonly UILabel _empty;
         private readonly UIView _host;
+        private NSLayoutConstraint _scrollTop;
 
         public ListLayout(UIView host, float spacing = 10f, float padding = 14f)
         {
@@ -28,9 +29,10 @@ namespace Tawsela.iOS
                 AlwaysBounceVertical = true
             };
             host.AddSubview(Scroll);
+            _scrollTop = NSLayoutConstraint.Create(Scroll, NSLayoutAttribute.Top, NSLayoutRelation.Equal, host.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 0);
             host.AddConstraints(new[]
             {
-                NSLayoutConstraint.Create(Scroll, NSLayoutAttribute.Top, NSLayoutRelation.Equal, host.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 0),
+                _scrollTop,
                 NSLayoutConstraint.Create(Scroll, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, host.SafeAreaLayoutGuide, NSLayoutAttribute.Bottom, 1, 0),
                 NSLayoutConstraint.Create(Scroll, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, host, NSLayoutAttribute.Leading, 1, 0),
                 NSLayoutConstraint.Create(Scroll, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, host, NSLayoutAttribute.Trailing, 1, 0),
@@ -74,6 +76,15 @@ namespace Tawsela.iOS
             });
         }
 
+        /// <summary>سطر توضيحي يظهر أعلى القائمة (بديل TextView الفرعي في AXML).</summary>
+        public string Subtitle { get; set; }
+
+        /// <summary>إزاحة أعلى القائمة لترك مساحة شريط بحث ثابت فوقها.</summary>
+        public nfloat TopInset
+        {
+            set { if (_scrollTop != null) _scrollTop.Constant = value; }
+        }
+
         /// <summary>استبدال الصفوف المعروضة (على الخيط الرئيسي).</summary>
         public void SetRows(IList<UIView> rows, string emptyText)
         {
@@ -82,6 +93,20 @@ namespace Tawsela.iOS
                 var v = Stack.ArrangedSubviews[i];
                 Stack.RemoveArrangedSubview(v);
                 v.RemoveFromSuperview();
+            }
+
+            if (!string.IsNullOrEmpty(Subtitle))
+            {
+                var sub = new UILabel
+                {
+                    Text = Subtitle,
+                    Font = Theme.Font(13),
+                    TextColor = Theme.TextSecondary,
+                    TextAlignment = UITextAlignment.Right,
+                    Lines = 0,
+                    TranslatesAutoresizingMaskIntoConstraints = false
+                };
+                Stack.AddArrangedSubview(sub);
             }
 
             if (rows == null || rows.Count == 0)
@@ -117,6 +142,12 @@ namespace Tawsela.iOS
             get { return "لا توجد بيانات"; }
         }
 
+        /// <summary>سطر توضيحي أعلى القائمة (اختياري).</summary>
+        protected virtual string Subtitle
+        {
+            get { return ""; }
+        }
+
         /// <summary>جلب البيانات — يُنفَّذ على خيط خلفي.</summary>
         protected abstract List<T> Fetch();
 
@@ -150,9 +181,38 @@ namespace Tawsela.iOS
             Reload();
         }
 
-        protected void Reload()
+        /// <summary>
+        /// شريط بحث ثابت أعلى القائمة (بديل EditText أعلى RecyclerView في أندرويد).
+        /// يعيد الحقل؛ التغيير يستدعي Reload تلقائيًا.
+        /// </summary>
+        protected UITextField AddSearchBar(string placeholder)
         {
-            Ui.Run(
+            const float height = 60f;
+
+            var header = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            View.AddSubview(header);
+            View.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 8),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 16),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, -16),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, height),
+            });
+
+            var field = Controls.TextField(placeholder);
+            field.EditingChanged += (s, e) => Reload();
+            header.AddArrangedSubview(field);
+
+            List.TopInset = height + 8;
+            return field;
+        }
+
+        protected void Reload()
+        {            Ui.Run(
                 () =>
                 {
                     var data = Fetch();
@@ -174,6 +234,7 @@ namespace Tawsela.iOS
                                 }
                             }
 
+                        List.Subtitle = Subtitle;
                         List.SetRows(rows, EmptyText);
                         List.EndRefreshing();
                     });

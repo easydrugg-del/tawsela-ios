@@ -15,11 +15,11 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class AdminAccountsViewController : ListViewController<Dictionary<string, object>>
     {
-        public AdminAccountsViewController() : base("حسابات الإدارة") { }
+        public AdminAccountsViewController() : base("إدارة حسابات المدير") { }
 
         protected override string EmptyText
         {
-            get { return "لا توجد حسابات إدارة"; }
+            get { return "لا يوجد حسابات مديرين"; }
         }
 
         protected override List<Dictionary<string, object>> Fetch()
@@ -91,7 +91,7 @@ namespace Tawsela.iOS.Screens
         {
             base.ViewDidLoad();
 
-            var add = Controls.PrimaryButton("إضافة حساب إدارة");
+            var add = Controls.PrimaryButton("+ إضافة مدير جديد");
             add.TouchUpInside += (s, e) => Add();
             View.AddSubview(add);
             View.AddConstraints(new[]
@@ -146,7 +146,7 @@ namespace Tawsela.iOS.Screens
         private DateTime _from, _to;
         private int _fixedCount = 3;
 
-        public AdminAnalyticsViewController() : base("التحليلات") { }
+        public AdminAnalyticsViewController() : base("تحليلات متقدمة") { }
 
         public override void ViewDidLoad()
         {
@@ -164,15 +164,24 @@ namespace Tawsela.iOS.Screens
             month.TouchUpInside += (s, e) => { _from = DateTime.Today.AddDays(-30); _to = DateTime.Today; Load(); };
             _stack.AddArrangedSubview(month);
 
-            var breakdown = Controls.OutlineButton("تفصيل حسب…");
+            var breakdown = Controls.OutlineButton("التوزيع (الحالة / الخدمة / الدفع)");
             breakdown.TouchUpInside += (s, e) => ShowBreakdown();
             _stack.AddArrangedSubview(breakdown);
 
+            // أفضل السائقين والعملاء (بديل txtTopDrivers / txtTopCustomers)
+            var topDrivers = Controls.OutlineButton("أفضل السائقين");
+            topDrivers.TouchUpInside += (s, e) => ShowTop("topDrivers", "أفضل السائقين");
+            _stack.AddArrangedSubview(topDrivers);
+
+            var topCustomers = Controls.OutlineButton("أفضل العملاء");
+            topCustomers.TouchUpInside += (s, e) => ShowTop("topCustomers", "أفضل العملاء");
+            _stack.AddArrangedSubview(topCustomers);
+
             // ضبط معامل الذروة (بديل btnPeak في أندرويد)
-            var peak = Controls.OutlineButton("تعديل معامل الذروة");
+            var peak = Controls.OutlineButton("تسعير الذروة");
             peak.TouchUpInside += (s, e) =>
             {
-                Ui.Prompt("معامل الذروة", "مثال: 1.5", "", "1.0", text =>
+                Ui.Prompt("مضاعف الذروة (1.0 = عادي)", "مثال: 1.5", "", "1.0", text =>
                 {
                     decimal m;
                     if (!decimal.TryParse((text ?? "").Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out m))
@@ -190,12 +199,12 @@ namespace Tawsela.iOS.Screens
             _stack.AddArrangedSubview(peak);
 
             // ضبط عمولة النقدي: نسبة + مبلغ ثابت (بديل btnComm)
-            var commission = Controls.OutlineButton("تعديل عمولة النقدي");
+            var commission = Controls.OutlineButton("عمولة الدفع النقدي للسائق");
             commission.TouchUpInside += (s, e) =>
             {
-                Ui.Prompt("نسبة العمولة %", "مثال: 15", "", "15", pText =>
+                Ui.Prompt("نسبة % (مثلاً 15)", "مثال: 15", "", "15", pText =>
                 {
-                    Ui.Prompt("عمولة ثابتة (ج.م)", "اكتب 0 إن لم توجد", "", "0", fText =>
+                    Ui.Prompt("مبلغ ثابت (0=نسبة)", "اكتب 0 إن لم توجد", "", "0", fText =>
                     {
                         decimal p, f;
                         decimal.TryParse((pText ?? "").Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out p);
@@ -212,7 +221,7 @@ namespace Tawsela.iOS.Screens
             _stack.AddArrangedSubview(commission);
 
             // تصدير الطلبات CSV (بديل btnExport)
-            var export = Controls.OutlineButton("تصدير الطلبات (CSV)");
+            var export = Controls.OutlineButton("تصدير الطلبات (مشاركة نص)");
             export.TouchUpInside += (s, e) => ExportCsv();
             _stack.AddArrangedSubview(export);
 
@@ -360,7 +369,7 @@ namespace Tawsela.iOS.Screens
             var options = new[] { "حسب الحالة", "حسب الخدمة", "حسب الدفع", "ساعات الذروة" };
             var keys = new[] { "byStatus", "byService", "byPayment", "peak" };
 
-            Ui.Choose("تفصيل حسب", options, index =>
+            Ui.Choose("التوزيع (الحالة / الخدمة / الدفع)", options, index =>
             {
                 var from = _from;
                 var to = _to;
@@ -372,6 +381,18 @@ namespace Tawsela.iOS.Screens
                     Ui.BeginOnMain(() => RenderBreakdown(options[index], rows));
                 }, null, ex => Ui.Toast(ex.Message));
             });
+        }
+
+        private void ShowTop(string key, string title)
+        {
+            var from = _from;
+            var to = _to;
+
+            Ui.Run(() =>
+            {
+                var rows = Api.AdminRangeList(from, to, key);
+                Ui.BeginOnMain(() => RenderBreakdown(title, rows));
+            }, null, ex => Ui.Toast(ex.Message));
         }
 
         private void RenderBreakdown(string title, List<Dictionary<string, object>> rows)
@@ -430,11 +451,16 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class AdsAdminViewController : ListViewController<Dictionary<string, object>>
     {
-        public AdsAdminViewController() : base("الإعلانات") { }
+        public AdsAdminViewController() : base("إدارة الإعلانات") { }
 
         protected override string EmptyText
         {
-            get { return "لا توجد إعلانات"; }
+            get { return "لا توجد إعلانات بعد"; }
+        }
+
+        protected override string Subtitle
+        {
+            get { return "الإعلانات المفعّلة تظهر للعميل والسائق في الشاشة الرئيسية"; }
         }
 
         protected override List<Dictionary<string, object>> Fetch()
@@ -472,7 +498,7 @@ namespace Tawsela.iOS.Screens
         {
             base.ViewDidLoad();
 
-            var add = Controls.PrimaryButton("إضافة إعلان");
+            var add = Controls.PrimaryButton("إعلان جديد (صورة و/أو نص)");
             add.TouchUpInside += (s, e) => Add();
             View.AddSubview(add);
             View.AddConstraints(new[]
@@ -486,20 +512,66 @@ namespace Tawsela.iOS.Screens
 
         private void Add()
         {
-            Ui.Prompt("إعلان جديد", "العنوان", "", "العنوان", title =>
+            const string form = "إعلان جديد (صورة و/أو نص)";
+
+            Ui.Prompt(form, "عنوان الإعلان", "", "العنوان", title =>
             {
-                Ui.Prompt("إعلان جديد", "النص", "", "النص", body =>
+                Ui.Prompt(form, "نص الإعلان (اختياري)", "", "النص", body =>
                 {
-                    Ui.Prompt("إعلان جديد", "الرابط (اختياري)", "", "https://", link =>
+                    Ui.Prompt(form, "رابط عند الضغط (اختياري)", "", "https://", link =>
                     {
-                        Ui.Choose("نطاق الظهور", new[] { "الكل", "محافظة", "مدينة" }, scopeIndex =>
+                        Ui.Choose("يظهر الإعلان لـ:", new[] { "الكل", "محافظة", "مدينة" }, scopeIndex =>
                         {
                             var scope = scopeIndex == 0 ? "الكل" : scopeIndex == 1 ? "محافظة" : "مدينة";
+                            var gov = scope == "محافظة" ? Session.Governorate : "";
+                            var city = "";
 
-                            var gov = scope == "الكل" ? "" : Session.Governorate;
-                            var cities = scope == "مدينة" ? Session.City : "";
+                            Action publishStep = () =>
+                            {
+                                Ui.Choose("اختيار صورة", new[] { "بدون صورة", "المعرض", "الكاميرا" }, imageIndex =>
+                                {
+                                    Action<string> publish = image =>
+                                        Ui.Confirm("نشر الإعلان", "نشر الإعلان الآن؟", "نشر", () =>
+                                            Run(() => Api.AddAd(title, body, image, link, scope, gov, city), "تمت الإضافة"));
 
-                            Run(() => Api.AddAd(title, body, "", link, scope, gov, cities), "تمت الإضافة");
+                                    if (imageIndex == 0)
+                                    {
+                                        publish("");
+                                        return;
+                                    }
+
+                                    ImagePicker.PickImage(this, imageIndex == 2, img =>
+                                    {
+                                        if (img == null) { publish(""); return; }
+
+                                        try
+                                        {
+                                            using (var data = ImagePicker.Scale(img, 800f).AsJPEG(0.7f))
+                                                publish(data == null ? "" : Convert.ToBase64String(data.ToArray()));
+                                        }
+                                        catch
+                                        {
+                                            publish("");
+                                        }
+                                    }, err => Ui.Toast(err));
+                                });
+                            };
+
+                            if (scope != "مدينة")
+                            {
+                                publishStep();
+                                return;
+                            }
+
+                            Ui.Prompt("المدن المختارة (تضاف من القائمة)",
+                                "اسم المدينة — اكتب «مسح المدن» للمسح", "", Session.City, cityText =>
+                            {
+                                var text = (cityText ?? "").Trim();
+                                if (text == "مسح المدن") city = "";
+                                else if (text.Length > 0) city = text;
+
+                                publishStep();
+                            });
                         });
                     });
                 });
@@ -531,7 +603,7 @@ namespace Tawsela.iOS.Screens
         private string _version = "";
         private string _url = "";
 
-        public AppUpdateAdminViewController() : base("تحديث التطبيق") { }
+        public AppUpdateAdminViewController() : base("تحديث الاصدار") { }
 
         public override void ViewDidLoad()
         {
@@ -544,11 +616,15 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(12f, 16f);
 
+            stack.AddArrangedSubview(MakeLabel(
+                "النسخة المسجلة هنا هي ما سيُقارن بها التطبيق عند فتحه",
+                12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right));
+
             _current = MakeLabel("جارٍ التحميل…", 14f, Theme.TextSecondary,
                 UIFontWeight.Regular, UITextAlignment.Right);
             stack.AddArrangedSubview(_current);
 
-            var save = Controls.PrimaryButton("تعديل بيانات الإصدار");
+            var save = Controls.PrimaryButton("حفظ");
             save.TouchUpInside += (s, e) => Edit();
             stack.AddArrangedSubview(save);
 
@@ -576,9 +652,9 @@ namespace Tawsela.iOS.Screens
 
         private void Edit()
         {
-            Ui.Prompt("الإصدار الجديد", "مثال: 1.3.28", _version, "1.3.28", version =>
+            Ui.Prompt("رقم الاصدار الجديد (مثال: 1.3.0)", "مثال: 1.3.0", _version, "1.3.0", version =>
             {
-                Ui.Prompt("رابط التحديث", "رابط App Store", _url, "https://apps.apple.com/...", url =>
+                Ui.Prompt("رابط التحديث الاخير", "رابط App Store", _url, "https://apps.apple.com/...", url =>
                 {
                     var progress = Ui.ShowProgress("جارٍ الحفظ…");
                     Ui.Run(() => Api.AdminSaveSettings(new Dictionary<string, string>
@@ -619,7 +695,7 @@ namespace Tawsela.iOS.Screens
         private UILabel _current;
         private string _value = "";
 
-        public DriverFeeAdminViewController() : base("رسم قبول الطلب") { }
+        public DriverFeeAdminViewController() : base("قيمة الخصم من السائق") { }
 
         public override void ViewDidLoad()
         {
@@ -636,13 +712,13 @@ namespace Tawsela.iOS.Screens
                 UIFontWeight.Medium, UITextAlignment.Right);
             stack.AddArrangedSubview(_current);
 
-            var edit = Controls.PrimaryButton("تعديل القيمة");
+            stack.AddArrangedSubview(MakeLabel(
+                "تُخصم من محفظة السائق عند قبوله أي طلب (0 = بدون خصم)",
+                12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right));
+
+            var edit = Controls.PrimaryButton("حفظ");
             edit.TouchUpInside += (s, e) => Edit();
             stack.AddArrangedSubview(edit);
-
-            stack.AddArrangedSubview(MakeLabel(
-                "القيمة تُخصم من السائق عند قبول الطلب (بالجنيه). اتركها 0 لإلغاء الرسم.",
-                12f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right));
         }
 
         private void Load()
@@ -667,7 +743,7 @@ namespace Tawsela.iOS.Screens
 
         private void Edit()
         {
-            Ui.Prompt("رسم قبول الطلب", "القيمة بالجنيه", _value, "0", text =>
+            Ui.Prompt("قيمة الخصم من السائق", "المبلغ بالجنيه", _value, "مثال: 5", text =>
             {
                 decimal value;
                 if (!decimal.TryParse(text, out value) || value < 0)
@@ -700,7 +776,7 @@ namespace Tawsela.iOS.Screens
     /// </summary>
     public class RestaurantsAdminViewController : ListViewController<Dictionary<string, object>>
     {
-        public RestaurantsAdminViewController() : base("المطاعم") { }
+        public RestaurantsAdminViewController() : base("المطاعم والمحلات") { }
 
         protected override string EmptyText
         {
