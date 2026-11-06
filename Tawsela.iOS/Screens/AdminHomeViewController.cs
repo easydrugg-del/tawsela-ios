@@ -2,166 +2,312 @@ using System;
 using System.Collections.Generic;
 using Tawsela.Core.Platform;
 using Tawsela.Data;
+using Tawsela.Models;
 using Tawsela.iOS.Platform;
 using UIKit;
 
 namespace Tawsela.iOS.Screens
 {
     /// <summary>
-    /// بديل Activities/AdminActivity.cs — لوحة الإدارة: إحصائيات حية
-    /// (Api.AdminStats) + الوصول للأقسام المُنقلة.
+    /// بديل Activities/AdminActivity.cs — نفس شكل أندرويد بالضبط:
+    /// هيدر برتقالي (عنوان + إحصائيات + اختصار الأكواد) + أقسام ببلاطات بنفس عدد الأعمدة.
     /// </summary>
     public class AdminHomeViewController : BaseViewController
     {
-        private UIStackView _stats;
-        private UIStackView _sections;
+        private UILabel _stats;
 
-        public AdminHomeViewController() : base("لوحة الإدارة") { }
+        public override bool ShowNavigationBar
+        {
+            get { return false; }
+        }
+
+        public AdminHomeViewController() : base() { }
 
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
+            View.BackgroundColor = Theme.Surface;
             BuildUi();
             LoadStats();
         }
 
         private void BuildUi()
         {
-            var stack = CreateScrollContent(14f, 16f);
+            // ===== الهيدر (بديل bg_header) =====
+            var header = Shapes.Header(210f);
+            header.TranslatesAutoresizingMaskIntoConstraints = false;
+            View.AddSubview(header);
 
-            stack.AddArrangedSubview(Controls.SectionTitle("🛠️ لوحة الإدارة"));
+            var title = MakeLabel("🛠️ لوحة الإدارة", 20f, UIColor.White, UIFontWeight.Bold, UITextAlignment.Center);
+            _stats = MakeLabel("جارٍ التحميل…", 14f, Theme.Hex(0xDDDDDD), UIFontWeight.Regular, UITextAlignment.Center);
+            _stats.Lines = 0;
 
-            _stats = new UIStackView
+            var coupons = new UIButton(UIButtonType.System) { TranslatesAutoresizingMaskIntoConstraints = false };
+            coupons.SetTitle("🎟️ إدارة الأكواد والخصومات", UIControlState.Normal);
+            coupons.SetTitleColor(Theme.Primary, UIControlState.Normal);
+            coupons.TitleLabel.Font = Theme.FontBold(15);
+            coupons.BackgroundColor = Theme.White;
+            coupons.Layer.CornerRadius = Theme.CornerTile;
+            coupons.Layer.BorderWidth = 1f;
+            coupons.Layer.BorderColor = Theme.CardStroke.CGColor;
+            coupons.Layer.MasksToBounds = true;
+            coupons.TouchUpInside += (s, e) => Push(new CouponsAdminViewController());
+
+            header.AddSubview(title);
+            header.AddSubview(_stats);
+            header.AddSubview(coupons);
+
+            View.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View, NSLayoutAttribute.Top, 1, 0),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 0),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, 0),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 210),
+
+                NSLayoutConstraint.Create(title, NSLayoutAttribute.Top, NSLayoutRelation.Equal, header.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 12),
+                NSLayoutConstraint.Create(title, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, header, NSLayoutAttribute.Leading, 1, 16),
+                NSLayoutConstraint.Create(title, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, header, NSLayoutAttribute.Trailing, 1, -16),
+
+                NSLayoutConstraint.Create(_stats, NSLayoutAttribute.Top, NSLayoutRelation.Equal, title, NSLayoutAttribute.Bottom, 1, 6),
+                NSLayoutConstraint.Create(_stats, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, header, NSLayoutAttribute.Leading, 1, 16),
+                NSLayoutConstraint.Create(_stats, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, header, NSLayoutAttribute.Trailing, 1, -16),
+
+                NSLayoutConstraint.Create(coupons, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _stats, NSLayoutAttribute.Bottom, 1, 8),
+                NSLayoutConstraint.Create(coupons, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, header, NSLayoutAttribute.Leading, 1, 16),
+                NSLayoutConstraint.Create(coupons, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, header, NSLayoutAttribute.Trailing, 1, -16),
+                NSLayoutConstraint.Create(coupons, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 48),
+            });
+
+            // ===== المحتوى =====
+            var scroll = new UIScrollView
+            {
+                TranslatesAutoresizingMaskIntoConstraints = false,
+                AlwaysBounceVertical = true
+            };
+            View.AddSubview(scroll);
+
+            var content = new UIStackView
             {
                 Axis = UILayoutConstraintAxis.Vertical,
                 Spacing = 8,
                 TranslatesAutoresizingMaskIntoConstraints = false
             };
-            stack.AddArrangedSubview(_stats);
-            _stats.AddArrangedSubview(MakeLabel("جارٍ التحميل…", 14f, Theme.TextSecondary,
-                UIFontWeight.Regular, UITextAlignment.Right));
+            scroll.AddSubview(content);
 
-            // ===== نفس ترتيب أقسام لوحة الإدارة في أندرويد =====
-            _sections = NewGroup(stack);
-            AddSection("🎟️ إدارة الأكواد والخصومات", "ic_ticket", () => Push(new CouponsAdminViewController()));
-
-            stack.AddArrangedSubview(Controls.SectionTitle("إدارة المستخدمين"));
-            _sections = NewGroup(stack);
-            AddSection("السائقون", "ic_taxi", () => Push(new DriversAdminViewController()));
-            AddSection("العملاء", "ic_group", () => Push(new CustomersAdminViewController()));
-            AddSection("بحث سائق", "ic_search", () => Push(new DriverSearchViewController()));
-            AddSection("مشرفو التكاتك", "ic_group", () => Push(new SupervisorAdminViewController()));
-            AddSection("حركات سائق", "ic_action_map", () => Push(new DriverMovementsViewController()));
-            AddSection("كشف حساب", "ic_money", () => Push(new DriverStatementPickerViewController()));
-
-            stack.AddArrangedSubview(Controls.SectionTitle("الخدمات والعروض"));
-            _sections = NewGroup(stack);
-            AddSection("إدارة الأكواد", "ic_ticket", () => Push(new CouponsAdminViewController()));
-            AddSection("الخدمات", "ic_work", () => Push(new ServiceAdminViewController()));
-            AddSection("الاشتراكات", "ic_work", () => Push(new SubscriptionsAdminViewController()));
-            AddSection("المناطق", "ic_action_map", () => Push(new AreasAdminViewController()));
-            AddSection("الشوارع", "ic_pin", () => Push(new StreetsAdminViewController()));
-            AddSection("توصيلات المطاعم", "ic_action_receipt", () => Push(new RestaurantDeliveryAdminViewController()));
-
-            stack.AddArrangedSubview(Controls.SectionTitle("المتابعة والدعم"));
-            _sections = NewGroup(stack);
-            AddSection("الشكاوى", "ic_support", () => Push(new ComplaintsAdminViewController()));
-            AddSection("التوثيق", "ic_doc", () => Push(new DocsAdminViewController()));
-            AddSection("تحليلات", "ic_action_receipt", () => Push(new AdminAnalyticsViewController()));
-
-            stack.AddArrangedSubview(Controls.SectionTitle("الخرائط والتقارير"));
-            _sections = NewGroup(stack);
-            AddSection("الحرارية", "ic_action_map", () => Push(new HeatmapViewController()));
-            AddSection("خريطة السائقين", "ic_action_map", () => Push(new DriverMovementsViewController()));
-            AddSection("تقرير الرحلات", "ic_doc", () => Push(new TripReportViewController()));
-
-            stack.AddArrangedSubview(Controls.SectionTitle("المالية والإعلانات"));
-            _sections = NewGroup(stack);
-            AddSection("طلبات الشحن", "ic_money", () => Push(new TopUpsAdminViewController()));
-            AddSection("خصم السائق", "ic_money", () => Push(new DriverFeeAdminViewController()));
-            AddSection("الإعلانات", "ic_bell", () => Push(new AdsAdminViewController()));
-
-            stack.AddArrangedSubview(Controls.SectionTitle("الطوارئ والنظام"));
-            _sections = NewGroup(stack);
-            AddSection("بيانات الطوارئ", "ic_action_warning", () => Push(new EmergencyTypesAdminViewController()));
-            AddSection("تفاصيل الطوارئ", "ic_action_warning", () => Push(new EmergenciesAdminViewController()));
-            AddSection("المديرين", "ic_person", () => Push(new AdminAccountsViewController()));
-            AddSection("⬆️ تحديث الاصدار", "ic_work", () => Push(new AppUpdateAdminViewController()));
-
-            // شاشات إضافية موجودة في iOS (مش في لوحة أندرويد الرئيسية)
-            stack.AddArrangedSubview(Controls.SectionTitle("إضافي"));
-            _sections = NewGroup(stack);
-            AddSection("الطلبات", "ic_inbox", () => Push(new OrdersViewController("", "", "الطلبات")));
-            AddSection("المطاعم وحساباتها", "ic_work", () => Push(new RestaurantsAdminViewController()));
-            AddSection("السائقون المحظورون", "ic_action_close", () => Push(new BlockedDriversViewController()));
-            AddSection("سجل تأكيدات الدفع", "ic_action_receipt", () => Push(new TopUpHistoryViewController(true)));
-            AddSection("الإشعارات", "ic_bell", () => Push(new NotificationsViewController()));
-            AddSection("حسابي", "ic_person", () => Push(new ProfileViewController()));
-        }
-
-        /// <summary>حاوية قسم جديدة داخل الصفحة (بديل LinearLayout لكل قسم في أندرويد).</summary>
-        private static UIStackView NewGroup(UIStackView stack)
-        {
-            var g = new UIStackView
+            View.AddConstraints(new[]
             {
-                Axis = UILayoutConstraintAxis.Vertical,
-                Spacing = 10,
-                TranslatesAutoresizingMaskIntoConstraints = false
-            };
-            stack.AddArrangedSubview(g);
-            return g;
-        }
+                NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Top, NSLayoutRelation.Equal, header, NSLayoutAttribute.Bottom, 1, 0),
+                NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Bottom, 1, 0),
+                NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 0),
+                NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, 0),
 
-        private void AddSection(string title, string icon, Action onTap)
-        {
-            AddExtra(_sections, title, icon, onTap);
-        }
-
-        /// <summary>بطاقة قسم داخل أي حاوية (نفس شكل AddSection).</summary>
-        private void AddExtra(UIStackView host, string title, string icon, Action onTap)
-        {
-            var card = Controls.Card();
-            card.UserInteractionEnabled = true;
-            card.AddGestureRecognizer(new UITapGestureRecognizer(onTap));
-
-            var img = new UIImageView
-            {
-                Image = IconFactory.Image(icon, 20f, Theme.Primary),
-                ContentMode = UIViewContentMode.ScaleAspectFit,
-                TranslatesAutoresizingMaskIntoConstraints = false
-            };
-            var label = MakeLabel(title, 15f, Theme.TextPrimary, UIFontWeight.Medium, UITextAlignment.Right);
-            var chevron = MakeLabel("‹", 20f, Theme.Gray, UIFontWeight.Regular, UITextAlignment.Left);
-
-            card.AddSubview(img);
-            card.AddSubview(label);
-            card.AddSubview(chevron);
-
-            card.AddConstraints(new[]
-            {
-                NSLayoutConstraint.Create(img, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, card, NSLayoutAttribute.CenterY, 1, 0),
-                NSLayoutConstraint.Create(img, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -12),
-                NSLayoutConstraint.Create(img, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 20),
-                NSLayoutConstraint.Create(img, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 20),
-
-                NSLayoutConstraint.Create(label, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, card, NSLayoutAttribute.CenterY, 1, 0),
-                NSLayoutConstraint.Create(label, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, img, NSLayoutAttribute.Leading, 1, -10),
-                NSLayoutConstraint.Create(label, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, chevron, NSLayoutAttribute.Trailing, 1, 8),
-
-                NSLayoutConstraint.Create(chevron, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, card, NSLayoutAttribute.CenterY, 1, 0),
-                NSLayoutConstraint.Create(chevron, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, card, NSLayoutAttribute.Leading, 1, 12),
-
-                NSLayoutConstraint.Create(card, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 56),
+                NSLayoutConstraint.Create(content, NSLayoutAttribute.Top, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Top, 1, 4),
+                NSLayoutConstraint.Create(content, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Bottom, 1, -10),
+                NSLayoutConstraint.Create(content, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Leading, 1, 10),
+                NSLayoutConstraint.Create(content, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Trailing, 1, -10),
+                NSLayoutConstraint.Create(content, NSLayoutAttribute.Width, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Width, 1, -20),
             });
 
-            host.AddArrangedSubview(card);
+            // ===== نفس أقسام أندرويد وترتيب الصفوف =====
+            var s1 = NewSection(content, "إدارة المستخدمين", first: true);
+            AddRow(s1, 3,
+                ("🚕", "السائقون", () => Push(new DriversAdminViewController())),
+                ("👥", "العملاء", () => Push(new CustomersAdminViewController())),
+                ("🔍", "بحث سائق", () => Push(new DriverSearchViewController())));
+            AddRow(s1, 3,
+                ("🧑‍✈️", "مشرفو التكاتك", () => Push(new SupervisorAdminViewController())));
+            AddRow(s1, 2,
+                ("🚗", "حركات سائق", () => Push(new DriverMovementsViewController())),
+                ("📒", "كشف حساب", () => Push(new DriverStatementPickerViewController())));
+
+            var s2 = NewSection(content, "الخدمات والعروض");
+            AddRow(s2, 3,
+                ("🎟️", "إدارة الأكواد", () => Push(new CouponsAdminViewController())),
+                ("🛎️", "الخدمات", () => Push(new ServiceAdminViewController())),
+                ("💳", "الاشتراكات", () => Push(new SubscriptionsAdminViewController())));
+            AddRow(s2, 3,
+                ("📍", "المناطق", () => Push(new AreasAdminViewController())),
+                ("🛣️", "الشوارع", () => Push(new StreetsAdminViewController())));
+            AddRow(s2, 1,
+                ("🏪", "توصيلات المطاعم", () => Push(new RestaurantDeliveryAdminViewController())));
+
+            var s3 = NewSection(content, "المتابعة والدعم");
+            AddRow(s3, 3,
+                ("📢", "الشكاوى", () => Push(new ComplaintsAdminViewController())),
+                ("📄", "التوثيق", () => Push(new DocsAdminViewController())),
+                ("📊", "تحليلات", () => Push(new AdminAnalyticsViewController())));
+
+            var s4 = NewSection(content, "الخرائط والتقارير");
+            AddRow(s4, 3,
+                ("🔥", "الحرارية", () => Push(new HeatmapViewController())),
+                ("🗺️", "خريطة السائقين", OpenDriversMap),
+                ("🧾", "تقرير الرحلات", () => Push(new TripReportViewController())));
+
+            var s5 = NewSection(content, "المالية والإعلانات");
+            AddRow(s5, 3,
+                ("💰", "طلبات الشحن", () => Push(new TopUpsAdminViewController())),
+                ("💸", "خصم السائق", () => Push(new DriverFeeAdminViewController())),
+                ("📣", "الإعلانات", () => Push(new AdsAdminViewController())));
+
+            var s6 = NewSection(content, "الطوارئ والنظام");
+            AddRow(s6, 3,
+                ("🚨", "بيانات الطوارئ", () => Push(new EmergencyTypesAdminViewController())),
+                ("🆘", "تفاصيل الطوارئ", () => Push(new EmergenciesAdminViewController())),
+                ("👔", "المديرين", () => Push(new AdminAccountsViewController())));
+
+            // شاشات إضافية موجودة في iOS فقط
+            var s7 = NewSection(content, "إضافي");
+            AddRow(s7, 3,
+                ("🧾", "الطلبات", () => Push(new OrdersViewController("", "", "الطلبات"))),
+                ("🏪", "المطاعم وحساباتها", () => Push(new RestaurantsAdminViewController())),
+                ("🚫", "السائقون المحظورون", () => Push(new BlockedDriversViewController())));
+            AddRow(s7, 3,
+                ("📜", "سجل تأكيدات الدفع", () => Push(new TopUpHistoryViewController(true))),
+                ("🔔", "الإشعارات", () => Push(new NotificationsViewController())),
+                ("👤", "حسابي", () => Push(new ProfileViewController())));
+
+            // زر تحديث الإصدار (بديل btnAppUpdate)
+            if (Session.IsAdmin)
+            {
+                var update = new UIButton(UIButtonType.System) { TranslatesAutoresizingMaskIntoConstraints = false };
+                update.SetTitle("⬆️ تحديث الاصدار", UIControlState.Normal);
+                update.SetTitleColor(UIColor.White, UIControlState.Normal);
+                update.TitleLabel.Font = Theme.FontBold(14);
+                update.BackgroundColor = Theme.Red;
+                update.Layer.CornerRadius = Theme.CornerTile;
+                update.Layer.MasksToBounds = true;
+                update.TouchUpInside += (s, e) => Push(new AppUpdateAdminViewController());
+                update.HeightAnchor.ConstraintEqualTo(52f).Active = true;
+
+                var wrap = new UIView { TranslatesAutoresizingMaskIntoConstraints = false };
+                wrap.AddSubview(update);
+                wrap.AddConstraints(new[]
+                {
+                    NSLayoutConstraint.Create(update, NSLayoutAttribute.Top, NSLayoutRelation.Equal, wrap, NSLayoutAttribute.Top, 1, 4),
+                    NSLayoutConstraint.Create(update, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, wrap, NSLayoutAttribute.Bottom, 1, -4),
+                    NSLayoutConstraint.Create(update, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, wrap, NSLayoutAttribute.Leading, 1, 4),
+                    NSLayoutConstraint.Create(update, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, wrap, NSLayoutAttribute.Trailing, 1, -4),
+                });
+                content.AddArrangedSubview(wrap);
+            }
+
+            var credit = MakeLabel("Designed @ Ahmed Ali", 10f, Theme.TextSecondary,
+                UIFontWeight.Regular, UITextAlignment.Center);
+            credit.Alpha = 0.6f;
+            content.AddArrangedSubview(credit);
+        }
+
+        /// <summary>قسم زي أندرويد: عنوان برتقالي ثم صفوف بلاطات.</summary>
+        private UIStackView NewSection(UIStackView content, string title, bool first = false)
+        {
+            var section = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 8,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            section.AddArrangedSubview(MakeLabel(title, 15f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right));
+
+            if (!first && content.ArrangedSubviews.Length > 0)
+            {
+                var prev = content.ArrangedSubviews[content.ArrangedSubviews.Length - 1];
+                content.SetCustomSpacing(14f, prev);
+            }
+            content.AddArrangedSubview(section);
+            return section;
+        }
+
+        /// <summary>
+        /// صف بلاطات بعدد أعمدة ثابت (زي weightSum في أندرويد):
+        /// cols=3 → كل بلاطة ثلث العرض، والباقي فراغ (محاذاة لليمين في RTL).
+        /// </summary>
+        private void AddRow(UIStackView section, int cols, params (string emoji, string label, Action tap)[] items)
+        {
+            var row = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Horizontal,
+                Spacing = 8,
+                Distribution = UIStackViewDistribution.FillEqually,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+
+            foreach (var it in items)
+                row.AddArrangedSubview(Tile(it.emoji, it.label, it.tap));
+
+            for (int i = items.Length; i < cols; i++)
+                row.AddArrangedSubview(new UIView { TranslatesAutoresizingMaskIntoConstraints = false });
+
+            row.HeightAnchor.ConstraintEqualTo(96f).Active = true;
+            section.AddArrangedSubview(row);
+        }
+
+        /// <summary>بلاطة 96 زي أندرويد: إيموجي 30 + نص 12 عريض.</summary>
+        private UIControl Tile(string emoji, string label, Action onTap)
+        {
+            var b = new UIControl { TranslatesAutoresizingMaskIntoConstraints = false };
+            b.BackgroundColor = Theme.White;
+            b.Layer.CornerRadius = Theme.CornerTile;
+            b.Layer.BorderWidth = 1f;
+            b.Layer.BorderColor = Theme.CardStroke.CGColor;
+            b.Layer.MasksToBounds = true;
+
+            var e = MakeLabel(emoji, 30f, Theme.TextPrimary, UIFontWeight.Regular, UITextAlignment.Center);
+            e.UserInteractionEnabled = false;
+
+            var l = MakeLabel(label, label.Length > 12 ? 11f : 12f, Theme.TextPrimary, UIFontWeight.Bold, UITextAlignment.Center);
+            l.Lines = 2;
+            l.UserInteractionEnabled = false;
+
+            b.AddSubview(e);
+            b.AddSubview(l);
+            b.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(e, NSLayoutAttribute.Top, NSLayoutRelation.Equal, b, NSLayoutAttribute.Top, 1, 8),
+                NSLayoutConstraint.Create(e, NSLayoutAttribute.CenterX, NSLayoutRelation.Equal, b, NSLayoutAttribute.CenterX, 1, 0),
+
+                NSLayoutConstraint.Create(l, NSLayoutAttribute.Top, NSLayoutRelation.Equal, e, NSLayoutAttribute.Bottom, 1, 2),
+                NSLayoutConstraint.Create(l, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, b, NSLayoutAttribute.Leading, 1, 4),
+                NSLayoutConstraint.Create(l, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, b, NSLayoutAttribute.Trailing, 1, -4),
+            });
+
+            b.TouchUpInside += (s, ev) => onTap();
+            return b;
+        }
+
+        /// <summary>خريطة السائقين الحية (بديل DriverMapActivity).</summary>
+        private void OpenDriversMap()
+        {
+            Ui.Run(() =>
+            {
+                List<Driver> list = null;
+                try { list = Api.DriverLocations(); } catch { }
+
+                var points = new List<double[]>();
+                if (list != null)
+                {
+                    foreach (var d in list)
+                    {
+                        if (d.Lat != 0 || d.Lng != 0) points.Add(new[] { d.Lat, d.Lng });
+                    }
+                }
+
+                Ui.BeginOnMain(() =>
+                {
+                    if (points.Count == 0)
+                    {
+                        Ui.Toast("لا يوجد سائقون على الخريطة الآن");
+                        return;
+                    }
+                    Push(new PointsMapViewController("خريطة السائقين",
+                        points[0][0], points[0][1], points, "#1976D2"));
+                });
+            }, null, ex => Ui.Toast(ex.Message));
         }
 
         private void LoadStats()
         {
             Ui.Run(() =>
             {
-                // نفس أندرويد: حساب الحالات من قائمة الطلبات + عدّ السائقين المتاحين
                 var all = Api.GetOrders("");
                 var counts = new Dictionary<string, int>();
                 if (all != null)
@@ -188,26 +334,14 @@ namespace Tawsela.iOS.Screens
 
         private void RenderStats(int total, Dictionary<string, int> counts, int availableDrivers)
         {
-            var old = new UIView[_stats.ArrangedSubviews.Length];
-            _stats.ArrangedSubviews.CopyTo(old, 0);
-            foreach (var v in old)
-            {
-                _stats.RemoveArrangedSubview(v);
-                v.RemoveFromSuperview();
-            }
+            if (_stats == null) return;
 
-            var line1 = MakeLabel(
+            _stats.Text =
                 "إجمالي الطلبات: " + total +
                 "  |  جديد: " + Count(counts, "جديد") +
                 "  |  مكتمل: " + Count(counts, "مكتمل") +
-                "  |  ملغي: " + Count(counts, "ملغي"),
-                14f, Theme.TextPrimary, UIFontWeight.Regular, UITextAlignment.Right);
-            line1.Lines = 0;
-            _stats.AddArrangedSubview(line1);
-
-            _stats.AddArrangedSubview(MakeLabel(
-                "السائقون المتاحون: " + (availableDrivers >= 0 ? availableDrivers : 0),
-                14f, Theme.TextPrimary, UIFontWeight.Regular, UITextAlignment.Right));
+                "  |  ملغي: " + Count(counts, "ملغي") +
+                "\nالسائقون المتاحون: " + (availableDrivers >= 0 ? availableDrivers : 0);
         }
     }
 }
