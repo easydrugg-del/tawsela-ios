@@ -96,17 +96,7 @@ namespace Tawsela.iOS
                 await Shot(dir, ok, "23-customer-stats", () => new CustomerStatsViewController());
                 await Shot(dir, ok, "24-my-orders",
                     () => new OrdersViewController("customer", "", "طلباتي"));
-                await Shot(dir, ok, "25-track", () =>
-                {
-                    var id = 0;
-                    try
-                    {
-                        var list = Api.GetOrders("", "customer");
-                        if (list != null && list.Count > 0) id = list[0].Id;
-                    }
-                    catch { }
-                    return new TrackOrderViewController(id > 0 ? id : 37);
-                });
+                await Shot(dir, ok, "25-track", () => new TrackOrderViewController(37));
 
                 // ===== سائق =====
                 await Login("playdrv094621", "Tw!c5ecdb89e37f");
