@@ -126,4 +126,17 @@ toggle.Leading  == row.Leading          // ❌ في LTR = يسار، فاللي�
 - اتشال من `MainActivity` (أندرويد) — بقى `ViewStates.Gone` ومفيش أي كود بيجيبه من `Api.CouponsList`.
 - iOS ما كانش فيه من الأساس.
 
+## 10. «توصيلة زي آخر مرة» (إعادة آخر رحلة)
+
+- أندرويد: `MainActivity.ReorderLast` بيجيب آخر طلب ويبعت Intent extras
+  (`prefFrom/prefTo/prefServiceId`) لـ `NewOrderActivity`، اللي بيملأ العنوانين
+  ونوع الخدمة ويحسب الأجرة فورًا (`EstimateNow`).
+- iOS كان بيفتح الشاشة **فاضية** لأن التعبئة كانت بتحصل قبل اكتمال بناء الشاشة
+  ومفيش إعادة تطبيق بعد الظهور. اتصلّح في `NewOrderViewController`:
+  - `_prefill` مش readonly + `SetPrefill(order)` عشان البيانات توصل مضمونة.
+  - `ApplyPrefill()` اتنقل لآخر `ViewDidLoad` (بعد تحميل الخدمات/الأماكن).
+  - إعادة تطبيق مرة واحدة في `ViewDidAppear` لو حصل أي مسح للحقول.
+  - بعد التعبئة: `UpdateEstimate()` + `RefreshDriversCount()` زي أندرويد.
+- نص البلاطة اتوحّد: «توصيلة زي آخر مرة» في المنصتين.
+
 
