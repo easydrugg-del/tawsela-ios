@@ -26,6 +26,11 @@ namespace Tawsela.iOS.Screens
         private bool _online;
         private UILabel _notifBadge;
         private UIStackView _grid;
+        private UIView _header;
+        private UIView _statusBanner;
+        private UILabel _statusLabel;
+        private NSLayoutConstraint _statusHeight;
+        private UILabel _numberPill;
 
         public override bool ShowNavigationBar
         {
@@ -66,6 +71,7 @@ namespace Tawsela.iOS.Screens
         private void BuildHeader()
         {
             var header = Shapes.Header(150f);
+            _header = header;
             header.TranslatesAutoresizingMaskIntoConstraints = false;
             View.AddSubview(header);
 
@@ -144,11 +150,41 @@ namespace Tawsela.iOS.Screens
 
         private void BuildContent()
         {
+            // شريط حالة الحساب (بديل txtAccountStatus في أندرويد) — يظهر للسائق فقط
+            if (Session.IsDriver)
+            {
+                _statusBanner = new UIView
+                {
+                    BackgroundColor = Theme.Accent,
+                    TranslatesAutoresizingMaskIntoConstraints = false,
+                    Hidden = true
+                };
+                _statusLabel = MakeLabel("", 13.5f, UIColor.White, UIFontWeight.Bold, UITextAlignment.Center);
+                _statusLabel.Lines = 0;
+                _statusBanner.AddSubview(_statusLabel);
+
+                View.AddSubview(_statusBanner);
+                _statusHeight = _statusBanner.HeightAnchor.ConstraintEqualTo(0f);
+                View.AddConstraints(new[]
+                {
+                    NSLayoutConstraint.Create(_statusBanner, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _header, NSLayoutAttribute.Bottom, 1, 0),
+                    NSLayoutConstraint.Create(_statusBanner, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 0),
+                    NSLayoutConstraint.Create(_statusBanner, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, 0),
+                    _statusHeight,
+                    NSLayoutConstraint.Create(_statusLabel, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _statusBanner, NSLayoutAttribute.Top, 1, 8),
+                    NSLayoutConstraint.Create(_statusLabel, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, _statusBanner, NSLayoutAttribute.Bottom, 1, -8),
+                    NSLayoutConstraint.Create(_statusLabel, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, _statusBanner, NSLayoutAttribute.Leading, 1, 12),
+                    NSLayoutConstraint.Create(_statusLabel, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, _statusBanner, NSLayoutAttribute.Trailing, 1, -12),
+                });
+            }
+
             var scroll = new UIScrollView { TranslatesAutoresizingMaskIntoConstraints = false, AlwaysBounceVertical = true };
             View.AddSubview(scroll);
             View.AddConstraints(new[]
             {
-                NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 120),
+                Session.IsDriver
+                    ? NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _statusBanner, NSLayoutAttribute.Bottom, 1, 0)
+                    : NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _header, NSLayoutAttribute.Bottom, 1, 0),
                 NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Bottom, 1, 0),
                 NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 0),
                 NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, 0),
@@ -163,7 +199,7 @@ namespace Tawsela.iOS.Screens
             scroll.AddSubview(content);
             scroll.AddConstraints(new[]
             {
-                NSLayoutConstraint.Create(content, NSLayoutAttribute.Top, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Top, 1, 50),
+                NSLayoutConstraint.Create(content, NSLayoutAttribute.Top, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Top, 1, 12),
                 NSLayoutConstraint.Create(content, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Bottom, 1, -20),
                 NSLayoutConstraint.Create(content, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Leading, 1, 16),
                 NSLayoutConstraint.Create(content, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Trailing, 1, -16),
@@ -223,19 +259,15 @@ namespace Tawsela.iOS.Screens
             // إعلان نشط للمحافظة/المدينة (بديل Api.ActiveAdsList في MainActivity)
             LoadAd(content);
 
-            // زر الاستقبال للسائق (بديل btnOnlineToggle في أندرويد)
+            // حالة الاستقبال أصبحت بطاقة داخل «لوحة الكابتن» (نفس أندرويد)
             if (Session.IsDriver)
             {
-                content.AddArrangedSubview(Controls.SectionTitle("🟢 حالة الاستقبال"));
-
-                _btnOnline = Controls.PrimaryButton("تفعيل الاستقبال (غير متصل)");
-                _btnOnline.TouchUpInside += (s, e) => SetAvailability(!_online);
-                content.AddArrangedSubview(_btnOnline);
-
                 LoadAvailability();
+                LoadDriverStatus();
             }
 
-            content.AddArrangedSubview(Controls.SectionTitle(Session.IsDriver ? "لوحة الكابتن" : "القائمة الرئيسية"));
+            if (!Session.IsDriver)
+                content.AddArrangedSubview(Controls.SectionTitle("القائمة الرئيسية"));
 
             _grid = new UIStackView
             {
@@ -306,38 +338,70 @@ namespace Tawsela.iOS.Screens
 
             if (Session.IsDriver)
             {
-                // ===== نفس أزرار صفحة السائق في أندرويد بالضبط =====
-                Func<string, string, UIColor, Action, UIView> driverRow = (text, icon, color, act) =>
+                // ===== لوحة الكابتن: نفس بطاقات وأزرار أندرويد =====
+
+                // العنوان + رقم السائق (بديل txtDriverNumber)
+                var head = new UIView { TranslatesAutoresizingMaskIntoConstraints = false };
+                var capTitle = MakeLabel("لوحة الكابتن", 17f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
+
+                _numberPill = MakeLabel("  رقم: —  ", 13f, UIColor.White, UIFontWeight.Bold, UITextAlignment.Center);
+                _numberPill.BackgroundColor = Theme.BadgeRed;
+                _numberPill.Layer.CornerRadius = 13f;
+                _numberPill.Layer.MasksToBounds = true;
+                _numberPill.Hidden = true;
+
+                head.AddSubview(capTitle);
+                head.AddSubview(_numberPill);
+                head.AddConstraints(new[]
                 {
-                    var b = Controls.IconButton(text, icon, color);
-                    b.TouchUpInside += (s, e) => act();
-                    return b;
-                };
+                    NSLayoutConstraint.Create(capTitle, NSLayoutAttribute.Top, NSLayoutRelation.Equal, head, NSLayoutAttribute.Top, 1, 2),
+                    NSLayoutConstraint.Create(capTitle, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, head, NSLayoutAttribute.Leading, 1, 4),
+                    NSLayoutConstraint.Create(capTitle, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, head, NSLayoutAttribute.Trailing, 1, -4),
 
-                _grid.AddArrangedSubview(Controls.SectionTitle("📥 التوصيلات"));
-                _grid.AddArrangedSubview(driverRow("الواردة (الجديدة)", "ic_inbox", Theme.Blue, OpenDriverOrders));
-                _grid.AddArrangedSubview(driverRow("توصيلاتي (المنتهية)", "ic_taxi", Theme.Accent,
-                    () => Push(new OrdersViewController("driver", "", "توصيلاتي"))));
+                    NSLayoutConstraint.Create(_numberPill, NSLayoutAttribute.Top, NSLayoutRelation.Equal, capTitle, NSLayoutAttribute.Bottom, 1, 6),
+                    NSLayoutConstraint.Create(_numberPill, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, head, NSLayoutAttribute.Trailing, 1, -4),
+                    NSLayoutConstraint.Create(_numberPill, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, head, NSLayoutAttribute.Bottom, 1, 0),
+                    NSLayoutConstraint.Create(_numberPill, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 26),
+                });
+                _grid.AddArrangedSubview(head);
 
-                _grid.AddArrangedSubview(Controls.SectionTitle("🏪 توصيلات المطاعم"));
-                _grid.AddArrangedSubview(driverRow("توصيلات المطاعم", "ic_action_receipt", Theme.Hex(0x00897B),
-                    () => Push(new RestaurantRequestsViewController())));
+                // 🟢 حالة الاستقبال
+                _btnOnline = Controls.PrimaryButton("تفعيل الاستقبال (غير متصل)", 60f);
+                _btnOnline.TouchUpInside += (s, e) => SetAvailability(!_online);
+                _grid.AddArrangedSubview(CardSection("🟢 حالة الاستقبال", 14f, _btnOnline));
 
-                _grid.AddArrangedSubview(Controls.SectionTitle("🗺️ الشغل والأرباح"));
-                _grid.AddArrangedSubview(driverRow("الأرباح", "ic_action_receipt", Theme.Blue,
-                    () => Push(new DriverStatsViewController())));
+                // 📥 التوصيلات
+                _grid.AddArrangedSubview(CardSection("📥 التوصيلات", 12f, TileRow(
+                    Tile("ic_taxi", "توصيلاتي (المنتهية)", BadgeOrangeLight, BadgeOrangeDark,
+                        () => Push(new OrdersViewController("driver", "", "توصيلاتي"))),
+                    Tile("ic_inbox", "الواردة (الجديدة)", TealLight, TealDark, OpenDriverOrders))));
 
-                _grid.AddArrangedSubview(Controls.SectionTitle("👤 حسابي"));
-                _grid.AddArrangedSubview(driverRow("المحفظة / شحن الرصيد", "ic_wallet", Theme.Green,
-                    () => Push(new WalletViewController())));
-                _grid.AddArrangedSubview(driverRow("الإشعارات", "ic_bell", Theme.Hex(0xEF6C00),
-                    () => Push(new NotificationsViewController())));
-                _grid.AddArrangedSubview(driverRow("إعادة إرسال الوثائق", "ic_doc", Theme.Hex(0x8E24AA),
-                    () => Push(new DriverDocsViewController())));
-                _grid.AddArrangedSubview(driverRow("النوبات", "ic_clock", Theme.Accent,
-                    () => Push(new DriverShiftsViewController())));
-                _grid.AddArrangedSubview(driverRow("زر الطوارئ SOS", "ic_action_warning", Theme.Red,
-                    () => Push(new EmergencyViewController())));
+                // 🏪 توصيلات المطاعم
+                _grid.AddArrangedSubview(CardSection("🏪 توصيلات المطاعم", 12f,
+                    RowTile("ic_home", "توصيلات المطاعم", BadgePurpleLight, BadgePurpleDark,
+                        () => Push(new RestaurantRequestsViewController()))));
+
+                // 🗺️ الشغل والأرباح
+                _grid.AddArrangedSubview(CardSection("🗺️ الشغل والأرباح", 12f, TileRow(
+                    Tile("ic_money", "الأرباح", TealLight, TealDark,
+                        () => Push(new DriverStatsViewController())))));
+
+                // 👤 حسابي
+                _grid.AddArrangedSubview(CardSection("👤 حسابي", 12f,
+                    RowTile("ic_wallet", "المحفظة / شحن الرصيد", BadgeGreenLight, BadgeGreenDark,
+                        () => Push(new WalletViewController())),
+                    RowTile("ic_bell", "الإشعارات", BadgePurpleLight, BadgePurpleDark,
+                        () => Push(new NotificationsViewController())),
+                    RowTile("ic_doc", "إعادة إرسال الوثائق", IndigoLight, IndigoDark,
+                        () => Push(new DriverDocsViewController())),
+                    RowTile("ic_clock", "النوبات", IndigoLight, IndigoDark,
+                        () => Push(new DriverShiftsViewController()))));
+
+                // زر الطوارئ SOS
+                var sos = Controls.IconButton("زر الطوارئ SOS", "ic_action_warning", Theme.Red);
+                sos.HeightAnchor.ConstraintEqualTo(58f).Active = true;
+                sos.TouchUpInside += (s, e) => Push(new EmergencyViewController());
+                _grid.AddArrangedSubview(sos);
             }
             else
             {
@@ -451,6 +515,10 @@ namespace Tawsela.iOS.Screens
         private static readonly UIColor BadgePurpleDark = Theme.Hex(0x6A1B9A);
         private static readonly UIColor BadgeDeepLight = Theme.Hex(0xFF8A65);
         private static readonly UIColor BadgeDeepDark = Theme.Hex(0xBF360C);
+        private static readonly UIColor TealLight = Theme.Hex(0x80CBC4);
+        private static readonly UIColor TealDark = Theme.Hex(0x00897B);
+        private static readonly UIColor IndigoLight = Theme.Hex(0x9FA8DA);
+        private static readonly UIColor IndigoDark = Theme.Hex(0x3949AB);
 
         /// <summary>بطاقة قسم زي أندرويد: عنوان + صفوف بلاطات (2 في السطر).</summary>
         private UIView SectionCard(string title, UIView[][] rows)
@@ -493,6 +561,97 @@ namespace Tawsela.iOS.Screens
             }
 
             return card;
+        }
+
+        /// <summary>بطاقة بعنوان + أي عناصر (ارتفاع كل عنصر تحدده هي) — نفس بطاقات أندرويد.</summary>
+        private UIView CardSection(string title, float padding, params UIView[] items)
+        {
+            var card = Controls.Card();
+            var stack = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 8,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            card.AddSubview(stack);
+            card.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(stack, NSLayoutAttribute.Top, NSLayoutRelation.Equal, card, NSLayoutAttribute.Top, 1, padding),
+                NSLayoutConstraint.Create(stack, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, card, NSLayoutAttribute.Leading, 1, padding),
+                NSLayoutConstraint.Create(stack, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -padding),
+                NSLayoutConstraint.Create(stack, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, card, NSLayoutAttribute.Bottom, 1, -padding),
+            });
+
+            stack.AddArrangedSubview(MakeLabel(title, 15f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right));
+            foreach (var item in items) stack.AddArrangedSubview(item);
+            return card;
+        }
+
+        /// <summary>صف بلاطات بارتفاع 88 (بديل LinearLayout horizontal + weightSum في أندرويد).</summary>
+        private UIView TileRow(params UIView[] tiles)
+        {
+            var row = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Horizontal,
+                Spacing = 8,
+                Distribution = UIStackViewDistribution.FillEqually,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            foreach (var t in tiles)
+            {
+                t.HeightAnchor.ConstraintEqualTo(88f).Active = true;
+                row.AddArrangedSubview(t);
+            }
+            return row;
+        }
+
+        /// <summary>سطر داخل بطاقة: أيقونة دائرية على اليمين + نص (بديل btnWalletDriver...).</summary>
+        private UIControl RowTile(string icon, string title, UIColor light, UIColor dark, Action onTap)
+        {
+            var row = new UIControl { TranslatesAutoresizingMaskIntoConstraints = false };
+            row.BackgroundColor = Theme.White;
+            row.Layer.CornerRadius = Theme.CornerTile;
+            row.Layer.BorderWidth = 1f;
+            row.Layer.BorderColor = Theme.CardStroke.CGColor;
+            row.Layer.MasksToBounds = true;
+
+            var circle = Shapes.BadgeCircle(40f, light, dark);
+            circle.TranslatesAutoresizingMaskIntoConstraints = false;
+            circle.UserInteractionEnabled = false;
+
+            var img = new UIImageView
+            {
+                Image = IconFactory.Image(icon, 20f, UIColor.White),
+                ContentMode = UIViewContentMode.ScaleAspectFit,
+                TranslatesAutoresizingMaskIntoConstraints = false,
+                UserInteractionEnabled = false
+            };
+            circle.AddSubview(img);
+
+            var label = MakeLabel(title, 15f, Theme.TextPrimary, UIFontWeight.Bold, UITextAlignment.Right);
+            label.UserInteractionEnabled = false;
+
+            row.AddSubview(circle);
+            row.AddSubview(label);
+            row.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(row, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 64),
+
+                NSLayoutConstraint.Create(circle, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, row, NSLayoutAttribute.CenterY, 1, 0),
+                NSLayoutConstraint.Create(circle, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, row, NSLayoutAttribute.Trailing, 1, -14),
+                NSLayoutConstraint.Create(circle, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 40),
+                NSLayoutConstraint.Create(circle, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 40),
+
+                NSLayoutConstraint.Create(img, NSLayoutAttribute.CenterX, NSLayoutRelation.Equal, circle, NSLayoutAttribute.CenterX, 1, 0),
+                NSLayoutConstraint.Create(img, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, circle, NSLayoutAttribute.CenterY, 1, 0),
+
+                NSLayoutConstraint.Create(label, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, row, NSLayoutAttribute.CenterY, 1, 0),
+                NSLayoutConstraint.Create(label, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, circle, NSLayoutAttribute.Leading, 1, -10),
+                NSLayoutConstraint.Create(label, NSLayoutAttribute.Leading, NSLayoutRelation.GreaterThanOrEqual, row, NSLayoutAttribute.Leading, 1, 14),
+            });
+
+            if (onTap != null) row.TouchUpInside += (s, e) => onTap();
+            return row;
         }
 
         /// <summary>يغلّف بلاطة ويضع عليها شارة صغيرة (بديل badge_new / txtNotifBadge).</summary>
@@ -753,11 +912,17 @@ namespace Tawsela.iOS.Screens
                     Ui.BeginOnMain(() =>
                     {
                         _driverBalance = balance;
-                        _driverInfo.Text = (string.IsNullOrEmpty(number) ? "" : "رقم السائق: " + number + " · ") +
-                                           "رصيدك: " + balance.ToString("0.00") + " ج.م";
+                        _driverInfo.Text = "رصيدك: " + balance.ToString("0.00") + " ج.م";
                         _driverInfo.TextColor = balance > 0
                             ? UIColor.White.ColorWithAlpha(0.9f)
                             : Theme.Hex(0xFFD2AE);
+
+                        // رقم السائق تحت «لوحة الكابتن» (بديل txtDriverNumber)
+                        if (_numberPill != null && !string.IsNullOrEmpty(number))
+                        {
+                            _numberPill.Text = "  رقم: " + number + "  ";
+                            _numberPill.Hidden = false;
+                        }
                     });
                 }, null, ex => AppServices.Log("TawselaMain", "driver info: " + ex.Message));
             }
@@ -778,6 +943,57 @@ namespace Tawsela.iOS.Screens
                     ApplyOnlineButton();
                 });
             }, null, ex => AppServices.Log("TawselaMain", "status: " + ex.Message));
+        }
+
+        /// <summary>شريط حالة حساب السائق (بديل txtAccountStatus في أندرويد).</summary>
+        private void LoadDriverStatus()
+        {
+            Ui.Run(() =>
+            {
+                string status;
+                bool available;
+                try { Api.GetDriverStatus(out status, out available); }
+                catch { return; }
+
+                Ui.BeginOnMain(() =>
+                {
+                    if (_statusBanner == null || _statusLabel == null) return;
+
+                    string text;
+                    UIColor bg;
+                    if (status == "نشط")
+                    {
+                        text = "✅ حسابك نشط — جاهز لاستقبال التوصيلات";
+                        bg = Theme.Hex(0x28A745);
+                    }
+                    else if (status == "قيد_المراجعة" || string.IsNullOrEmpty(status))
+                    {
+                        text = "⏳ حسابك قيد المراجعة — لا يمكنك استقبال التوصيلات حتى موافقة الإدارة";
+                        bg = Theme.Hex(0xDC3545);
+                    }
+                    else if (status == "مرفوض")
+                    {
+                        text = "❌ حسابك مرفوض — تواصل مع الإدارة";
+                        bg = Theme.Hex(0xDC3545);
+                    }
+                    else if (status == "موقوف")
+                    {
+                        text = "⛔ حسابك موقوف — تواصل مع الإدارة";
+                        bg = Theme.Hex(0xDC3545);
+                    }
+                    else
+                    {
+                        text = "⚠️ حالة الحساب: " + status;
+                        bg = Theme.Hex(0xDC3545);
+                    }
+
+                    _statusLabel.Text = text;
+                    _statusBanner.BackgroundColor = bg;
+                    _statusBanner.Hidden = false;
+                    if (_statusHeight != null) _statusHeight.Active = false;
+                    View.SetNeedsLayout();
+                });
+            }, null, ex => AppServices.Log("TawselaMain", "account status: " + ex.Message));
         }
 
         private void SetAvailability(bool available)
@@ -828,7 +1044,7 @@ namespace Tawsela.iOS.Screens
             if (_btnOnline == null) return;
             _btnOnline.SetTitle(_online ? "إيقاف الاستقبال (متصل)" : "تفعيل الاستقبال (غير متصل)",
                 UIControlState.Normal);
-            _btnOnline.BackgroundColor = _online ? Theme.Green : Theme.Gray;
+            _btnOnline.BackgroundColor = _online ? Theme.Green : Theme.Primary;
         }
     }
 }
