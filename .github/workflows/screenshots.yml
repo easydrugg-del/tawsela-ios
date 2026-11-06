@@ -15,7 +15,7 @@ on:
         default: '10.0.x'
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   DOTNET_NOLOGO: '1'
@@ -99,3 +99,19 @@ jobs:
           path: screenshots/
           if-no-files-found: warn
           retention-days: 14
+
+      # ينشر نسخة المحاكي الجاهزة للجلسات التفاعلية (flutter-remote mode=app)
+      - name: Publish simulator app for remote testing
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          APP_DIR="Tawsela.iOS/bin/Release/net10.0-ios/iossimulator-arm64"
+          APP="$APP_DIR/Tawsela.app"
+          [ -d "$APP" ] || { echo "::error::Simulator app not found"; ls -la "$APP_DIR" || true; exit 1; }
+          rm -f "$RUNNER_TEMP/Tawsela-sim.zip"
+          (cd "$APP_DIR" && zip -qry "$RUNNER_TEMP/Tawsela-sim.zip" Tawsela.app)
+          gh release view flutter-remote-build >/dev/null 2>&1 || \
+            gh release create flutter-remote-build --title "flutter-remote build" --notes "Prebuilt simulator apps for remote testing"
+          gh release upload flutter-remote-build "$RUNNER_TEMP/Tawsela-sim.zip" --clobber
+          ls -la "$RUNNER_TEMP/Tawsela-sim.zip"
