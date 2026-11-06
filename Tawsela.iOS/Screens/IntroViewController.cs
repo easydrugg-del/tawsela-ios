@@ -110,7 +110,7 @@ namespace Tawsela.iOS.Screens
             View.AddConstraints(new[]
             {
                 NSLayoutConstraint.Create(skip, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 6),
-                NSLayoutConstraint.Create(skip, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 28),
+                NSLayoutConstraint.Create(skip, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, -28),
                 NSLayoutConstraint.Create(skip, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 36),
 
                 NSLayoutConstraint.Create(_next, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Bottom, 1, -28),
