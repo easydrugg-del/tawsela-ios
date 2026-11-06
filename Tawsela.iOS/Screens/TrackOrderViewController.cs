@@ -30,6 +30,7 @@ namespace Tawsela.iOS.Screens
         };
 
         private readonly int _orderId;
+        private readonly Order _preview;
         private Order _order;
         private NSTimer _timer;
         private bool _rated;
@@ -68,12 +69,21 @@ namespace Tawsela.iOS.Screens
             _orderId = orderId;
         }
 
+        /// <summary>للالتقاط/المعاينة فقط: عرض طلب جاهز بدون شبكة.</summary>
+        public TrackOrderViewController(Order preview) : base()
+        {
+            _preview = preview;
+            _orderId = preview != null ? preview.Id : 0;
+        }
+
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
             View.BackgroundColor = Theme.Surface;
             BuildUi();
-            Load();
+
+            if (_preview != null) Render(_preview, "", 0);
+            else Load();
         }
 
         public override void ViewWillAppear(bool animated)
@@ -426,7 +436,7 @@ namespace Tawsela.iOS.Screens
                 return;
             }
 
-            _topSub.Text = "طلب رقم " + o.Id;
+            if (o.Id > 0) _topSub.Text = "طلب رقم " + o.Id;
 
             _status.Text = o.StatusText;
             _status.TextColor = Theme.FromArgb(o.StatusColor);

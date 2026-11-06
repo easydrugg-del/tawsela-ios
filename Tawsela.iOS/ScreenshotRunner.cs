@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Foundation;
 using Tawsela.Data;
+using Tawsela.Models;
 using Tawsela.iOS.Screens;
 using UIKit;
 
@@ -96,7 +97,20 @@ namespace Tawsela.iOS
                 await Shot(dir, ok, "23-customer-stats", () => new CustomerStatsViewController());
                 await Shot(dir, ok, "24-my-orders",
                     () => new OrdersViewController("customer", "", "طلباتي"));
-                await Shot(dir, ok, "25-track", () => new TrackOrderViewController(37));
+                await Shot(dir, ok, "25-track", () =>
+                {
+                    var o = new Order
+                    {
+                        Id = 37,
+                        Status = "جديد",
+                        PaymentMethod = "نقدي",
+                        FromAddress = "شارع عبد الباقي غراب، كفر عنان، الغربية",
+                        ToAddress = "شارع البحر، زفتى",
+                        PinCode = "7505",
+                        EstimatedFare = 16m
+                    };
+                    return new TrackOrderViewController(o);
+                });
 
                 // ===== سائق =====
                 await Login("playdrv094621", "Tw!c5ecdb89e37f");
