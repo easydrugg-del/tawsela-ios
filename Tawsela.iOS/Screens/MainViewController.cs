@@ -19,11 +19,12 @@ namespace Tawsela.iOS.Screens
         private UILabel _greeting;
         private UILabel _roleBadge;
         private UILabel _driverInfo;
+        private UILabel _balanceBadge;
+        private UIButton _logoutBtn;
         private decimal _driverBalance = -1m;
         private UISwitch _availability;
         private UILabel _availabilityState;
-        private UIControl _bell;
-        private UILabel _bellBadge;
+        private UILabel _notifBadge;
         private UIStackView _grid;
 
         public override bool ShowNavigationBar
@@ -87,36 +88,42 @@ namespace Tawsela.iOS.Screens
             header.AddSubview(_roleBadge);
             header.AddSubview(_driverInfo);
 
-            // جرس الإشعارات
-            _bell = new UIControl { TranslatesAutoresizingMaskIntoConstraints = false };
-            var bellIcon = new UIImageView
+            // شعار الرصيد (بديل txtDriverBalance في أندرويد)
+            _balanceBadge = MakeLabel("", 12f, UIColor.White, UIFontWeight.Bold, UITextAlignment.Center);
+            _balanceBadge.BackgroundColor = Theme.BadgeRed;
+            _balanceBadge.Layer.CornerRadius = 11f;
+            _balanceBadge.Layer.MasksToBounds = true;
+            _balanceBadge.TextAlignment = UITextAlignment.Center;
+            _balanceBadge.Hidden = true;
+            _balanceBadge.Text = "  الرصيد: —  ";
+
+            // زر الخروج الأحمر في الهيدر (بديل btnLogout في أندرويد)
+            _logoutBtn = new UIButton(UIButtonType.System)
             {
-                Image = IconFactory.Image("ic_bell", 24f, UIColor.White),
-                ContentMode = UIViewContentMode.ScaleAspectFit,
-                TranslatesAutoresizingMaskIntoConstraints = false,
-                UserInteractionEnabled = false
+                TranslatesAutoresizingMaskIntoConstraints = false
             };
-            _bellBadge = MakeLabel("", 10f, UIColor.White, UIFontWeight.Bold, UITextAlignment.Center);
-            _bellBadge.BackgroundColor = Theme.BadgeRed;
-            _bellBadge.Layer.CornerRadius = 9f;
-            _bellBadge.Layer.MasksToBounds = true;
-            _bellBadge.TextAlignment = UITextAlignment.Center;
-            _bellBadge.Hidden = true;
+            _logoutBtn.SetTitle("خروج", UIControlState.Normal);
+            _logoutBtn.SetTitleColor(UIColor.White, UIControlState.Normal);
+            _logoutBtn.TitleLabel.Font = Theme.FontSemiBold(14);
+            _logoutBtn.BackgroundColor = Theme.Red;
+            _logoutBtn.Layer.CornerRadius = 16f;
+            _logoutBtn.Layer.MasksToBounds = true;
+            _logoutBtn.ContentEdgeInsets = new UIEdgeInsets(8, 18, 8, 18);
+            _logoutBtn.TouchUpInside += (s, e) => Logout();
 
-            _bell.AddSubview(bellIcon);
-            _bell.AddSubview(_bellBadge);
-            _bell.TouchUpInside += (s, e) => Push(new NotificationsViewController());
-            header.AddSubview(_bell);
-
-            var bellTap = new UITapGestureRecognizer(() => Push(new NotificationsViewController()));
-            _bell.AddGestureRecognizer(bellTap);
+            header.AddSubview(_logoutBtn);
+            header.AddSubview(_balanceBadge);
 
             header.AddConstraints(new[]
             {
                 NSLayoutConstraint.Create(_greeting, NSLayoutAttribute.Top, NSLayoutRelation.Equal, header.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 16),
-                // العنوان على اليمين والجرس على الشمال (زي الأندرويد)
+                // العنوان على اليمين وزر الخروج على الشمال (زي الأندرويد)
                 NSLayoutConstraint.Create(_greeting, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, header, NSLayoutAttribute.Trailing, 1, -18),
-                NSLayoutConstraint.Create(_greeting, NSLayoutAttribute.Leading, NSLayoutRelation.GreaterThanOrEqual, _bell, NSLayoutAttribute.Trailing, 1, 14),
+                NSLayoutConstraint.Create(_greeting, NSLayoutAttribute.Leading, NSLayoutRelation.GreaterThanOrEqual, _balanceBadge, NSLayoutAttribute.Trailing, 1, 10),
+
+                NSLayoutConstraint.Create(_balanceBadge, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, _greeting, NSLayoutAttribute.CenterY, 1, 0),
+                NSLayoutConstraint.Create(_balanceBadge, NSLayoutAttribute.Leading, NSLayoutRelation.GreaterThanOrEqual, _logoutBtn, NSLayoutAttribute.Trailing, 1, 8),
+                NSLayoutConstraint.Create(_balanceBadge, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 22),
 
                 NSLayoutConstraint.Create(_roleBadge, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _greeting, NSLayoutAttribute.Bottom, 1, 4),
                 NSLayoutConstraint.Create(_roleBadge, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, _greeting, NSLayoutAttribute.Trailing, 1, 0),
@@ -126,19 +133,13 @@ namespace Tawsela.iOS.Screens
                 NSLayoutConstraint.Create(_driverInfo, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, _roleBadge, NSLayoutAttribute.Trailing, 1, 0),
                 NSLayoutConstraint.Create(_driverInfo, NSLayoutAttribute.Leading, NSLayoutRelation.GreaterThanOrEqual, header, NSLayoutAttribute.Leading, 1, 16),
 
-                NSLayoutConstraint.Create(_bell, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, _greeting, NSLayoutAttribute.CenterY, 1, 6),
-                NSLayoutConstraint.Create(_bell, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, header, NSLayoutAttribute.Leading, 1, 18),
-                NSLayoutConstraint.Create(_bell, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 34),
-                NSLayoutConstraint.Create(_bell, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 34),
-
-                NSLayoutConstraint.Create(bellIcon, NSLayoutAttribute.CenterX, NSLayoutRelation.Equal, _bell, NSLayoutAttribute.CenterX, 1, 0),
-                NSLayoutConstraint.Create(bellIcon, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, _bell, NSLayoutAttribute.CenterY, 1, 0),
-
-                NSLayoutConstraint.Create(_bellBadge, NSLayoutAttribute.Top, NSLayoutRelation.Equal, _bell, NSLayoutAttribute.Top, 1, -2),
-                NSLayoutConstraint.Create(_bellBadge, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, _bell, NSLayoutAttribute.Trailing, 1, 2),
-                NSLayoutConstraint.Create(_bellBadge, NSLayoutAttribute.Width, NSLayoutRelation.GreaterThanOrEqual, null, NSLayoutAttribute.NoAttribute, 1, 18),
-                NSLayoutConstraint.Create(_bellBadge, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 18),
+                NSLayoutConstraint.Create(_logoutBtn, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, _greeting, NSLayoutAttribute.CenterY, 1, 0),
+                NSLayoutConstraint.Create(_logoutBtn, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, header, NSLayoutAttribute.Leading, 1, 18),
+                NSLayoutConstraint.Create(_logoutBtn, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 36),
             });
+
+            // شارة الدور مخفية زي أندرويد (الهيدر: الاسم + الرصيد + خروج)
+            _roleBadge.Hidden = true;
         }
 
         private void BuildContent()
@@ -169,14 +170,54 @@ namespace Tawsela.iOS.Screens
                 NSLayoutConstraint.Create(content, NSLayoutAttribute.Width, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Width, 1, -32),
             });
 
-            // زر الطلب السريع (عميل فقط)
+            // بطاقة «رايح فين؟» (بديل cardWhereTo في أندرويد)
             if (!Session.IsDriver)
             {
-                var quick = Controls.Tile("ic_taxi", "اطلب توصيلة الآن", Theme.Accent, Theme.PrimaryDark,
-                    () => Push(new NewOrderViewController()));
-                quick.BackgroundColor = UIColor.Clear;
-                content.AddArrangedSubview(quick);
-                quick.HeightAnchor.ConstraintEqualTo(92).Active = true;
+                var whereCard = Controls.Card();
+                var whereTitle = MakeLabel("رايح فين؟", 22f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
+
+                var go = new UIControl { TranslatesAutoresizingMaskIntoConstraints = false };
+                go.Layer.CornerRadius = 16f;
+                go.Layer.MasksToBounds = true;
+
+                var goBg = new GradientView
+                {
+                    TranslatesAutoresizingMaskIntoConstraints = false,
+                    Colors = new[] { Theme.Hex(0x424242), Theme.Hex(0x616161) },
+                    Start = new CGPoint(0, 0.5),
+                    End = new CGPoint(1, 0.5)
+                };
+                var goText = MakeLabel("اضغط لطلب توصيلة جديدة", 16f, UIColor.White,
+                    UIFontWeight.Bold, UITextAlignment.Center);
+
+                go.AddSubview(goBg);
+                go.AddSubview(goText);
+                go.TouchUpInside += (s, e) => Push(new NewOrderViewController());
+
+                whereCard.AddSubview(whereTitle);
+                whereCard.AddSubview(go);
+                whereCard.AddConstraints(new[]
+                {
+                    NSLayoutConstraint.Create(whereTitle, NSLayoutAttribute.Top, NSLayoutRelation.Equal, whereCard, NSLayoutAttribute.Top, 1, 18),
+                    NSLayoutConstraint.Create(whereTitle, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, whereCard, NSLayoutAttribute.Leading, 1, 18),
+                    NSLayoutConstraint.Create(whereTitle, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, whereCard, NSLayoutAttribute.Trailing, 1, -18),
+
+                    NSLayoutConstraint.Create(go, NSLayoutAttribute.Top, NSLayoutRelation.Equal, whereTitle, NSLayoutAttribute.Bottom, 1, 12),
+                    NSLayoutConstraint.Create(go, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, whereCard, NSLayoutAttribute.Leading, 1, 18),
+                    NSLayoutConstraint.Create(go, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, whereCard, NSLayoutAttribute.Trailing, 1, -18),
+                    NSLayoutConstraint.Create(go, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, whereCard, NSLayoutAttribute.Bottom, 1, -18),
+                    NSLayoutConstraint.Create(go, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 52),
+
+                    NSLayoutConstraint.Create(goBg, NSLayoutAttribute.Top, NSLayoutRelation.Equal, go, NSLayoutAttribute.Top, 1, 0),
+                    NSLayoutConstraint.Create(goBg, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, go, NSLayoutAttribute.Bottom, 1, 0),
+                    NSLayoutConstraint.Create(goBg, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, go, NSLayoutAttribute.Leading, 1, 0),
+                    NSLayoutConstraint.Create(goBg, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, go, NSLayoutAttribute.Trailing, 1, 0),
+
+                    NSLayoutConstraint.Create(goText, NSLayoutAttribute.CenterX, NSLayoutRelation.Equal, go, NSLayoutAttribute.CenterX, 1, 0),
+                    NSLayoutConstraint.Create(goText, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, go, NSLayoutAttribute.CenterY, 1, 0),
+                });
+
+                content.AddArrangedSubview(whereCard);
             }
 
             // إعلان نشط للمحافظة/المدينة (بديل Api.ActiveAdsList في MainActivity)
@@ -205,7 +246,7 @@ namespace Tawsela.iOS.Screens
                 LoadAvailability();
             }
 
-            content.AddArrangedSubview(Controls.SectionTitle("الأقسام"));
+            content.AddArrangedSubview(Controls.SectionTitle(Session.IsDriver ? "الأقسام" : "القائمة الرئيسية"));
 
             _grid = new UIStackView
             {
@@ -315,73 +356,71 @@ namespace Tawsela.iOS.Screens
             }
             else
             {
-                AddRow(
-                    Tile("ic_inbox", "طلباتي", Theme.Accent, Theme.PrimaryDark,
-                        () => Push(new OrdersViewController("customer", "", "طلباتي"))),
-                    Tile("ic_wallet", "المحفظة", Theme.Green, Theme.PrimaryDark,
-                        () => Push(new WalletViewController())));
+                // ===== نفس ترتيب وزراير صفحة العميل في أندرويد بالضبط =====
 
-                AddRow(
-                    Tile("ic_bell", "الإشعارات", Theme.Hex(0xEF6C00), Theme.PrimaryDark,
-                        () => Push(new NotificationsViewController())),
-                    Tile("ic_person", "حسابي", Theme.Hex(0x8E24AA), Theme.PrimaryDark,
-                        () => Push(new ProfileViewController())));
+                // 🚕 توصيلاتي
+                _grid.AddArrangedSubview(SectionCard("🚕 توصيلاتي", new[]
+                {
+                    new[]
+                    {
+                        Tile("ic_taxi", "توصيلاتي", BadgeOrangeLight, BadgeOrangeDark,
+                            () => Push(new OrdersViewController("customer", "", "طلباتي"))),
+                        Tile("ic_action_reorder", "توصيلة زي آخر مرة", BadgeOrangeLight, BadgeOrangeDark,
+                            ReorderLast),
+                    }
+                }));
 
-                AddRow(
-                    Tile("ic_taxi", "توصيلة جديدة", Theme.Hex(0x00897B), Theme.PrimaryDark,
-                        () => Push(new NewOrderViewController())),
-                    Tile("ic_action_receipt", "إحصائياتي", Theme.Red, Theme.PrimaryDark,
-                        () => Push(new CustomerStatsViewController())));
+                // 💰 المحفظة والمفضلة والإشعارات
+                _grid.AddArrangedSubview(SectionCard("💰 المحفظة والمفضلة والإشعارات", new[]
+                {
+                    new[]
+                    {
+                        Tile("ic_wallet", "محفظتي", BadgeGreenLight, BadgeGreenDark,
+                            () => Push(new WalletViewController())),
+                        Tile("ic_star", "المفضلون", BadgeGreenLight, BadgeGreenDark, ShowFavorites),
+                    },
+                    new[]
+                    {
+                        Tile("ic_gift", "العروض والكوبونات", BadgePurpleLight, BadgePurpleDark,
+                            () => Push(new CouponsViewController())),
+                        NotificationsTile(),
+                    }
+                }));
 
-                // توصيلة زي آخر مرة بضغطة واحدة (بديل btnReorder في MainActivity)
-                AddRow(
-                    Tile("ic_action_reorder", "توصيلة زي آخر مرة", Theme.Blue, Theme.PrimaryDark, ReorderLast),
-                    Tile("ic_action_map", "سائقون قريبون", Theme.Hex(0x00897B), Theme.PrimaryDark,
-                        () => Push(new NearbyDriversViewController())));
+                // ⭐ المكافآت والدعم
+                _grid.AddArrangedSubview(SectionCard("⭐ المكافآت والدعم", new[]
+                {
+                    new[]
+                    {
+                        Tile("ic_group", "دعوة الأصدقاء", BadgeDeepLight, BadgeDeepDark,
+                            () => Push(new ReferralViewController())),
+                        Tile("ic_trophy", "نقاط الولاء", BadgeDeepLight, BadgeDeepDark,
+                            () => Push(new LoyaltyViewController())),
+                    },
+                    new[]
+                    {
+                        NewBadge(Tile("ic_crown", "اشتراك VIP", BadgeDeepLight, BadgeDeepDark,
+                            () => Push(new SubscriptionViewController()))),
+                        Tile("ic_support", "الدعم", BadgeDeepLight, BadgeDeepDark,
+                            () => Push(new ComplaintViewController())),
+                    },
+                    new[]
+                    {
+                        NewBadge(Tile("ic_flag", "تحديات الأسبوع", BadgeDeepLight, BadgeDeepDark,
+                            () => Push(new ChallengesViewController()))),
+                    }
+                }));
 
-                // ---- المكافآت والعروض ----
-                _grid.AddArrangedSubview(Controls.SectionTitle("المكافآت والعروض"));
+                // أزرار أسفل الشاشة زي أندرويد
+                _grid.AddArrangedSubview(IconFullButton("الملف الشخصي", "ic_person", Theme.Primary,
+                    () => Push(new ProfileViewController())));
+                _grid.AddArrangedSubview(IconFullButton("الإعدادات", "ic_settings", Theme.TextPrimary,
+                    () => Push(new SettingsViewController())));
 
-                AddRow(
-                    Tile("ic_ticket", "العروض", Theme.Accent, Theme.PrimaryDark,
-                        () => Push(new CouponsViewController())),
-                    Tile("ic_crown", "نقاط الولاء", Theme.Hex(0xF9A825), Theme.PrimaryDark,
-                        () => Push(new LoyaltyViewController())));
-
-                AddRow(
-                    Tile("ic_gift", "دعوة الأصدقاء", Theme.Green, Theme.PrimaryDark,
-                        () => Push(new ReferralViewController())),
-                    Tile("ic_trophy", "التحديات", Theme.Blue, Theme.PrimaryDark,
-                        () => Push(new ChallengesViewController())));
-
-                AddRow(
-                    Tile("ic_work", "الاشتراك", Theme.Hex(0x8E24AA), Theme.PrimaryDark,
-                        () => Push(new SubscriptionViewController())),
-                    Tile("ic_action_receipt", "سجل الشحن", Theme.Hex(0x00897B), Theme.PrimaryDark,
-                        () => Push(new TopUpHistoryViewController(false))));
-
-                // ---- أخرى ----
-                _grid.AddArrangedSubview(Controls.SectionTitle("أخرى"));
-
-                AddRow(
-                    Tile("ic_support", "الشكاوى", Theme.Hex(0xEF6C00), Theme.PrimaryDark,
-                        () => Push(new ComplaintViewController())),
-                    Tile("ic_settings", "الإعدادات", Theme.Gray, Theme.PrimaryDark,
-                        () => Push(new SettingsViewController())));
-
-                _grid.AddArrangedSubview(Controls.SectionTitle("خدمات إضافية"));
-
-                AddRow(
-                    Tile("ic_pin", "أماكني المحفوظة", Theme.Blue, Theme.PrimaryDark,
-                        () => Push(new SavedPlacesViewController())),
-                    Tile("ic_clock", "رحلات متكررة", Theme.Accent, Theme.PrimaryDark,
-                        () => Push(new RecurringViewController())));
-
-                AddRow(
-                    Tile("ic_action_map", "سائقون قريبون", Theme.Hex(0x00897B), Theme.PrimaryDark,
-                        () => Push(new NearbyDriversViewController())),
-                    Tile("ic_action_warning", "الطوارئ", Theme.Red, Theme.PrimaryDark,
-                        () => Push(new EmergencyViewController())));
+                var credit = MakeLabel("Designed @ Ahmed Ali", 10f, Theme.TextSecondary,
+                    UIFontWeight.Regular, UITextAlignment.Center);
+                credit.Alpha = 0.6f;
+                _grid.AddArrangedSubview(credit);
             }
 
             // الإدارة
@@ -413,6 +452,177 @@ namespace Tawsela.iOS.Screens
             row.AddArrangedSubview(right);
             row.HeightAnchor.ConstraintEqualTo(96).Active = true;
             _grid.AddArrangedSubview(row);
+        }
+
+        /* ---------- بلاطات صفحة العميل (نفس شكل أندرويد) ---------- */
+
+        // ألوان شارات أيقونات أندرويد (drawable/badge_*)
+        private static readonly UIColor BadgeOrangeLight = Theme.Hex(0xFF9A3C);
+        private static readonly UIColor BadgeOrangeDark = Theme.Hex(0xE85300);
+        private static readonly UIColor BadgeGreenLight = Theme.Hex(0x81C784);
+        private static readonly UIColor BadgeGreenDark = Theme.Hex(0x2E7D32);
+        private static readonly UIColor BadgePurpleLight = Theme.Hex(0xCE93D8);
+        private static readonly UIColor BadgePurpleDark = Theme.Hex(0x6A1B9A);
+        private static readonly UIColor BadgeDeepLight = Theme.Hex(0xFF8A65);
+        private static readonly UIColor BadgeDeepDark = Theme.Hex(0xBF360C);
+
+        /// <summary>بطاقة قسم زي أندرويد: عنوان + صفوف بلاطات (2 في السطر).</summary>
+        private UIView SectionCard(string title, UIView[][] rows)
+        {
+            var card = Controls.Card();
+            var stack = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 8,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            card.AddSubview(stack);
+            card.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(stack, NSLayoutAttribute.Top, NSLayoutRelation.Equal, card, NSLayoutAttribute.Top, 1, 12),
+                NSLayoutConstraint.Create(stack, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, card, NSLayoutAttribute.Leading, 1, 12),
+                NSLayoutConstraint.Create(stack, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -12),
+                NSLayoutConstraint.Create(stack, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, card, NSLayoutAttribute.Bottom, 1, -12),
+            });
+
+            stack.AddArrangedSubview(MakeLabel(title, 15f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right));
+
+            foreach (var tiles in rows)
+            {
+                var row = new UIStackView
+                {
+                    Axis = UILayoutConstraintAxis.Horizontal,
+                    Spacing = 8,
+                    Distribution = UIStackViewDistribution.FillEqually,
+                    TranslatesAutoresizingMaskIntoConstraints = false
+                };
+
+                foreach (var t in tiles)
+                {
+                    t.HeightAnchor.ConstraintEqualTo(88f).Active = true;
+                    row.AddArrangedSubview(t);
+                }
+
+                stack.AddArrangedSubview(row);
+            }
+
+            return card;
+        }
+
+        /// <summary>يغلّف بلاطة ويضع عليها شارة صغيرة (بديل badge_new / txtNotifBadge).</summary>
+        private UIView BadgeWrap(UIControl tile, UILabel badge, float height, float minWidth)
+        {
+            var wrap = new UIView { TranslatesAutoresizingMaskIntoConstraints = false };
+            tile.TranslatesAutoresizingMaskIntoConstraints = false;
+            badge.TranslatesAutoresizingMaskIntoConstraints = false;
+            badge.TextAlignment = UITextAlignment.Center;
+            badge.TextColor = UIColor.White;
+            badge.Layer.MasksToBounds = true;
+
+            wrap.AddSubview(tile);
+            wrap.AddSubview(badge);
+
+            wrap.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(tile, NSLayoutAttribute.Top, NSLayoutRelation.Equal, wrap, NSLayoutAttribute.Top, 1, 0),
+                NSLayoutConstraint.Create(tile, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, wrap, NSLayoutAttribute.Bottom, 1, 0),
+                NSLayoutConstraint.Create(tile, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, wrap, NSLayoutAttribute.Leading, 1, 0),
+                NSLayoutConstraint.Create(tile, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, wrap, NSLayoutAttribute.Trailing, 1, 0),
+
+                NSLayoutConstraint.Create(badge, NSLayoutAttribute.Top, NSLayoutRelation.Equal, wrap, NSLayoutAttribute.Top, 1, 4),
+                NSLayoutConstraint.Create(badge, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, wrap, NSLayoutAttribute.Leading, 1, 4),
+                NSLayoutConstraint.Create(badge, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, height),
+                NSLayoutConstraint.Create(badge, NSLayoutAttribute.Width, NSLayoutRelation.GreaterThanOrEqual, null, NSLayoutAttribute.NoAttribute, 1, minWidth),
+            });
+
+            return wrap;
+        }
+
+        /// <summary>شارة «جديد» زي أندرويد على اشتراك VIP وتحديات الأسبوع.</summary>
+        private UIView NewBadge(UIControl tile)
+        {
+            var badge = new UILabel
+            {
+                Text = "جديد",
+                Font = Theme.Font(10),
+                BackgroundColor = Theme.TextPrimary,
+                LineBreakMode = UILineBreakMode.Clip
+            };
+            badge.Layer.CornerRadius = 8f;
+            return BadgeWrap(tile, badge, 16f, 28f);
+        }
+
+        /// <summary>بلاطة الإشعارات مع شارة عدد غير المقروء (بديل txtNotifBadge).</summary>
+        private UIView NotificationsTile()
+        {
+            var tile = Tile("ic_bell", "الإشعارات", BadgePurpleLight, BadgePurpleDark,
+                () => Push(new NotificationsViewController()));
+
+            _notifBadge = new UILabel
+            {
+                Text = "",
+                Font = Theme.Font(11),
+                BackgroundColor = Theme.BadgeRed,
+                Hidden = true
+            };
+            _notifBadge.Layer.CornerRadius = 10f;
+            return BadgeWrap(tile, _notifBadge, 20f, 20f);
+        }
+
+        /// <summary>زر عريض بأيقونة أسفل الشاشة (بديل btnProfile/btnSettings).</summary>
+        private UIControl IconFullButton(string title, string icon, UIColor bg, Action onTap)
+        {
+            return Controls.IconButton(title, icon, bg);
+        }
+
+        /// <summary>سائقون مفضلون مع الاتصال (بديل ShowFavorites في أندرويد).</summary>
+        private void ShowFavorites()
+        {
+            var progress = Ui.ShowProgress("جارٍ التحميل…");
+
+            Ui.Run(() =>
+            {
+                var favs = Api.FavoriteDrivers() ?? new List<Driver>();
+                Ui.BeginOnMain(() =>
+                {
+                    progress.Dismiss();
+
+                    if (favs.Count == 0)
+                    {
+                        Ui.Toast("لا يوجد سائقون مفضلون بعد");
+                        return;
+                    }
+
+                    var items = new List<string>();
+                    foreach (var d in favs)
+                        items.Add(d.FullName + " — " + d.Phone + "\n" + d.CarModel + " (" + d.CarPlate + ")");
+
+                    Ui.Choose("سائقيّ المفضلون", items, index =>
+                    {
+                        var phone = favs[index].Phone;
+                        if (!string.IsNullOrEmpty(phone))
+                            AppServices.OpenUrl("tel:" + phone);
+                    });
+                });
+            }, null, ex =>
+            {
+                progress.Dismiss();
+                Ui.Toast("خطأ: " + ex.Message);
+            });
+        }
+
+        /// <summary>تسجيل الخروج من الهيدر (بديل btnLogout).</summary>
+        private void Logout()
+        {
+            Ui.Confirm("تسجيل الخروج", "سيتم إنهاء الجلسة على هذا الجهاز.", "خروج", () =>
+            {
+                try { Api.ClearSession(); } catch { }
+                try { AppServices.Prefs.Remove("tawsela.remember_user"); } catch { }
+                try { InAppNotifications.Stop(); } catch { }
+                try { AppLock.ClearBackground(); } catch { }
+                Ui.Toast("تم تسجيل الخروج");
+                Router.ShowLogin();
+            });
         }
 
         /// <summary>
@@ -510,7 +720,7 @@ namespace Tawsela.iOS.Screens
                 _roleBadge.Text = role;
             }
 
-            // شعار الإشعارات غير المقروءة
+            // شعار الإشعارات غير المقروءة (على بلاطة الإشعارات زي أندرويد)
             Ui.Run(() =>
             {
                 try
@@ -520,12 +730,29 @@ namespace Tawsela.iOS.Screens
                     if (list != null) foreach (var n in list) if (!n.IsRead) unread++;
                     Ui.BeginOnMain(() =>
                     {
-                        _bellBadge.Hidden = unread == 0;
-                        _bellBadge.Text = unread > 9 ? "9+" : unread.ToString();
+                        if (_notifBadge == null) return;
+                        _notifBadge.Hidden = unread == 0;
+                        _notifBadge.Text = unread > 9 ? "9+" : unread.ToString();
                     });
                 }
                 catch { }
             });
+
+            // رصيد المحفظة في شارة الهيدر (بديل LoadBalanceBadge/LoadDriverBalance)
+            if (ReleaseConfig.CustomerWalletEnabled || Session.IsDriver)
+            {
+                Ui.Run(() =>
+                {
+                    decimal bal = 0m;
+                    try { bal = Api.WalletBalance(); } catch { return; }
+                    Ui.BeginOnMain(() =>
+                    {
+                        if (_balanceBadge == null) return;
+                        _balanceBadge.Text = "  الرصيد: " + bal.ToString("0") + " ج.م  ";
+                        _balanceBadge.Hidden = false;
+                    });
+                }, null, ex => AppServices.Log("TawselaMain", "balance: " + ex.Message));
+            }
 
             // بيانات السائق: الرقم + الرصيد (بديل txtDriverNumber/txtDriverBalance)
             if (Session.IsDriver && _driverInfo != null)
