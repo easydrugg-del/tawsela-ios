@@ -161,80 +161,53 @@ namespace Tawsela.iOS.Screens
         {
             Ui.Run(() =>
             {
-                var stats = Api.AdminStats();
+                // نفس أندرويد: حساب الحالات من قائمة الطلبات + عدّ السائقين المتاحين
+                var all = Api.GetOrders("");
+                var counts = new Dictionary<string, int>();
+                if (all != null)
+                {
+                    foreach (var o in all)
+                    {
+                        if (!counts.ContainsKey(o.Status)) counts[o.Status] = 0;
+                        counts[o.Status]++;
+                    }
+                }
 
-                // نفس سطر أندرويد: «السائقون المتاحون: N» من نقطة نهاية مستقلة
                 var available = -1;
                 try { available = Api.AvailableDriversCount(); } catch { }
 
-                Ui.BeginOnMain(() => RenderStats(stats, available));
+                Ui.BeginOnMain(() => RenderStats(all == null ? 0 : all.Count, counts, available));
             }, null, ex => Ui.Toast(ex.Message));
         }
 
-        private void RenderStats(Dictionary<string, object> stats, int availableDrivers)
+        private static int Count(Dictionary<string, int> d, string key)
         {
-            for (int i = _stats.ArrangedSubviews.Length - 1; i >= 0; i--)
+            int v;
+            return d.TryGetValue(key, out v) ? v : 0;
+        }
+
+        private void RenderStats(int total, Dictionary<string, int> counts, int availableDrivers)
+        {
+            var old = new UIView[_stats.ArrangedSubviews.Length];
+            _stats.ArrangedSubviews.CopyTo(old, 0);
+            foreach (var v in old)
             {
-                var v = _stats.ArrangedSubviews[i];
                 _stats.RemoveArrangedSubview(v);
                 v.RemoveFromSuperview();
             }
 
-            if (stats == null || stats.Count == 0)
-            {
-                _stats.AddArrangedSubview(MakeLabel("لا توجد إحصائيات", 14f, Theme.TextSecondary,
-                    UIFontWeight.Regular, UITextAlignment.Right));
-                return;
-            }
+            var line1 = MakeLabel(
+                "إجمالي الطلبات: " + total +
+                "  |  جديد: " + Count(counts, "جديد") +
+                "  |  مكتمل: " + Count(counts, "مكتمل") +
+                "  |  ملغي: " + Count(counts, "ملغي"),
+                14f, Theme.TextPrimary, UIFontWeight.Regular, UITextAlignment.Right);
+            line1.Lines = 0;
+            _stats.AddArrangedSubview(line1);
 
-            // اعرض كل القيم الرقمية القادمة من الخادم بأسماء عربية معروفة
-            var known = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                { "orders", "الطلبات" },
-                { "totalOrders", "إجمالي الطلبات" },
-                { "todayOrders", "طلبات اليوم" },
-                { "activeOrders", "طلبات جارية" },
-                { "completedOrders", "طلبات مكتملة" },
-                { "cancelledOrders", "طلبات ملغاة" },
-                { "customers", "العملاء" },
-                { "totalCustomers", "إجمالي العملاء" },
-                { "drivers", "السائقون" },
-                { "totalDrivers", "إجمالي السائقين" },
-                { "availableDrivers", "سائقون متاحون" },
-                { "revenue", "الإيراد" },
-                { "totalRevenue", "إجمالي الإيراد" },
-                { "todayRevenue", "إيراد اليوم" },
-                { "walletBalance", "أرصدة المحافظ" },
-            };
-
-            var shown = 0;
-            foreach (var kv in stats)
-            {
-                var label = kv.Key;
-                string arabic;
-                if (known.TryGetValue(kv.Key, out arabic)) label = arabic;
-
-                var value = kv.Value == null ? "—" : kv.Value.ToString();
-                _stats.AddArrangedSubview(Controls.InfoRow(label, value));
-                shown++;
-                if (shown >= 12) break;
-            }
-
-            // إن لم يُرجِع الخادم العدد ضمن الإحصائيات، نضيفه من نقطة النهاية المستقلة
-            var hasAvailable = false;
-            foreach (var k in stats.Keys)
-            {
-                if (string.Equals(k, "availableDrivers", StringComparison.OrdinalIgnoreCase))
-                {
-                    hasAvailable = true;
-                    break;
-                }
-            }
-
-            if (!hasAvailable && availableDrivers >= 0)
-            {
-                _stats.AddArrangedSubview(Controls.InfoRow("سائقون متاحون", availableDrivers.ToString()));
-            }
+            _stats.AddArrangedSubview(MakeLabel(
+                "السائقون المتاحون: " + (availableDrivers >= 0 ? availableDrivers : 0),
+                14f, Theme.TextPrimary, UIFontWeight.Regular, UITextAlignment.Right));
         }
     }
 }
