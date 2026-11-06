@@ -130,6 +130,26 @@ namespace Tawsela.iOS
                 await Shot(dir, ok, "42-restaurant-new",
                     () => new RestaurantNewDeliveryViewController(new List<Dictionary<string, object>>()));
                 await Shot(dir, ok, "43-restaurant-requests", () => new RestaurantRequestsViewController());
+
+                // ===== الإدارة =====
+                await Login("admin", "admin123");
+                await Shot(dir, ok, "50-admin-home", () => new AdminHomeViewController());
+                await Shot(dir, ok, "51-admin-customers", () => new CustomersAdminViewController());
+                await Shot(dir, ok, "52-admin-drivers", () => new DriversAdminViewController());
+                await Shot(dir, ok, "53-admin-areas", () => new AreasAdminViewController());
+                await Shot(dir, ok, "54-admin-streets", () => new StreetsAdminViewController());
+                await Shot(dir, ok, "55-admin-coupons", () => new CouponsAdminViewController());
+                await Shot(dir, ok, "56-admin-docs", () => new DocsAdminViewController());
+                await Shot(dir, ok, "57-admin-complaints", () => new ComplaintsAdminViewController());
+                await Shot(dir, ok, "58-admin-subscriptions", () => new SubscriptionsAdminViewController());
+                await Shot(dir, ok, "59-admin-topups", () => new TopUpsAdminViewController());
+                await Shot(dir, ok, "60-admin-trips", () => new TripReportViewController());
+                await Shot(dir, ok, "61-admin-analytics", () => new AdminAnalyticsViewController());
+                await Shot(dir, ok, "62-admin-ads", () => new AdsAdminViewController());
+                await Shot(dir, ok, "63-admin-restaurants", () => new RestaurantsAdminViewController());
+                await Shot(dir, ok, "64-admin-services", () => new ServiceAdminViewController());
+                await Shot(dir, ok, "65-admin-supervisors", () => new SupervisorAdminViewController());
+                await Shot(dir, ok, "66-admin-emergencies", () => new EmergenciesAdminViewController());
             }
             catch (Exception ex)
             {
