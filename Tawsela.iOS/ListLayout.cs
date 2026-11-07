@@ -133,8 +133,9 @@ namespace Tawsela.iOS
     public abstract class ListViewController<T> : BaseViewController where T : class
     {
         protected ListLayout List;
+        private readonly string _pageTitle;
 
-        protected ListViewController(string title) : base(title) { }
+        protected ListViewController(string title) : base(title) { _pageTitle = title; }
 
         /// <summary>نص يظهر عند عدم وجود عناصر.</summary>
         protected virtual string EmptyText
@@ -223,7 +224,7 @@ namespace Tawsela.iOS
             if (AndroidHeader)
             {
                 // عنوان برتقالي أعلى الشاشة زي أندرويد + زر رجوع صغير
-                var title = MakeLabel(Title ?? "", 20f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
+                var title = MakeLabel(_pageTitle ?? "", 20f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
                 View.AddSubview(title);
                 View.AddConstraints(new[]
                 {
@@ -282,6 +283,7 @@ namespace Tawsela.iOS
         protected UITextField AddSearchBar(string placeholder)
         {
             const float height = 60f;
+            float top = AndroidHeader ? 64f : 8f;
 
             var header = new UIStackView
             {
@@ -291,7 +293,7 @@ namespace Tawsela.iOS
             View.AddSubview(header);
             View.AddConstraints(new[]
             {
-                NSLayoutConstraint.Create(header, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 8),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, top),
                 NSLayoutConstraint.Create(header, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 16),
                 NSLayoutConstraint.Create(header, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, -16),
                 NSLayoutConstraint.Create(header, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, height),
@@ -301,7 +303,7 @@ namespace Tawsela.iOS
             field.EditingChanged += (s, e) => Reload();
             header.AddArrangedSubview(field);
 
-            List.TopInset = height + 8;
+            List.TopInset = top + height;
             return field;
         }
 
