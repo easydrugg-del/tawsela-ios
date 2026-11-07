@@ -20,7 +20,7 @@ namespace Tawsela.iOS.Screens
         private UIButton _send;
         private UIStackView _list;
 
-        public ComplaintViewController() : base("الشكاوى") { }
+        public ComplaintViewController() : base("الشكاوى والدعم") { }
 
         public override void ViewDidLoad()
         {
