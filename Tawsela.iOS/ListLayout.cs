@@ -223,17 +223,15 @@ namespace Tawsela.iOS
 
             if (AndroidHeader)
             {
-                // عنوان برتقالي أعلى الشاشة زي أندرويد + زر رجوع صغير
-                var title = MakeLabel(_pageTitle ?? "", 20f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
-                View.AddSubview(title);
-                View.AddConstraints(new[]
+                // شريط عنوان مخصص (خلفية معتمة) فوق القائمة — عنوان برتقالي + زر رجوع
+                var bar = new UIView
                 {
-                    NSLayoutConstraint.Create(title, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 0),
-                    NSLayoutConstraint.Create(title, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 56),
-                    NSLayoutConstraint.Create(title, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, -16),
-                    NSLayoutConstraint.Create(title, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 56),
-                });
+                    BackgroundColor = Theme.White,
+                    TranslatesAutoresizingMaskIntoConstraints = false
+                };
+                View.AddSubview(bar);
 
+                var title = MakeLabel((_pageTitle ?? Title ?? "؟؟") + " ▸", 20f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
                 var back = new UIButton(UIButtonType.System) { TranslatesAutoresizingMaskIntoConstraints = false };
                 back.SetTitle("‹", UIControlState.Normal);
                 back.SetTitleColor(Theme.Primary, UIControlState.Normal);
@@ -242,15 +240,32 @@ namespace Tawsela.iOS
                 {
                     if (NavigationController != null) NavigationController.PopViewController(true);
                 };
-                View.AddSubview(back);
+
+                bar.AddSubview(title);
+                bar.AddSubview(back);
+
                 View.AddConstraints(new[]
                 {
-                    NSLayoutConstraint.Create(back, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, title, NSLayoutAttribute.CenterY, 1, 0),
-                    NSLayoutConstraint.Create(back, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 8),
+                    NSLayoutConstraint.Create(bar, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 0),
+                    NSLayoutConstraint.Create(bar, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 0),
+                    NSLayoutConstraint.Create(bar, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, 0),
+                    NSLayoutConstraint.Create(bar, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 56),
+                });
+
+                bar.AddConstraints(new[]
+                {
+                    NSLayoutConstraint.Create(title, NSLayoutAttribute.Top, NSLayoutRelation.Equal, bar, NSLayoutAttribute.Top, 1, 0),
+                    NSLayoutConstraint.Create(title, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, bar, NSLayoutAttribute.Bottom, 1, 0),
+                    NSLayoutConstraint.Create(title, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, bar, NSLayoutAttribute.Leading, 1, 56),
+                    NSLayoutConstraint.Create(title, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, bar, NSLayoutAttribute.Trailing, 1, -16),
+
+                    NSLayoutConstraint.Create(back, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, bar, NSLayoutAttribute.CenterY, 1, 0),
+                    NSLayoutConstraint.Create(back, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, bar, NSLayoutAttribute.Leading, 1, 8),
                     NSLayoutConstraint.Create(back, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 40),
                     NSLayoutConstraint.Create(back, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 40),
                 });
 
+                View.BringSubviewToFront(bar);
                 List.TopInset = 56;
             }
 
