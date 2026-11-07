@@ -189,7 +189,13 @@ namespace Tawsela.iOS.Screens
             _supervisor = supervisor;
             _from = DateTime.Today.AddDays(-30);
             _to = DateTime.Today;
+        
+
         }
+
+        public override bool ShowNavigationBar => false;
+
+        protected override bool FlatHeader => true;
 
         public override void ViewDidLoad()
         {

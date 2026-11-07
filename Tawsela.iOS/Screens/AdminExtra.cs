@@ -152,6 +152,10 @@ namespace Tawsela.iOS.Screens
 
         public AdminAnalyticsViewController() : base("تحليلات متقدمة") { }
 
+        public override bool ShowNavigationBar => false;
+
+        protected override bool FlatHeader => true;
+
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
@@ -613,6 +617,10 @@ namespace Tawsela.iOS.Screens
 
         public AppUpdateAdminViewController() : base("تحديث الاصدار") { }
 
+        public override bool ShowNavigationBar => false;
+
+        protected override bool FlatHeader => true;
+
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
@@ -704,6 +712,10 @@ namespace Tawsela.iOS.Screens
         private string _value = "";
 
         public DriverFeeAdminViewController() : base("قيمة الخصم من السائق") { }
+
+        public override bool ShowNavigationBar => false;
+
+        protected override bool FlatHeader => true;
 
         public override void ViewDidLoad()
         {

@@ -212,7 +212,13 @@ namespace Tawsela.iOS.Screens
             _service = service;
             _onSaved = onSaved;
             _isNew = service == null;
+        
+
         }
+
+        public override bool ShowNavigationBar => false;
+
+        protected override bool FlatHeader => true;
 
         public override void ViewDidLoad()
         {

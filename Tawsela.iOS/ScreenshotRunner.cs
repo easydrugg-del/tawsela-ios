@@ -128,7 +128,17 @@ namespace Tawsela.iOS
                 await Shot(dir, ok, "40-restaurant-home", () => new RestaurantMainViewController());
                 await Shot(dir, ok, "41-restaurant-profile", () => new RestaurantProfileViewController());
                 await Shot(dir, ok, "42-restaurant-new",
-                    () => new RestaurantNewDeliveryViewController(new List<Dictionary<string, object>>()));
+                    () => new RestaurantNewDeliveryViewController(new List<Dictionary<string, object>>
+                    {
+                        new Dictionary<string, object>
+                        {
+                            { "Id", 1 },
+                            { "Name", "زفتى" },
+                            { "Price", 25.0 },
+                            { "City", "زفتى" },
+                            { "Governorate", "الغربية" },
+                        }
+                    }));
                 await Shot(dir, ok, "43-restaurant-requests", () => new RestaurantRequestsViewController());
 
                 // ===== الإدارة =====
@@ -145,6 +155,11 @@ namespace Tawsela.iOS
                 await Shot(dir, ok, "59-admin-topups", () => new TopUpsAdminViewController());
                 await Shot(dir, ok, "60-admin-trips", () => new TripReportViewController());
                 await Shot(dir, ok, "61-admin-analytics", () => new AdminAnalyticsViewController());
+                await Shot(dir, ok, "67-admin-driver-fee", () => new DriverFeeAdminViewController());
+                await Shot(dir, ok, "68-admin-app-update", () => new AppUpdateAdminViewController());
+                await Shot(dir, ok, "69-admin-heatmap", () => new HeatmapViewController());
+                await Shot(dir, ok, "70-admin-driver-search", () => new DriverSearchViewController());
+                await Shot(dir, ok, "71-supervisor-earnings", () => new SupervisorEarningsViewController(null));
                 await Shot(dir, ok, "62-admin-ads", () => new AdsAdminViewController());
                 await Shot(dir, ok, "63-admin-restaurants", () => new RestaurantsAdminViewController());
                 await Shot(dir, ok, "64-admin-services", () => new ServiceAdminViewController());

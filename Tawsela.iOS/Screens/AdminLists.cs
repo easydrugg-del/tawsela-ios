@@ -40,7 +40,13 @@ namespace Tawsela.iOS.Screens
             _lng = lng;
             _initialActive = active;
             _onSave = onSave;
+        
+
         }
+
+        public override bool ShowNavigationBar => false;
+
+        protected override bool FlatHeader => true;
 
         public override void ViewDidLoad()
         {

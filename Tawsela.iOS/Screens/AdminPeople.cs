@@ -850,7 +850,13 @@ namespace Tawsela.iOS.Screens
         {
             _row = row ?? new Dictionary<string, object>();
             _onChanged = onChanged;
+        
+
         }
+
+        public override bool ShowNavigationBar => false;
+
+        protected override bool FlatHeader => true;
 
         public override void ViewDidLoad()
         {

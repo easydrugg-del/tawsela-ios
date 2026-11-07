@@ -49,6 +49,12 @@ namespace Tawsela.iOS
                 NavigationController.SetNavigationBarHidden(ShowNavigationBar == false, animated);
             }
             RegisterKeyboard();
+
+            if (FlatHeader && !_flatApplied)
+            {
+                _flatApplied = true;
+                ApplyFlatHeader();
+            }
         }
 
         public override void ViewWillDisappear(bool animated)
@@ -61,6 +67,69 @@ namespace Tawsela.iOS
         public virtual bool ShowNavigationBar
         {
             get { return true; }
+        }
+
+        /// <summary>شكل أندرويد: عنوان برتقالي على خلفية فاتحة بدل شريط التنقل.</summary>
+        protected virtual bool FlatHeader
+        {
+            get { return false; }
+        }
+
+        private bool _flatApplied;
+
+        /// <summary>شريط عنوان مخصص: عنوان برتقالي + زر رجوع، ويزيح المحتوى تحته.</summary>
+        private void ApplyFlatHeader()
+        {
+            var bar = new UIView
+            {
+                BackgroundColor = Theme.White,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            View.AddSubview(bar);
+
+            var label = MakeLabel(Title ?? "", 20f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
+            var back = new UIButton(UIButtonType.System) { TranslatesAutoresizingMaskIntoConstraints = false };
+            back.SetTitle("‹", UIControlState.Normal);
+            back.SetTitleColor(Theme.Primary, UIControlState.Normal);
+            back.TitleLabel.Font = Theme.FontBold(30);
+            back.TouchUpInside += (s, e) =>
+            {
+                if (NavigationController != null && NavigationController.ViewControllers.Length > 1)
+                    NavigationController.PopViewController(true);
+            };
+
+            bar.AddSubview(label);
+            bar.AddSubview(back);
+
+            View.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(bar, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 0),
+                NSLayoutConstraint.Create(bar, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 0),
+                NSLayoutConstraint.Create(bar, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, 0),
+                NSLayoutConstraint.Create(bar, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 56),
+            });
+
+            bar.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(label, NSLayoutAttribute.Top, NSLayoutRelation.Equal, bar, NSLayoutAttribute.Top, 1, 0),
+                NSLayoutConstraint.Create(label, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, bar, NSLayoutAttribute.Bottom, 1, 0),
+                NSLayoutConstraint.Create(label, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, bar, NSLayoutAttribute.Leading, 1, 56),
+                NSLayoutConstraint.Create(label, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, bar, NSLayoutAttribute.Trailing, 1, -16),
+
+                NSLayoutConstraint.Create(back, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, bar, NSLayoutAttribute.CenterY, 1, 0),
+                NSLayoutConstraint.Create(back, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, bar, NSLayoutAttribute.Leading, 1, 8),
+                NSLayoutConstraint.Create(back, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 40),
+                NSLayoutConstraint.Create(back, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 40),
+            });
+
+            // إزاحة المحتوى الممرَّر من أسفل الشريط
+            foreach (var c in View.Constraints)
+            {
+                if (c.FirstItem is UIScrollView && c.FirstAttribute == NSLayoutAttribute.Top)
+                    c.Constant = 56;
+            }
+
+            View.BringSubviewToFront(bar);
         }
 
         /* ---------- Keyboard ---------- */

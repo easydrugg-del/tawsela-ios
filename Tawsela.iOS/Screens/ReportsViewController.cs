@@ -18,6 +18,10 @@ namespace Tawsela.iOS.Screens
 
         public HeatmapViewController() : base("الخريطة الحرارية للطلبات") { }
 
+        public override bool ShowNavigationBar => false;
+
+        protected override bool FlatHeader => true;
+
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
@@ -91,6 +95,10 @@ namespace Tawsela.iOS.Screens
         private UIStackView _results;
 
         public DriverSearchViewController() : base("بحث عن سائق") { }
+
+        public override bool ShowNavigationBar => false;
+
+        protected override bool FlatHeader => true;
 
         public override void ViewDidLoad()
         {
@@ -323,6 +331,10 @@ namespace Tawsela.iOS.Screens
 
         public DriverEarningsReportViewController() : base("تقرير الأرباح") { }
 
+        public override bool ShowNavigationBar => false;
+
+        protected override bool FlatHeader => true;
+
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
@@ -496,6 +508,10 @@ namespace Tawsela.iOS.Screens
         private DateTime _to = DateTime.Today;
 
         public TripReportViewController() : base("تقرير الرحلات") { }
+
+        public override bool ShowNavigationBar => false;
+
+        protected override bool FlatHeader => true;
 
         public override void ViewDidLoad()
         {
