@@ -18,6 +18,8 @@ namespace Tawsela.iOS.Screens
 
         protected override bool AndroidHeader => true;
 
+        protected override string PageTitle => "السائقون المحظورون";
+
         protected override string EmptyText
         {
             get { return "لا يوجد سائقون محظورون"; }
@@ -67,6 +69,8 @@ namespace Tawsela.iOS.Screens
         public ServiceAdminViewController() : base("إدارة أنواع الخدمة") { }
 
         protected override bool AndroidHeader => true;
+
+        protected override string PageTitle => "إدارة أنواع الخدمة";
 
         protected override string EmptyText
         {

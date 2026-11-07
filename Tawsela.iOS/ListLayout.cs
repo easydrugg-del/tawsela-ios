@@ -137,6 +137,12 @@ namespace Tawsela.iOS
 
         protected ListViewController(string title) : base(title) { _pageTitle = title; }
 
+        /// <summary>عنوان الشاشة (يُعرَّض في الشاشات التي تخفي شريط التنقل).</summary>
+        protected virtual string PageTitle
+        {
+            get { return string.IsNullOrEmpty(_pageTitle) ? (Title ?? "") : _pageTitle; }
+        }
+
         /// <summary>نص يظهر عند عدم وجود عناصر.</summary>
         protected virtual string EmptyText
         {
@@ -226,12 +232,12 @@ namespace Tawsela.iOS
                 // شريط عنوان مخصص (خلفية معتمة) فوق القائمة — عنوان برتقالي + زر رجوع
                 var bar = new UIView
                 {
-                    BackgroundColor = Theme.White,
+                    BackgroundColor = Theme.Surface,
                     TranslatesAutoresizingMaskIntoConstraints = false
                 };
                 View.AddSubview(bar);
 
-                var title = MakeLabel((_pageTitle ?? Title ?? "؟؟") + " ▸", 20f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
+                var title = MakeLabel(PageTitle, 20f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
                 var back = new UIButton(UIButtonType.System) { TranslatesAutoresizingMaskIntoConstraints = false };
                 back.SetTitle("‹", UIControlState.Normal);
                 back.SetTitleColor(Theme.Primary, UIControlState.Normal);

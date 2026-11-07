@@ -19,6 +19,8 @@ namespace Tawsela.iOS.Screens
 
         protected override bool AndroidHeader => true;
 
+        protected override string PageTitle => "إدارة حسابات المدير";
+
         protected override string EmptyText
         {
             get { return "لا يوجد حسابات مديرين"; }
@@ -457,6 +459,8 @@ namespace Tawsela.iOS.Screens
 
         protected override bool AndroidHeader => true;
 
+        protected override string PageTitle => "إدارة الإعلانات";
+
         protected override string EmptyText
         {
             get { return "لا توجد إعلانات بعد"; }
@@ -783,6 +787,8 @@ namespace Tawsela.iOS.Screens
         public RestaurantsAdminViewController() : base("المطاعم والمحلات") { }
 
         protected override bool AndroidHeader => true;
+
+        protected override string PageTitle => "المطاعم والمحلات";
 
         protected override string EmptyText
         {

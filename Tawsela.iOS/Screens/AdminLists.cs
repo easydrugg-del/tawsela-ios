@@ -112,6 +112,8 @@ namespace Tawsela.iOS.Screens
 
         protected override bool AndroidHeader => true;
 
+        protected override string PageTitle => "المناطق المسجلة";
+
         protected override string EmptyText
         {
             get { return "لا توجد مناطق مسجلة"; }
@@ -219,6 +221,8 @@ namespace Tawsela.iOS.Screens
 
         protected override bool AndroidHeader => true;
 
+        protected override string PageTitle => "الشوارع المسجلة";
+
         protected override string EmptyText
         {
             get { return "لا توجد شوارع مسجلة"; }
@@ -322,6 +326,8 @@ namespace Tawsela.iOS.Screens
         public CouponsAdminViewController() : base("إدارة أكواد الخصم") { }
 
         protected override bool AndroidHeader => true;
+
+        protected override string PageTitle => "إدارة أكواد الخصم";
 
         protected override string EmptyText
         {
@@ -489,6 +495,8 @@ namespace Tawsela.iOS.Screens
 
         protected override bool AndroidHeader => true;
 
+        protected override string PageTitle => "بيانات زر الطوارئ";
+
         protected override string EmptyText
         {
             get { return "لا توجد حالات مسجلة"; }
@@ -566,6 +574,8 @@ namespace Tawsela.iOS.Screens
         public EmergenciesAdminViewController() : base("تفاصيل الطوارئ") { }
 
         protected override bool AndroidHeader => true;
+
+        protected override string PageTitle => "تفاصيل الطوارئ";
 
         protected override string EmptyText
         {

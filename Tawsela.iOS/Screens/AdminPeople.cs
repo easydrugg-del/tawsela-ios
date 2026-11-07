@@ -21,6 +21,8 @@ namespace Tawsela.iOS.Screens
 
         protected override bool AndroidHeader => true;
 
+        protected override string PageTitle => "إدارة السائقين";
+
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
@@ -136,6 +138,8 @@ namespace Tawsela.iOS.Screens
         public CustomersAdminViewController() : base("إدارة العملاء") { }
 
         protected override bool AndroidHeader => true;
+
+        protected override string PageTitle => "إدارة العملاء";
 
         public override void ViewDidLoad()
         {
@@ -257,6 +261,8 @@ namespace Tawsela.iOS.Screens
 
         protected override bool AndroidHeader => true;
 
+        protected override string PageTitle => "العملاء المحذوفون";
+
         public override void ViewDidLoad()
         {
             // نفس حماية أندرويد: الشاشة للأدمن المميّز فقط
@@ -304,6 +310,8 @@ namespace Tawsela.iOS.Screens
         public DocsAdminViewController() : base("مراجعة وثائق السائقين") { }
 
         protected override bool AndroidHeader => true;
+
+        protected override string PageTitle => "مراجعة وثائق السائقين";
 
         public override void ViewDidLoad()
         {
@@ -463,6 +471,8 @@ namespace Tawsela.iOS.Screens
 
         protected override bool AndroidHeader => true;
 
+        protected override string PageTitle => "إدارة الشكاوى";
+
         protected override string EmptyText
         {
             get { return "لا توجد شكاوى"; }
@@ -516,6 +526,8 @@ namespace Tawsela.iOS.Screens
         public SubscriptionsAdminViewController() : base("إدارة الاشتراكات") { }
 
         protected override bool AndroidHeader => true;
+
+        protected override string PageTitle => "إدارة الاشتراكات";
 
         protected override string EmptyText
         {
@@ -709,6 +721,8 @@ namespace Tawsela.iOS.Screens
         public TopUpsAdminViewController() : base("طلبات شحن العملاء") { }
 
         protected override bool AndroidHeader => true;
+
+        protected override string PageTitle => "طلبات شحن العملاء";
 
         public override void ViewDidLoad()
         {
