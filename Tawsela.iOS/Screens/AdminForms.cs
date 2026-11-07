@@ -16,6 +16,8 @@ namespace Tawsela.iOS.Screens
     {
         public BlockedDriversViewController() : base("السائقون المحظورون") { }
 
+        protected override bool AndroidHeader => true;
+
         protected override string EmptyText
         {
             get { return "لا يوجد سائقون محظورون"; }
@@ -63,6 +65,8 @@ namespace Tawsela.iOS.Screens
         private bool _showNight;
 
         public ServiceAdminViewController() : base("إدارة أنواع الخدمة") { }
+
+        protected override bool AndroidHeader => true;
 
         protected override string EmptyText
         {

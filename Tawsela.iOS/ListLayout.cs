@@ -148,6 +148,66 @@ namespace Tawsela.iOS
             get { return ""; }
         }
 
+        /// <summary>شكل أندرويد: عنوان برتقالي أعلى الشاشة بدون شريط تنقل.</summary>
+        protected virtual bool AndroidHeader
+        {
+            get { return false; }
+        }
+
+        public override bool ShowNavigationBar
+        {
+            get { return !AndroidHeader; }
+        }
+
+        /// <summary>صف إدارة بشكل أندرويد: أبيض بدون كروت، اسم برتقالي + تفاصيل رمادية + الحالة يسارًا.</summary>
+        protected UIView AdminRow(string title, string subtitle, string status = null, UIColor statusColor = null)
+        {
+            var row = new UIView
+            {
+                BackgroundColor = Theme.White,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+
+            var t = MakeLabel(title ?? "", 15f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
+            var s = MakeLabel(subtitle ?? "", 13f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
+            s.Lines = 0;
+            row.AddSubview(t);
+            row.AddSubview(s);
+
+            UILabel st = null;
+            if (!string.IsNullOrEmpty(status))
+            {
+                st = MakeLabel(status, 12f, statusColor ?? Theme.Gray, UIFontWeight.Bold, UITextAlignment.Left);
+                row.AddSubview(st);
+            }
+
+            var list = new List<NSLayoutConstraint>
+            {
+                NSLayoutConstraint.Create(t, NSLayoutAttribute.Top, NSLayoutRelation.Equal, row, NSLayoutAttribute.Top, 1, 12),
+                NSLayoutConstraint.Create(s, NSLayoutAttribute.Top, NSLayoutRelation.Equal, t, NSLayoutAttribute.Bottom, 1, 2),
+                NSLayoutConstraint.Create(s, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, row, NSLayoutAttribute.Bottom, 1, -12),
+            };
+
+            if (st != null)
+            {
+                list.Add(NSLayoutConstraint.Create(st, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, row, NSLayoutAttribute.CenterY, 1, 0));
+                list.Add(NSLayoutConstraint.Create(st, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, row, NSLayoutAttribute.Leading, 1, 12));
+                list.Add(NSLayoutConstraint.Create(t, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, st, NSLayoutAttribute.Trailing, 1, 10));
+                list.Add(NSLayoutConstraint.Create(s, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, t, NSLayoutAttribute.Leading, 1, 0));
+            }
+            else
+            {
+                list.Add(NSLayoutConstraint.Create(t, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, row, NSLayoutAttribute.Leading, 1, 12));
+                list.Add(NSLayoutConstraint.Create(s, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, row, NSLayoutAttribute.Leading, 1, 12));
+            }
+
+            list.Add(NSLayoutConstraint.Create(t, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, row, NSLayoutAttribute.Trailing, 1, -12));
+            list.Add(NSLayoutConstraint.Create(s, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, row, NSLayoutAttribute.Trailing, 1, -12));
+
+            row.AddConstraints(list.ToArray());
+            return row;
+        }
+
         /// <summary>جلب البيانات — يُنفَّذ على خيط خلفي.</summary>
         protected abstract List<T> Fetch();
 
@@ -159,6 +219,40 @@ namespace Tawsela.iOS
             base.ViewDidLoad();
             List = new ListLayout(View);
             List.Refresh.ValueChanged += (s, e) => Reload();
+
+            if (AndroidHeader)
+            {
+                // عنوان برتقالي أعلى الشاشة زي أندرويد + زر رجوع صغير
+                var title = MakeLabel(Title ?? "", 20f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
+                View.AddSubview(title);
+                View.AddConstraints(new[]
+                {
+                    NSLayoutConstraint.Create(title, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 0),
+                    NSLayoutConstraint.Create(title, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 56),
+                    NSLayoutConstraint.Create(title, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, -16),
+                    NSLayoutConstraint.Create(title, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 56),
+                });
+
+                var back = new UIButton(UIButtonType.System) { TranslatesAutoresizingMaskIntoConstraints = false };
+                back.SetTitle("‹", UIControlState.Normal);
+                back.SetTitleColor(Theme.Primary, UIControlState.Normal);
+                back.TitleLabel.Font = Theme.FontBold(30);
+                back.TouchUpInside += (s, e) =>
+                {
+                    if (NavigationController != null) NavigationController.PopViewController(true);
+                };
+                View.AddSubview(back);
+                View.AddConstraints(new[]
+                {
+                    NSLayoutConstraint.Create(back, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, title, NSLayoutAttribute.CenterY, 1, 0),
+                    NSLayoutConstraint.Create(back, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 8),
+                    NSLayoutConstraint.Create(back, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 40),
+                    NSLayoutConstraint.Create(back, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 40),
+                });
+
+                List.TopInset = 56;
+            }
+
             Reload();
         }
 
@@ -211,6 +305,39 @@ namespace Tawsela.iOS
             return field;
         }
 
+        /// <summary>تحويل بطاقة InfoRow إلى صف أندرويد: أبيض بدون حدود، الاسم برتقالي والتفاصيل رمادية.</summary>
+        private static void FlattenRow(UIView row)
+        {
+            row.BackgroundColor = Theme.White;
+            row.Layer.CornerRadius = 0f;
+            row.Layer.BorderWidth = 0f;
+            row.Layer.MasksToBounds = false;
+
+            var labels = new List<UILabel>();
+            Collect(row, labels);
+
+            if (labels.Count > 0)
+            {
+                labels[0].Font = Theme.FontBold(15);
+                labels[0].TextColor = Theme.Primary;
+            }
+            if (labels.Count > 1)
+            {
+                labels[1].Font = Theme.Font(13);
+                labels[1].TextColor = Theme.TextSecondary;
+            }
+        }
+
+        private static void Collect(UIView view, List<UILabel> acc)
+        {
+            foreach (var sub in view.Subviews)
+            {
+                var l = sub as UILabel;
+                if (l != null) acc.Add(l);
+                else Collect(sub, acc);
+            }
+        }
+
         protected void Reload()
         {            Ui.Run(
                 () =>
@@ -226,7 +353,11 @@ namespace Tawsela.iOS
                                 try
                                 {
                                     var row = BuildRow(item);
-                                    if (row != null) rows.Add(row);
+                                    if (row != null)
+                                    {
+                                        if (AndroidHeader) FlattenRow(row);
+                                        rows.Add(row);
+                                    }
                                 }
                                 catch (Exception ex)
                                 {

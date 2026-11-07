@@ -16,6 +16,8 @@ namespace Tawsela.iOS.Screens
     {
         public SupervisorAdminViewController() : base("مشرفو التكاتك") { }
 
+        protected override bool AndroidHeader => true;
+
         protected override string EmptyText
         {
             get { return "لا يوجد مشرفون بعد"; }
@@ -337,6 +339,8 @@ namespace Tawsela.iOS.Screens
     public class RestaurantDeliveryAdminViewController : ListViewController<Dictionary<string, object>>
     {
         public RestaurantDeliveryAdminViewController() : base("🏪 توصيلات المطاعم") { }
+
+        protected override bool AndroidHeader => true;
 
         protected override string EmptyText
         {

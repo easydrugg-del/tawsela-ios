@@ -57,6 +57,17 @@ namespace Tawsela.iOS.Screens
             header.AddSubview(_stats);
             header.AddSubview(coupons);
 
+            // زر رجوع (أندرويد يستخدم زر الرجوع بالنظام)
+            var back = new UIButton(UIButtonType.System) { TranslatesAutoresizingMaskIntoConstraints = false };
+            back.SetTitle("‹", UIControlState.Normal);
+            back.SetTitleColor(UIColor.White, UIControlState.Normal);
+            back.TitleLabel.Font = Theme.FontBold(30);
+            back.TouchUpInside += (s, e) =>
+            {
+                if (NavigationController != null) NavigationController.PopViewController(true);
+            };
+            header.AddSubview(back);
+
             View.AddConstraints(new[]
             {
                 NSLayoutConstraint.Create(header, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View, NSLayoutAttribute.Top, 1, 0),
@@ -76,6 +87,11 @@ namespace Tawsela.iOS.Screens
                 NSLayoutConstraint.Create(coupons, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, header, NSLayoutAttribute.Leading, 1, 16),
                 NSLayoutConstraint.Create(coupons, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, header, NSLayoutAttribute.Trailing, 1, -16),
                 NSLayoutConstraint.Create(coupons, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 48),
+
+                NSLayoutConstraint.Create(back, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, title, NSLayoutAttribute.CenterY, 1, 0),
+                NSLayoutConstraint.Create(back, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, header, NSLayoutAttribute.Leading, 1, 8),
+                NSLayoutConstraint.Create(back, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 40),
+                NSLayoutConstraint.Create(back, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 40),
             });
 
             // ===== المحتوى =====

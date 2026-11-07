@@ -19,6 +19,8 @@ namespace Tawsela.iOS.Screens
 
         public DriversAdminViewController() : base("إدارة السائقين") { }
 
+        protected override bool AndroidHeader => true;
+
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
@@ -132,6 +134,8 @@ namespace Tawsela.iOS.Screens
     public class CustomersAdminViewController : ListViewController<Customer>
     {
         public CustomersAdminViewController() : base("إدارة العملاء") { }
+
+        protected override bool AndroidHeader => true;
 
         public override void ViewDidLoad()
         {
@@ -251,6 +255,8 @@ namespace Tawsela.iOS.Screens
     {
         public DeletedCustomersAdminViewController() : base("العملاء المحذوفون") { }
 
+        protected override bool AndroidHeader => true;
+
         public override void ViewDidLoad()
         {
             // نفس حماية أندرويد: الشاشة للأدمن المميّز فقط
@@ -296,6 +302,8 @@ namespace Tawsela.iOS.Screens
         private UITextField _search;
 
         public DocsAdminViewController() : base("مراجعة وثائق السائقين") { }
+
+        protected override bool AndroidHeader => true;
 
         public override void ViewDidLoad()
         {
@@ -453,6 +461,8 @@ namespace Tawsela.iOS.Screens
     {
         public ComplaintsAdminViewController() : base("إدارة الشكاوى") { }
 
+        protected override bool AndroidHeader => true;
+
         protected override string EmptyText
         {
             get { return "لا توجد شكاوى"; }
@@ -504,6 +514,8 @@ namespace Tawsela.iOS.Screens
         private List<Subscription> _rows;
 
         public SubscriptionsAdminViewController() : base("إدارة الاشتراكات") { }
+
+        protected override bool AndroidHeader => true;
 
         protected override string EmptyText
         {
@@ -695,6 +707,8 @@ namespace Tawsela.iOS.Screens
     public class TopUpsAdminViewController : ListViewController<Dictionary<string, object>>
     {
         public TopUpsAdminViewController() : base("طلبات شحن العملاء") { }
+
+        protected override bool AndroidHeader => true;
 
         public override void ViewDidLoad()
         {
