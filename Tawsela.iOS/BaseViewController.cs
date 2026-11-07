@@ -20,8 +20,7 @@ namespace Tawsela.iOS
 
         protected BaseViewController()
         {
-            // التطبيق عربي: الاتجاه ثابت لكل شاشة
-            View.SemanticContentAttribute = UISemanticContentAttribute.ForceRightToLeft;
+            // ملاحظة: لا تلمس View هنا — قد يرمي NRE قبل اكتمال التهيئة
         }
 
         protected BaseViewController(string title) : this()
@@ -33,6 +32,8 @@ namespace Tawsela.iOS
         {
             base.ViewDidLoad();
             View.BackgroundColor = Theme.Surface;
+            // التطبيق عربي: الاتجاه ثابت لكل شاشة
+            View.SemanticContentAttribute = UISemanticContentAttribute.ForceRightToLeft;
             EdgesForExtendedLayout = UIRectEdge.None;
             ExtendedLayoutIncludesOpaqueBars = false;
             if (NavigationController != null)
