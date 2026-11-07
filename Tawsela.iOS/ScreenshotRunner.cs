@@ -210,7 +210,7 @@ namespace Tawsela.iOS
             }
             catch (Exception ex)
             {
-                SafeWrite(Path.Combine(dir, "shot-errors.txt"), name + ": " + ex.Message + "\n");
+                SafeWrite(Path.Combine(dir, "shot-errors.txt"), name + ": " + ex.ToString());
             }
         }
 
