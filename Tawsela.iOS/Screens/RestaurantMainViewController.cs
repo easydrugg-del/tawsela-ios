@@ -41,7 +41,7 @@ namespace Tawsela.iOS.Screens
         private void BuildUi()
         {
             // ===== الترويسة: اسم المطعم + حالته (بديل bg_header) =====
-            var header = Shapes.Header(120f);
+            var header = Shapes.Header(150f);
             header.TranslatesAutoresizingMaskIntoConstraints = false;
             View.AddSubview(header);
 
@@ -58,9 +58,9 @@ namespace Tawsela.iOS.Screens
                 NSLayoutConstraint.Create(header, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View, NSLayoutAttribute.Top, 1, 0),
                 NSLayoutConstraint.Create(header, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 0),
                 NSLayoutConstraint.Create(header, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, 0),
-                NSLayoutConstraint.Create(header, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 120),
+                NSLayoutConstraint.Create(header, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 150),
 
-                NSLayoutConstraint.Create(title, NSLayoutAttribute.Top, NSLayoutRelation.Equal, header.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 14),
+                NSLayoutConstraint.Create(title, NSLayoutAttribute.Top, NSLayoutRelation.Equal, header, NSLayoutAttribute.Top, 1, 30),
                 NSLayoutConstraint.Create(title, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, header, NSLayoutAttribute.Leading, 1, 20),
                 NSLayoutConstraint.Create(title, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, header, NSLayoutAttribute.Trailing, 1, -20),
 
@@ -109,7 +109,13 @@ namespace Tawsela.iOS.Screens
             content.AddArrangedSubview(PadTab(sections, 16, 8));
 
             // صف أول: طلباتي (أزرق) / الإشعارات (برتقالي)
-            var row1 = new UIStackView { Axis = UILayoutConstraintAxis.Horizontal, Spacing = 12, TranslatesAutoresizingMaskIntoConstraints = false };
+            var row1 = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Horizontal,
+                Spacing = 12,
+                Distribution = UIStackViewDistribution.FillEqually,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
             var myOrders = BigButton("📋 طلباتي", Theme.Blue, 92f);
             myOrders.TouchUpInside += (s, e) => Push(new RestaurantDeliveryMyOrdersViewController());
             var notifs = BigButton("🔔 الإشعارات", Theme.Primary, 92f);
@@ -119,7 +125,13 @@ namespace Tawsela.iOS.Screens
             content.AddArrangedSubview(row1);
 
             // صف ثانٍ: تحديث (أخضر) / خروج (أحمر)
-            var row2 = new UIStackView { Axis = UILayoutConstraintAxis.Horizontal, Spacing = 12, TranslatesAutoresizingMaskIntoConstraints = false };
+            var row2 = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Horizontal,
+                Spacing = 12,
+                Distribution = UIStackViewDistribution.FillEqually,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
             var refresh = BigButton("🔄 تحديث", Theme.Green, 92f);
             refresh.TouchUpInside += (s, e) => LoadRestaurant();
             var logout = BigButton("🚪 خروج", Theme.Red, 92f);
