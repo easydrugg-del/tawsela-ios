@@ -342,157 +342,436 @@ namespace Tawsela.iOS.Screens
     }
 
     /// <summary>
-    /// بديل Activities/RestaurantDeliveryAdminActivity.cs — مناطق توصيل المطاعم وأسعارها.
+    /// بديل Activities/RestaurantDeliveryAdminActivity.cs — نفس شاشة أندرويد:
+    /// «＋ إضافة منطقة تسعير» + «مناطق التوصيل وأسعارها» (الاسم — السعر ج.م + تعديل)
+    /// ثم «＋ إضافة مطعم/محل» + «المطاعم والمحلات» (الاسم — المنطقة (حساب/بدون حساب) + حساب + تعديل).
+    /// هذه التسعيرة خاصة بتوصيل المطاعم والمحلات، منفصلة تمامًا عن مناطق العملاء (Api.Areas).
     /// </summary>
-    public class RestaurantDeliveryAdminViewController : ListViewController<Dictionary<string, object>>
+    public class RestaurantDeliveryAdminViewController : BaseViewController
     {
+        private readonly List<Dictionary<string, object>> _areas = new List<Dictionary<string, object>>();
+        private readonly List<Dictionary<string, object>> _restaurants = new List<Dictionary<string, object>>();
+
+        private UIStackView _areasBox;
+        private UIStackView _restaurantsBox;
+
         public RestaurantDeliveryAdminViewController() : base("🏪 توصيلات المطاعم") { }
 
-        protected override bool AndroidHeader => true;
-
-        protected override string PageTitle => "🏪 توصيلات المطاعم";
-
-        protected override string EmptyText
+        /// <summary>شكل أندرويد: شريط عنوان مسطح فوق المحتوى.</summary>
+        protected override bool FlatHeader
         {
-            get { return "لا توجد مناطق توصيل"; }
-        }
-
-        protected override string Subtitle
-        {
-            get { return "مناطق التوصيل وأسعارها · المطاعم والمحلات"; }
-        }
-
-        protected override List<Dictionary<string, object>> Fetch()
-        {
-            return Api.AllDeliveryAreas();
-        }
-
-        protected override UIView BuildRow(Dictionary<string, object> a)
-        {
-            var id = Row.Int(a, "Id");
-            var name = Row.Str(a, "Name");
-            var city = Row.Str(a, "City");
-            var price = Row.Num(a, "Price");
-            var active = Row.Bool(a, "Active") || Row.Bool(a, "IsActive");
-            var lat = Row.Dbl(a, "Lat");
-            var lng = Row.Dbl(a, "Lng");
-
-            var row = Controls.InfoRow(name + (active ? "" : " (موقوفة)"),
-                city + " · " + price.ToString("0.00") + " ج.م");
-
-            row.UserInteractionEnabled = true;
-            row.AddGestureRecognizer(new UITapGestureRecognizer(() =>
-            {
-                Ui.Choose(name, new[] { "تعديل السعر", "تحديد الموقع", active ? "إيقاف" : "تفعيل" }, index =>
-                {
-                    if (index == 0)
-                    {
-                        Ui.Prompt("سعر التوصيل", "السعر بالجنيه", price.ToString("0.00"), "0", text =>
-                        {
-                            decimal newPrice;
-                            if (!decimal.TryParse(text, out newPrice) || newPrice < 0)
-                            {
-                                Ui.Toast("سعر غير صحيح");
-                                return;
-                            }
-                            Run(() => Api.SaveDeliveryArea(id, name, city, Row.Str(a, "Governorate"),
-                                newPrice, lat, lng, active), "تم التحديث");
-                        }, UIKeyboardType.DecimalPad);
-                    }
-                    else if (index == 1)
-                    {
-                        Push(MapViewController.Pick(lat, lng, (plat, plng, address) =>
-                        {
-                            Run(() => Api.SaveDeliveryArea(id, name, city, Row.Str(a, "Governorate"),
-                                price, plat, plng, active), "تم تحديث الموقع");
-                        }));
-                    }
-                    else
-                    {
-                        Run(() => Api.SaveDeliveryArea(id, name, city, Row.Str(a, "Governorate"),
-                            price, lat, lng, !active), "تم التحديث");
-                    }
-                });
-            }));
-
-            return row;
+            get { return true; }
         }
 
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
-
-            var add = Controls.PrimaryButton("إضافة منطقة");
-            add.TouchUpInside += (s, e) => Add();
-            View.AddSubview(add);
-            View.AddConstraints(new[]
-            {
-                NSLayoutConstraint.Create(add, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Leading, 1, 16),
-                NSLayoutConstraint.Create(add, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Trailing, 1, -16),
-                NSLayoutConstraint.Create(add, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Bottom, 1, -12),
-            });
-
-            // إدارة المطاعم والمحلات (بديل تبويب «＋ إضافة مطعم/محل»)
-            var restaurants = Controls.OutlineButton("＋ إضافة مطعم/محل");
-            restaurants.TouchUpInside += (s, e) => Push(new RestaurantsAdminViewController());
-            View.AddSubview(restaurants);
-            View.AddConstraints(new[]
-            {
-                NSLayoutConstraint.Create(restaurants, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Leading, 1, 16),
-                NSLayoutConstraint.Create(restaurants, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Trailing, 1, -16),
-                NSLayoutConstraint.Create(restaurants, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, add, NSLayoutAttribute.Top, 1, -8),
-            });
-
-            List.Scroll.ContentInset = new UIEdgeInsets(0, 0, 136, 0);
+            BuildUi();
+            Load();
         }
 
-        private void Add()
+        /* ---------- بناء الشاشة ---------- */
+
+        private void BuildUi()
         {
-            var govs = EgyptPlaces.Governorates();
-            Ui.Choose("المحافظة", govs, gi =>
+            var scroll = new UIScrollView
             {
-                var gov = govs[gi];
-                var cities = EgyptPlaces.CitiesOf(gov);
+                TranslatesAutoresizingMaskIntoConstraints = false,
+                AlwaysBounceVertical = true
+            };
+            View.AddSubview(scroll);
 
-                Ui.Choose("المدينة", cities, ci =>
+            var content = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 10,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            scroll.AddSubview(content);
+
+            View.AddConstraints(new[]
+            {
+                NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Top, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Top, 1, 0),
+                NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, View.SafeAreaLayoutGuide, NSLayoutAttribute.Bottom, 1, 0),
+                NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, View, NSLayoutAttribute.Leading, 1, 0),
+                NSLayoutConstraint.Create(scroll, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, View, NSLayoutAttribute.Trailing, 1, 0),
+
+                NSLayoutConstraint.Create(content, NSLayoutAttribute.Top, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Top, 1, 10),
+                NSLayoutConstraint.Create(content, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Bottom, 1, -20),
+                NSLayoutConstraint.Create(content, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Leading, 1, 14),
+                NSLayoutConstraint.Create(content, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Trailing, 1, -14),
+                NSLayoutConstraint.Create(content, NSLayoutAttribute.Width, NSLayoutRelation.Equal, scroll, NSLayoutAttribute.Width, 1, -28),
+            });
+
+            // ＋ إضافة منطقة تسعير
+            var addArea = Controls.PrimaryButton("＋ إضافة منطقة تسعير", 46f);
+            addArea.TouchUpInside += (s, e) => AddArea();
+            content.AddArrangedSubview(addArea);
+
+            content.AddArrangedSubview(Controls.SectionTitle("مناطق التوصيل وأسعارها"));
+
+            _areasBox = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 8,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            content.AddArrangedSubview(_areasBox);
+
+            // ＋ إضافة مطعم/محل
+            var addRestaurant = Controls.OutlineButton("＋ إضافة مطعم/محل", null, 44f);
+            addRestaurant.TouchUpInside += (s, e) => AddRestaurant();
+            content.AddArrangedSubview(addRestaurant);
+
+            content.AddArrangedSubview(Controls.SectionTitle("المطاعم والمحلات"));
+
+            _restaurantsBox = new UIStackView
+            {
+                Axis = UILayoutConstraintAxis.Vertical,
+                Spacing = 8,
+                TranslatesAutoresizingMaskIntoConstraints = false
+            };
+            content.AddArrangedSubview(_restaurantsBox);
+        }
+
+        /* ---------- تحميل ---------- */
+
+        private void Load()
+        {
+            var progress = Ui.ShowProgress("جارٍ التحميل…");
+            Ui.Run(() =>
+            {
+                var areas = Api.AllDeliveryAreas();
+                var restaurants = Api.AllRestaurants();
+                Ui.BeginOnMain(() =>
                 {
-                    var city = cities[ci];
+                    progress.Dismiss();
+                    _areas.Clear();
+                    _areas.AddRange(areas);
+                    _restaurants.Clear();
+                    _restaurants.AddRange(restaurants);
+                    RenderAreas();
+                    RenderRestaurants();
+                });
+            }, null, ex =>
+            {
+                progress.Dismiss();
+                Ui.Toast("تعذر التحميل: " + ex.Message);
+            });
+        }
 
-                    Ui.Prompt("منطقة جديدة", "الاسم", "", "الاسم", name =>
+        /* ---------- مناطق التوصيل وأسعارها ---------- */
+
+        private void RenderAreas()
+        {
+            Clear(_areasBox);
+
+            if (_areas.Count == 0)
+            {
+                _areasBox.AddArrangedSubview(MakeLabel("لا توجد مناطق بعد", 13f, Theme.TextSecondary,
+                    UIFontWeight.Regular, UITextAlignment.Right));
+                return;
+            }
+
+            foreach (var a in _areas)
+            {
+                var name = Row.Str(a, "Name");
+                var price = Row.Num(a, "Price");
+
+                var card = Controls.Card();
+                var label = MakeLabel(name + " — " + price.ToString("0.##") + " ج.م", 15f,
+                    Theme.TextPrimary, UIFontWeight.Bold, UITextAlignment.Right);
+                label.Lines = 0;
+
+                var edit = SmallButton("تعديل", () => EditArea(a));
+
+                card.AddSubview(label);
+                card.AddSubview(edit);
+                card.AddConstraints(new[]
+                {
+                    NSLayoutConstraint.Create(label, NSLayoutAttribute.Top, NSLayoutRelation.Equal, card, NSLayoutAttribute.Top, 1, 10),
+                    NSLayoutConstraint.Create(label, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, card, NSLayoutAttribute.Bottom, 1, -10),
+                    NSLayoutConstraint.Create(label, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, card, NSLayoutAttribute.Leading, 1, 12),
+                    NSLayoutConstraint.Create(label, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, edit, NSLayoutAttribute.Leading, 1, -8),
+
+                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, card, NSLayoutAttribute.CenterY, 1, 0),
+                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -10),
+                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 62),
+                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 32),
+                });
+
+                _areasBox.AddArrangedSubview(card);
+            }
+        }
+
+        /// <summary>إضافة منطقة تسعير (نفس حقول أندرويد: الاسم + المدينة + السعر الثابت).</summary>
+        private void AddArea()
+        {
+            Ui.Prompt("إضافة منطقة", "اسم المنطقة", "", "اسم المنطقة", name =>
+            {
+                if (string.IsNullOrWhiteSpace(name)) { Ui.Toast("أدخل اسم المنطقة"); return; }
+
+                Ui.Prompt("إضافة منطقة", "المدينة", "", "المدينة", city =>
+                {
+                    Ui.Prompt("إضافة منطقة", "السعر الثابت", "", "0", priceText =>
                     {
-                        Ui.Prompt("سعر التوصيل", "السعر بالجنيه", "", "0", priceText =>
+                        decimal price;
+                        if (!decimal.TryParse(priceText, out price) || price < 0)
                         {
-                            decimal price;
-                            if (!decimal.TryParse(priceText, out price) || price < 0)
+                            Ui.Toast("أدخل سعراً صحيحاً");
+                            return;
+                        }
+
+                        Save(() => Api.SaveDeliveryArea(0, name.Trim(), (city ?? "").Trim(), "", price, 0, 0, true),
+                            "تم حفظ المنطقة");
+                    }, UIKeyboardType.DecimalPad);
+                });
+            });
+        }
+
+        /// <summary>تعديل منطقة: الاسم + المدينة + السعر (مع الحفاظ على الموقع الحالي).</summary>
+        private void EditArea(Dictionary<string, object> a)
+        {
+            var id = Row.Int(a, "Id");
+            var name = Row.Str(a, "Name");
+            var city = Row.Str(a, "City");
+            var governorate = Row.Str(a, "Governorate");
+            var price = Row.Num(a, "Price");
+            var lat = Row.Dbl(a, "Lat");
+            var lng = Row.Dbl(a, "Lng");
+            var active = Row.Bool(a, "Active") || Row.Bool(a, "IsActive");
+
+            Ui.Prompt("تعديل منطقة", "اسم المنطقة", name, "اسم المنطقة", newName =>
+            {
+                if (string.IsNullOrWhiteSpace(newName)) { Ui.Toast("أدخل اسم المنطقة"); return; }
+
+                Ui.Prompt("تعديل منطقة", "المدينة", city, "المدينة", newCity =>
+                {
+                    Ui.Prompt("تعديل منطقة", "السعر الثابت", price.ToString("0.##"), "0", priceText =>
+                    {
+                        decimal newPrice;
+                        if (!decimal.TryParse(priceText, out newPrice) || newPrice < 0)
+                        {
+                            Ui.Toast("أدخل سعراً صحيحاً");
+                            return;
+                        }
+
+                        Save(() => Api.SaveDeliveryArea(id, newName.Trim(), (newCity ?? "").Trim(),
+                            governorate, newPrice, lat, lng, active), "تم حفظ المنطقة");
+                    }, UIKeyboardType.DecimalPad);
+                });
+            });
+        }
+
+        /* ---------- المطاعم والمحلات ---------- */
+
+        private void RenderRestaurants()
+        {
+            Clear(_restaurantsBox);
+
+            if (_restaurants.Count == 0)
+            {
+                _restaurantsBox.AddArrangedSubview(MakeLabel("لا توجد مطاعم بعد", 13f, Theme.TextSecondary,
+                    UIFontWeight.Regular, UITextAlignment.Right));
+                return;
+            }
+
+            foreach (var r in _restaurants)
+            {
+                var name = Row.Str(r, "Name");
+                var areaName = Row.Str(r, "AreaName");
+                var owner = Row.Int(r, "OwnerUserId");
+
+                var text = name + " — " + (string.IsNullOrEmpty(areaName) ? "بدون منطقة" : areaName) +
+                           (owner > 0 ? "  (حساب: " + owner + ")" : "  (بدون حساب)");
+
+                var card = Controls.Card();
+                var label = MakeLabel(text, 14f, Theme.TextPrimary, UIFontWeight.Bold, UITextAlignment.Right);
+                label.Lines = 0;
+
+                var account = SmallButton("حساب", () => ShowAccountDialog(r));
+                var edit = SmallButton("تعديل", () => EditRestaurant(r));
+
+                card.AddSubview(label);
+                card.AddSubview(account);
+                card.AddSubview(edit);
+                card.AddConstraints(new[]
+                {
+                    NSLayoutConstraint.Create(label, NSLayoutAttribute.Top, NSLayoutRelation.Equal, card, NSLayoutAttribute.Top, 1, 10),
+                    NSLayoutConstraint.Create(label, NSLayoutAttribute.Bottom, NSLayoutRelation.Equal, card, NSLayoutAttribute.Bottom, 1, -10),
+                    NSLayoutConstraint.Create(label, NSLayoutAttribute.Leading, NSLayoutRelation.Equal, card, NSLayoutAttribute.Leading, 1, 12),
+                    NSLayoutConstraint.Create(label, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, account, NSLayoutAttribute.Leading, 1, -8),
+
+                    NSLayoutConstraint.Create(account, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, card, NSLayoutAttribute.CenterY, 1, 0),
+                    NSLayoutConstraint.Create(account, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 58),
+                    NSLayoutConstraint.Create(account, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 32),
+                    NSLayoutConstraint.Create(account, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, edit, NSLayoutAttribute.Leading, 1, -6),
+
+                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, card, NSLayoutAttribute.CenterY, 1, 0),
+                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 58),
+                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 32),
+                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -10),
+                });
+
+                _restaurantsBox.AddArrangedSubview(card);
+            }
+        }
+
+        private void AddRestaurant()
+        {
+            Ui.Prompt("إضافة مطعم", "اسم المطعم/المحل", "", "الاسم", name =>
+            {
+                if (string.IsNullOrWhiteSpace(name)) { Ui.Toast("أدخل اسم المطعم"); return; }
+
+                Ui.Prompt("إضافة مطعم", "رقم الهاتف", "", "01xxxxxxxxx", phone =>
+                {
+                    Ui.Prompt("إضافة مطعم", "العنوان", "", "العنوان", address =>
+                    {
+                        Ui.Prompt("إضافة مطعم", "رقم حساب المطعم (OwnerUserId)", "", "0", ownerText =>
+                        {
+                            int owner;
+                            int.TryParse((ownerText ?? "").Trim(), out owner);
+
+                            PickArea(0, areaId =>
                             {
-                                Ui.Toast("سعر غير صحيح");
+                                Save(() => Api.SaveRestaurant(0, name.Trim(), owner, (phone ?? "").Trim(),
+                                    (address ?? "").Trim(), areaId, 0, 0, true), "تم حفظ المطعم");
+                            });
+                        }, UIKeyboardType.NumberPad);
+                    });
+                }, UIKeyboardType.PhonePad);
+            });
+        }
+
+        private void EditRestaurant(Dictionary<string, object> r)
+        {
+            var id = Row.Int(r, "Id");
+            var name = Row.Str(r, "Name");
+            var phone = Row.Str(r, "Phone");
+            var address = Row.Str(r, "Address");
+            var owner = Row.Int(r, "OwnerUserId");
+            var areaId = Row.Int(r, "AreaId");
+            var lat = Row.Dbl(r, "Lat");
+            var lng = Row.Dbl(r, "Lng");
+            var active = Row.Bool(r, "IsActive") || !r.ContainsKey("IsActive");
+
+            Ui.Prompt("تعديل مطعم", "اسم المطعم/المحل", name, "الاسم", newName =>
+            {
+                Ui.Prompt("تعديل مطعم", "رقم الهاتف", phone, "01xxxxxxxxx", newPhone =>
+                {
+                    Ui.Prompt("تعديل مطعم", "العنوان", address, "العنوان", newAddress =>
+                    {
+                        Ui.Prompt("تعديل مطعم", "رقم حساب المطعم (OwnerUserId)",
+                            owner > 0 ? owner.ToString() : "", "0", ownerText =>
+                        {
+                            int newOwner;
+                            int.TryParse((ownerText ?? "").Trim(), out newOwner);
+
+                            PickArea(areaId, newAreaId =>
+                            {
+                                Save(() => Api.SaveRestaurant(id, newName.Trim(), newOwner,
+                                    (newPhone ?? "").Trim(), (newAddress ?? "").Trim(),
+                                    newAreaId, lat, lng, active), "تم حفظ المطعم");
+                            });
+                        }, UIKeyboardType.NumberPad);
+                    });
+                }, UIKeyboardType.PhonePad);
+            });
+        }
+
+        /// <summary>اختيار منطقة تسعير للمطعم (أول عنصر: بدون منطقة) — بديل Spinner في أندرويد.</summary>
+        private void PickArea(int currentId, Action<int> onPick)
+        {
+            var names = new List<string> { currentId == 0 ? "✓ بدون منطقة" : "بدون منطقة" };
+            var ids = new List<int> { 0 };
+
+            for (int i = 0; i < _areas.Count; i++)
+            {
+                var id = Row.Int(_areas[i], "Id");
+                names.Add(Row.Str(_areas[i], "Name") + " (" +
+                          Row.Num(_areas[i], "Price").ToString("0.##") + " ج.م)" +
+                          (id == currentId ? " ✓" : ""));
+                ids.Add(id);
+            }
+
+            Ui.Choose("منطقة التوصيل", names, index =>
+            {
+                if (onPick != null) onPick(ids[index]);
+            });
+        }
+
+        /// <summary>إنشاء حساب دخول للمطعم (بديل ShowAccountDialog في أندرويد).</summary>
+        private void ShowAccountDialog(Dictionary<string, object> r)
+        {
+            var id = Row.Int(r, "Id");
+            var name = Row.Str(r, "Name");
+            var phone = Row.Str(r, "Phone");
+
+            Ui.Prompt("حساب دخول المطعم", "اسم المستخدم", "", "restaurant", userName =>
+            {
+                if (string.IsNullOrWhiteSpace(userName)) { Ui.Toast("أكمل جميع الحقول"); return; }
+
+                Ui.Prompt("حساب دخول المطعم", "كلمة المرور", "", "••••••", password =>
+                {
+                    if ((password ?? "").Length < 6) { Ui.Toast("كلمة المرور 6 أحرف على الأقل"); return; }
+
+                    Ui.Prompt("حساب دخول المطعم", "اسم المطعم الظاهر", name, "الاسم", fullName =>
+                    {
+                        Ui.Prompt("حساب دخول المطعم", "رقم الهاتف", phone, "01xxxxxxxxx", accountPhone =>
+                        {
+                            if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(accountPhone))
+                            {
+                                Ui.Toast("أكمل جميع الحقول");
                                 return;
                             }
 
-                            Push(MapViewController.Pick(0, 0, (lat, lng, address) =>
-                            {
-                                Run(() => Api.SaveDeliveryArea(0, name, city, gov, price, lat, lng, true),
-                                    "تمت الإضافة");
-                            }));
-                        }, UIKeyboardType.DecimalPad);
+                            Save(() => Api.CreateRestaurantAccount(id, userName.Trim(), password,
+                                fullName.Trim(), accountPhone.Trim()), "تم إنشاء حساب المطعم");
+                        }, UIKeyboardType.PhonePad);
                     });
                 });
             });
         }
 
-        private void Run(Action action, string success)
+        /* ---------- أدوات ---------- */
+
+        private UIButton SmallButton(string title, Action onTap)
         {
-            var progress = Ui.ShowProgress("جارٍ التنفيذ…");
+            var b = new UIButton(UIButtonType.System) { TranslatesAutoresizingMaskIntoConstraints = false };
+            b.SetTitle(title, UIControlState.Normal);
+            b.SetTitleColor(Theme.Primary, UIControlState.Normal);
+            b.TitleLabel.Font = Theme.FontBold(14);
+            b.BackgroundColor = Theme.Surface;
+            b.Layer.CornerRadius = 8f;
+            b.Layer.BorderWidth = 1f;
+            b.Layer.BorderColor = Theme.CardStroke.CGColor;
+            b.TouchUpInside += (s, e) => { if (onTap != null) onTap(); };
+            return b;
+        }
+
+        private void Save(Action action, string success)
+        {
+            var progress = Ui.ShowProgress("جاري الحفظ...");
             Ui.Run(action, () =>
             {
                 progress.Dismiss();
                 Ui.Toast(success);
-                Reload();
+                Load();
             }, ex =>
             {
                 progress.Dismiss();
                 Ui.Toast(ex.Message);
             });
+        }
+
+        private static void Clear(UIStackView box)
+        {
+            if (box == null) return;
+            foreach (var v in box.ArrangedSubviews)
+            {
+                box.RemoveArrangedSubview(v);
+                v.RemoveFromSuperview();
+            }
         }
     }
 }

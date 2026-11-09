@@ -49,6 +49,10 @@ namespace Tawsela.iOS.Screens
             base.ViewDidLoad();
             BuildUi();
 
+            // مثل Spinner في أندرويد: أول منطقة تكون مختارة تلقائيًا؛
+            // وإعادة الطلب (إن وُجدت) تطابق منطقتها.
+            if (_area == null && _areas.Count > 0) SelectArea(_areas[0]);
+
             LoadRestaurant();
             ApplyRepeat();
         }

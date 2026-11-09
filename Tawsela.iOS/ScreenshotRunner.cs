@@ -162,6 +162,7 @@ namespace Tawsela.iOS
                 await Shot(dir, ok, "71-supervisor-earnings", () => new SupervisorEarningsViewController(null));
                 await Shot(dir, ok, "62-admin-ads", () => new AdsAdminViewController());
                 await Shot(dir, ok, "63-admin-restaurants", () => new RestaurantsAdminViewController());
+                await Shot(dir, ok, "72-admin-restaurant-delivery", () => new RestaurantDeliveryAdminViewController());
                 await Shot(dir, ok, "64-admin-services", () => new ServiceAdminViewController());
                 await Shot(dir, ok, "65-admin-supervisors", () => new SupervisorAdminViewController());
                 await Shot(dir, ok, "66-admin-emergencies", () => new EmergenciesAdminViewController());
