@@ -49,11 +49,24 @@ namespace Tawsela.iOS.Screens
             base.ViewDidLoad();
             BuildUi();
 
-            // منطقة التسعير مخفية — نختار أول منطقة تلقائيًا (تفضل في الذاكرة للاستخدام عند الإرسال)
-            if (_area == null && _areas.Count > 0) SelectArea(_areas[0]);
-
             LoadRestaurant();
             ApplyRepeat();
+        }
+
+        /// <summary>اختيار منطقة التسعير (بديل spnDeliveryArea في أندرويد).</summary>
+        private void PickPricingArea()
+        {
+            if (_areas.Count == 0)
+            {
+                Ui.Toast("لا توجد مناطق تسعير — راجع الإدارة");
+                return;
+            }
+
+            var names = new List<string>();
+            foreach (var a in _areas)
+                names.Add(Row.Str(a, "Name") + "  (" + Row.Num(a, "Price").ToString("0.##") + " ج.م)");
+
+            Ui.Choose("منطقة التوصيل", names, index => SelectArea(_areas[index]));
         }
 
         /// <summary>ملء بيانات توصيلة سابقة (عميل/عناوين/منطقة/موقع التوصيل).</summary>
@@ -140,9 +153,15 @@ namespace Tawsela.iOS.Screens
         {
             var stack = CreateScrollContent(12f, 16f);
 
-            /* ---------- منطقة التسعير: مخفية عن المستخدم (تُحدد تلقائيًا وتُستخدم عند الإرسال) ---------- */
-            _areaValue = MakeLabel("اختر المنطقة", 15f, Theme.TextSecondary, UIFontWeight.Regular, UITextAlignment.Right);
-            _fareValue = MakeLabel("—", 20f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
+            /* ---------- منطقة التوصيل والسعر (بديل spnDeliveryArea في أندرويد) ---------- */
+            stack.AddArrangedSubview(Controls.SectionTitle("منطقة التوصيل والسعر"));
+
+            var areaCard = MakeSelectorCard("المنطقة", out _areaValue, () => PickPricingArea());
+            _areaValue.Text = "اختر منطقة التوصيل";
+            stack.AddArrangedSubview(areaCard);
+
+            _fareValue = MakeLabel("سعر التوصيل: —", 17f, Theme.Primary, UIFontWeight.Bold, UITextAlignment.Right);
+            stack.AddArrangedSubview(_fareValue);
 
             /* ---------- العناوين ---------- */
             stack.AddArrangedSubview(Controls.SectionTitle("العناوين"));
@@ -204,37 +223,6 @@ namespace Tawsela.iOS.Screens
                 TranslatesAutoresizingMaskIntoConstraints = false
             };
             stack.AddArrangedSubview(_areaChipsRow);
-
-            _streetsTitle = Controls.SectionTitle("أهم الشوارع");
-            stack.AddArrangedSubview(_streetsTitle);
-
-            _streetSearch = Controls.TextField("ابحث عن شارع (جزء من الاسم)");
-            _streetSearch.TextAlignment = UITextAlignment.Right;
-            _streetSearch.EditingChanged += (s, e) =>
-            {
-                _showAllStreets = false;
-                BuildStreetGrid(_streetSearch.Text);
-            };
-            stack.AddArrangedSubview(_streetSearch);
-
-            // بحث صوتي عن الشارع (بديل btnRestVoiceStreet في أندرويد)
-            var voice = Controls.OutlineButton("بحث بالصوت", null, 38f);
-            voice.AccessibilityLabel = "بحث بالصوت";
-            voice.TouchUpInside += (s, e) => Voice(text =>
-            {
-                _streetSearch.Text = text;
-                _showAllStreets = false;
-                BuildStreetGrid(text);
-            });
-            stack.AddArrangedSubview(voice);
-
-            _streetGrid = new UIStackView
-            {
-                Axis = UILayoutConstraintAxis.Vertical,
-                Spacing = 8,
-                TranslatesAutoresizingMaskIntoConstraints = false
-            };
-            stack.AddArrangedSubview(_streetGrid);
 
             /* ---------- بيانات العميل ---------- */
             stack.AddArrangedSubview(Controls.SectionTitle("بيانات العميل"));
@@ -319,14 +307,6 @@ namespace Tawsela.iOS.Screens
                 if (seq != _areaSeq) return;
                 Ui.BeginOnMain(() => RenderAreas(areas));
             }, null, ex => AppServices.Log("TawselaRestaurantDelivery", "areas: " + ex.Message));
-
-            var sseq = ++_streetSeq;
-            Ui.Run(() =>
-            {
-                var streets = Api.Streets(city);
-                if (sseq != _streetSeq) return;
-                Ui.BeginOnMain(() => RenderStreets(streets));
-            }, null, ex => AppServices.Log("TawselaRestaurantDelivery", "streets: " + ex.Message));
         }
 
         private static void ClearChips(UIStackView row)
@@ -339,30 +319,13 @@ namespace Tawsela.iOS.Screens
             }
         }
 
-        /// <summary>اختيار منطقة: يملأ عنوان التوصيل وإحداثياته، ويطابق منطقة التسعير تلقائيًا.</summary>
+        /// <summary>اختيار وجهة: يملأ عنوان التوصيل وإحداثياته فقط (سعر التوصيل بالمنطقة المختارة يدويًا).</summary>
         private void ApplyDestination(string name, double lat, double lng, string cityHint = null)
         {
             _delivery.Text = name;
             _deliveryLat = lat;
             _deliveryLng = lng;
             _coords.Text = Coords(lat, lng);
-
-            // مطابقة اسم المنطقة/المدينة مع منطقة تسعير مسجّلة
-            Dictionary<string, object> match = null;
-            foreach (var a in _areas)
-            {
-                if (string.Equals(Row.Str(a, "Name"), name, StringComparison.OrdinalIgnoreCase))
-                { match = a; break; }
-            }
-            if (match == null && !string.IsNullOrEmpty(cityHint))
-            {
-                foreach (var a in _areas)
-                {
-                    if (string.Equals(Row.Str(a, "Name"), cityHint, StringComparison.OrdinalIgnoreCase))
-                    { match = a; break; }
-                }
-            }
-            if (match != null) SelectArea(match);
         }
 
         private void RenderAreas(List<Area> areas)
@@ -571,7 +534,7 @@ namespace Tawsela.iOS.Screens
 
         private void Submit()
         {
-            if (_area == null) { Ui.Toast("اختر منطقة التوصيل"); return; }
+            if (_area == null) { Ui.Toast("اختر منطقة تسعير صالحة"); return; }
 
             var name = (_customerName.Text ?? "").Trim();
             var phone = (_customerPhone.Text ?? "").Trim();
@@ -580,8 +543,10 @@ namespace Tawsela.iOS.Screens
 
             if (name == "") { Ui.Toast("أدخل اسم العميل"); return; }
             if (phone == "") { Ui.Toast("أدخل رقم هاتف العميل"); return; }
+            if (pickup == "") { Ui.Toast("أدخل عنوان الاستلام"); return; }
             if (delivery == "") { Ui.Toast("أدخل عنوان التوصيل"); return; }
             if (_deliveryLat == 0 && _deliveryLng == 0) { Ui.Toast("حدد موقع التوصيل على الخريطة"); return; }
+            if (_area == null || Row.Int(_area, "Id") <= 0 || Row.Num(_area, "Price") <= 0) { Ui.Toast("اختر منطقة تسعير صالحة"); return; }
 
             var areaId = Row.Int(_area, "Id");
             var fare = Row.Num(_area, "Price");
