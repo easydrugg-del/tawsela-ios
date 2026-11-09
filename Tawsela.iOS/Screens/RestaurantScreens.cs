@@ -263,7 +263,7 @@ namespace Tawsela.iOS.Screens
             _areaValue.TextColor = Theme.TextPrimary;
 
             var price = Row.Num(_area, "Price");
-            _fareValue.Text = "سعر التوصيل: " + price.ToString("0.00") + " ج.م";
+            _fareValue.Text = "سعر التوصيل: " + price.ToString("0.##") + " ج.م";
         }
 
         /* ---------- المحافظة / المدينة / المناطق / الشوارع ---------- */
