@@ -357,6 +357,12 @@ namespace Tawsela.iOS.Screens
 
         public RestaurantDeliveryAdminViewController() : base("🏪 توصيلات المطاعم") { }
 
+        /// <summary>الهيدر مسطح مثل باقي شاشات الإدارة (بدون شريط تنقل).</summary>
+        public override bool ShowNavigationBar
+        {
+            get { return false; }
+        }
+
         /// <summary>شكل أندرويد: شريط عنوان مسطح فوق المحتوى.</summary>
         protected override bool FlatHeader
         {
