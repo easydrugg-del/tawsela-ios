@@ -15,6 +15,7 @@ namespace Tawsela.iOS.Screens
     {
         private UIStackView _list;
         private UILabel _empty;
+        private UILabel _adminTitle;
 
         public EmergencyViewController() : base("الطوارئ") { }
 
@@ -37,8 +38,8 @@ namespace Tawsela.iOS.Screens
             report.TouchUpInside += (s, e) => Report();
             stack.AddArrangedSubview(report);
 
-            stack.AddArrangedSubview(Controls.SectionTitle("بلاغات السائقين (الأحدث أولاً)"));
-            stack.AddArrangedSubview(Controls.SectionTitle("بلاغاتي السابقة"));
+            _adminTitle = Controls.SectionTitle("بلاغات السائقين (الأحدث أولاً)");
+            stack.AddArrangedSubview(_adminTitle);
 
             _empty = MakeLabel("لا توجد بلاغات", 14f, Theme.TextSecondary,
                 UIFontWeight.Regular, UITextAlignment.Right);
@@ -54,6 +55,15 @@ namespace Tawsela.iOS.Screens
 
         private void Load()
         {
+            // قائمة البلاغات من endpoint الإدارة فقط — السائق/العميل يرسل بلاغًا بلا عرض القائمة
+            if (!Session.IsAdmin)
+            {
+                if (_adminTitle != null) _adminTitle.Hidden = true;
+                _empty.Text = "أرسل بلاغك من الزر الأحمر أعلاه. متابعة البلاغات للإدارة فقط.";
+                _list.AddArrangedSubview(_empty);
+                return;
+            }
+
             Ui.Run(() =>
             {
                 var items = Api.AllEmergencies();

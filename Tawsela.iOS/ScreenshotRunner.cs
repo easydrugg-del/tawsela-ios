@@ -229,6 +229,15 @@ namespace Tawsela.iOS
 
                 // ملاحظة: فحص الأزرار (TapSafe) يُشغَّل في وضع منفصل --taps حتى لا يطيل جمع اللقطات
                 if (ScreenshotRunner.TapsEnabled) await TapSafe(dir, name, nav, vc);
+
+                // إغلاق أي حوار متبقٍ حتى لا يظهر فوق الشاشة التالية
+                try
+                {
+                    var root = _window.RootViewController;
+                    if (root != null && root.PresentedViewController != null)
+                        root.DismissViewController(false, null);
+                }
+                catch { }
             }
             catch (Exception ex)
             {
@@ -360,14 +369,16 @@ namespace Tawsela.iOS
         private static readonly string[] SafePrefixes =
         {
             "‹", "رجوع", "إغلاق", "إلغاء", "تحديث", "عرض", "الكل", "المزيد", "تفاصيل",
-            "التالي", "السابق", "عن التطبيق", "سياسة", "شروط", "الأسئلة", "اتصل",
-            "نسخ", "مشاركة", "إعادة المحاولة", "تحديد", "اختر", "تغيير", "معرفة", "دعم"
+            "التالي", "السابق", "نسخ", "مشاركة", "إعادة المحاولة", "تحديد", "اختر", "تغيير"
         };
 
+        /// <summary>كلمات تمنع الضغط: إجراءات مُدمّرة أو تفتح تطبيقًا خارجيًا (Safari/هاتف).</summary>
         private static readonly string[] DangerWords =
         {
             "حذف", "حظر", "دفع", "سحب", "شراء", "إرسال", "تأكيد", "تقييم", "خروج",
-            "شكوى", "تفعيل", "إيقاف", "إلغاء الطلب", "خصم", "الغاء", "موافقة", "رفض"
+            "شكوى", "تفعيل", "إيقاف", "إلغاء الطلب", "خصم", "الغاء", "موافقة", "رفض",
+            // تفتح تطبيقًا خارجيًا فيتوقف وضع اللقطات
+            "سياسة", "شروط", "اتصل", "اتصال", "واتساب", "مكالمة", "هاتف", "البريد", "دعم", "معرفة"
         };
 
         private static bool IsSafeTitle(string title)
@@ -396,13 +407,20 @@ namespace Tawsela.iOS
                 CollectButtons(vc.View, list, 0);
 
                 var taken = 0;
-                for (var i = 0; i < list.Count && taken < 3; i++)
+                for (var i = 0; i < list.Count && taken < 2; i++)
                 {
                     var b = list[i];
                     if (b == null || b.Hidden || b.Alpha < 0.1f) continue;
 
                     var title = (b.CurrentTitle ?? "").Trim();
                     if (!IsSafeTitle(title)) continue;
+
+                    // لا تضغط إن غادر التطبيق الواجهة (Safari/الهاتف) — اللقطات تتوقف
+                    if (UIApplication.SharedApplication.ApplicationState != UIApplicationState.Active)
+                    {
+                        SafeWrite(Path.Combine(dir, "audit.txt"), name + " | taps stopped (app not active)");
+                        break;
+                    }
 
                     taken++;
                     try
@@ -416,10 +434,11 @@ namespace Tawsela.iOS
                         continue;
                     }
 
-                    await Task.Delay(1400);
+                    await Task.Delay(1600);
 
+                    UIViewController modal = nav.PresentedViewController ?? vc.PresentedViewController;
                     UIViewController top = null;
-                    if (vc.PresentedViewController != null) top = vc.PresentedViewController;
+                    if (modal != null) top = modal;
                     else if (nav.ViewControllers.Length > 1)
                         top = nav.ViewControllers[nav.ViewControllers.Length - 1];
 
@@ -437,8 +456,8 @@ namespace Tawsela.iOS
                         }
                         catch { }
 
-                        if (vc.PresentedViewController != null)
-                            vc.DismissViewController(false, null);
+                        if (modal != null)
+                            modal.DismissViewController(false, null);
                         else if (nav.ViewControllers.Length > 1)
                             nav.PopViewController(false);
 
