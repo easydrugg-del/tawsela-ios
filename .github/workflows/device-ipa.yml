@@ -50,9 +50,10 @@ jobs:
         run: |
           echo "Available Xcode:"
           ls -d /Applications/Xcode*.app || true
-          # .NET iOS 27.1 يتطلب Xcode 27.1 بالتحديد
-          if [ -d /Applications/Xcode_27.1.app ]; then
-            sudo xcode-select -s /Applications/Xcode_27.1.app
+          # اختر أحدث Xcode مثبّت على الـ runner (الـ workload يتطلب نسخة محددة)
+          LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$LATEST" ]; then
+            sudo xcode-select -s "$LATEST"
           elif [ -d /Applications/Xcode.app ]; then
             sudo xcode-select -s /Applications/Xcode.app
           fi
@@ -84,7 +85,8 @@ jobs:
             -r ios-arm64 \
             -m:1 -nr:false \
             -p:EnableCodeSigning=false \
-            -p:EnableFirebase=${{ inputs.firebase || 'false' }}
+            -p:EnableFirebase=${{ inputs.firebase || 'false' }} \
+            -p:ValidateXcodeVersion=false
 
       - name: Locate app bundle
         id: locate

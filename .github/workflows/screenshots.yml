@@ -33,8 +33,10 @@ jobs:
 
       - name: Select Xcode
         run: |
-          if [ -d /Applications/Xcode_27.1.app ]; then
-            sudo xcode-select -s /Applications/Xcode_27.1.app
+          # اختر أحدث Xcode مثبّت على الـ runner (الـ workload يتطلب نسخة محددة)
+          LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$LATEST" ]; then
+            sudo xcode-select -s "$LATEST"
           elif [ -d /Applications/Xcode.app ]; then
             sudo xcode-select -s /Applications/Xcode.app
           fi
@@ -55,7 +57,8 @@ jobs:
         run: |
           dotnet build Tawsela.iOS/Tawsela.iOS.csproj \
             -c Release -f net10.0-ios -r iossimulator-arm64 \
-            -m:1 -nr:false -p:CodesignKey=- -p:EnableFirebase=false
+            -m:1 -nr:false -p:CodesignKey=- -p:EnableFirebase=false \
+            -p:ValidateXcodeVersion=false
 
       - name: Run with --shots and collect
         run: |

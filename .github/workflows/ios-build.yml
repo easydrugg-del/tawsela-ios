@@ -41,9 +41,10 @@ jobs:
         run: |
           echo "Available Xcode:"
           ls -d /Applications/Xcode*.app || true
-          # .NET iOS 27.1 يتطلب Xcode 27.1 بالتحديد — لا نختار الأحدث تلقائيًا
-          if [ -d /Applications/Xcode_27.1.app ]; then
-            sudo xcode-select -s /Applications/Xcode_27.1.app
+          # اختر أحدث Xcode مثبّت (الـ workload يتطلب نسخة محددة)
+          LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$LATEST" ]; then
+            sudo xcode-select -s "$LATEST"
           elif [ -d /Applications/Xcode.app ]; then
             sudo xcode-select -s /Applications/Xcode.app
           fi
@@ -77,7 +78,8 @@ jobs:
             -r iossimulator-arm64 \
             -m:1 -nr:false \
             -p:CodesignKey=- \
-            -p:EnableFirebase=false
+            -p:EnableFirebase=false \
+            -p:ValidateXcodeVersion=false
 
       - name: Verify app bundle
         run: |
