@@ -228,7 +228,7 @@ namespace Tawsela.iOS
                 Audit(dir, name, vc);
 
                 // ملاحظة: فحص الأزرار (TapSafe) يُشغَّل في وضع منفصل --taps حتى لا يطيل جمع اللقطات
-                if (TapsEnabled) await TapSafe(dir, name, nav, vc);
+                if (ScreenshotRunner.TapsEnabled) await TapSafe(dir, name, nav, vc);
             }
             catch (Exception ex)
             {
