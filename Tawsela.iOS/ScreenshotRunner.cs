@@ -208,10 +208,208 @@ namespace Tawsela.iOS
                     data.Save(Path.Combine(dir, name + ".png"), true);
                     ok.Add(name);
                 }
+
+                // فحص الشاشة (نصوص أخطاء، أزرار من غير أوامر، عدد الصفوف)
+                Audit(dir, name, vc);
+
+                // تجربة الأزرار الآمنة (فتح/إغلاق/عرض/تحديث)
+                await TapSafe(dir, name, nav, vc);
             }
             catch (Exception ex)
             {
                 SafeWrite(Path.Combine(dir, "shot-errors.txt"), name + ": " + ex.ToString());
+            }
+        }
+
+        /* ---------- الفحص الشامل ---------- */
+
+        private class AuditInfo
+        {
+            public int Buttons, DeadButtons, Fields, Labels, Tables, Rows, Controls;
+            public readonly List<string> DeadTitles = new List<string>();
+            public readonly List<string> Errors = new List<string>();
+        }
+
+        private static readonly string[] ErrorTokens =
+        {
+            "تعذر", "خطأ", "فشل", "غير متاح", "حدث خطأ", "لم يتم", "مشكلة في"
+        };
+
+        private static void WalkViews(UIView view, AuditInfo info)
+        {
+            if (view == null || info.Controls > 4000) return;
+            info.Controls++;
+
+            var label = view as UILabel;
+            if (label != null && !string.IsNullOrEmpty(label.Text))
+            {
+                info.Labels++;
+                foreach (var token in ErrorTokens)
+                {
+                    if (label.Text.IndexOf(token, StringComparison.Ordinal) >= 0 &&
+                        info.Errors.Count < 6)
+                    {
+                        info.Errors.Add(label.Text.Trim().Replace("\n", " "));
+                        break;
+                    }
+                }
+            }
+
+            var field = view as UITextField;
+            if (field != null) info.Fields++;
+
+            var table = view as UITableView;
+            if (table != null)
+            {
+                info.Tables++;
+                try { info.Rows += (int)table.NumberOfRowsInSection(0); } catch { }
+            }
+
+            var collection = view as UICollectionView;
+            if (collection != null)
+            {
+                info.Tables++;
+                try { info.Rows += (int)collection.NumberOfItemsInSection(0); } catch { }
+            }
+
+            var button = view as UIButton;
+            if (button != null)
+            {
+                info.Buttons++;
+                var title = (button.CurrentTitle ?? "").Trim();
+                var targets = button.AllTargets;
+                if (targets == null || targets.Count == 0)
+                {
+                    info.DeadButtons++;
+                    if (title != "" && info.DeadTitles.Count < 8) info.DeadTitles.Add(title);
+                }
+            }
+
+            foreach (var sub in view.Subviews) WalkViews(sub, info);
+        }
+
+        private void Audit(string dir, string name, UIViewController vc)
+        {
+            try
+            {
+                var info = new AuditInfo();
+                WalkViews(vc.View, info);
+
+                // تنبيه/حوار مفتوح بعد التحميل = غالبًا رسالة خطأ
+                var presented = vc.PresentedViewController as UIAlertController;
+                if (presented != null)
+                    info.Errors.Add("ALERT: " + (presented.Title ?? "") + " / " + (presented.Message ?? ""));
+
+                var line = string.Format(
+                    "{0} | buttons={1} dead={2} fields={3} labels={4} tables={5} rows={6}",
+                    name, info.Buttons, info.DeadButtons, info.Fields, info.Labels, info.Tables, info.Rows);
+
+                if (info.DeadTitles.Count > 0)
+                    line += " | deadTitles=" + string.Join("; ", info.DeadTitles);
+                if (info.Errors.Count > 0)
+                    line += " | ERRORS=" + string.Join(" ; ", info.Errors);
+
+                SafeWrite(Path.Combine(dir, "audit.txt"), line);
+            }
+            catch (Exception ex)
+            {
+                SafeWrite(Path.Combine(dir, "audit-errors.txt"), name + ": " + ex.Message);
+            }
+        }
+
+        /// <summary>أزرار آمنة للضغط: تفتح/تغلق/تعرض/تحدّث فقط (ممنوع أي إجراء مُدمّر).</summary>
+        private static readonly string[] SafePrefixes =
+        {
+            "‹", "رجوع", "إغلاق", "إلغاء", "تحديث", "عرض", "الكل", "المزيد", "تفاصيل",
+            "التالي", "السابق", "عن التطبيق", "سياسة", "شروط", "الأسئلة", "اتصل",
+            "نسخ", "مشاركة", "إعادة المحاولة", "تحديد", "اختر", "تغيير", "معرفة", "دعم"
+        };
+
+        private static readonly string[] DangerWords =
+        {
+            "حذف", "حظر", "دفع", "سحب", "شراء", "إرسال", "تأكيد", "تقييم", "خروج",
+            "شكوى", "تفعيل", "إيقاف", "إلغاء الطلب", "خصم", "الغاء", "موافقة", "رفض"
+        };
+
+        private static bool IsSafeTitle(string title)
+        {
+            if (string.IsNullOrEmpty(title) || title.Length > 30) return false;
+            foreach (var d in DangerWords)
+                if (title.IndexOf(d, StringComparison.Ordinal) >= 0) return false;
+            foreach (var s in SafePrefixes)
+                if (title.StartsWith(s, StringComparison.Ordinal)) return true;
+            return false;
+        }
+
+        private static void CollectButtons(UIView view, List<UIButton> list, int depth)
+        {
+            if (view == null || depth > 12) return;
+            var b = view as UIButton;
+            if (b != null) list.Add(b);
+            foreach (var sub in view.Subviews) CollectButtons(sub, list, depth + 1);
+        }
+
+        private async Task TapSafe(string dir, string name, UINavigationController nav, UIViewController vc)
+        {
+            try
+            {
+                var list = new List<UIButton>();
+                CollectButtons(vc.View, list, 0);
+
+                var taken = 0;
+                for (var i = 0; i < list.Count && taken < 3; i++)
+                {
+                    var b = list[i];
+                    if (b == null || b.Hidden || b.Alpha < 0.1f) continue;
+
+                    var title = (b.CurrentTitle ?? "").Trim();
+                    if (!IsSafeTitle(title)) continue;
+
+                    taken++;
+                    try
+                    {
+                        b.SendActionForControlEvents(UIControlEvent.TouchUpInside);
+                    }
+                    catch (Exception ex)
+                    {
+                        SafeWrite(Path.Combine(dir, "audit.txt"),
+                            name + " | TAP-ERROR «" + title + "»: " + ex.Message);
+                        continue;
+                    }
+
+                    await Task.Delay(1400);
+
+                    UIViewController top = null;
+                    if (vc.PresentedViewController != null) top = vc.PresentedViewController;
+                    else if (nav.ViewControllers.Length > 1)
+                        top = nav.ViewControllers[nav.ViewControllers.Length - 1];
+
+                    SafeWrite(Path.Combine(dir, "audit.txt"),
+                        name + " | tap «" + title + "» -> " +
+                        (top == null ? "no-change" : top.GetType().Name));
+
+                    if (top != null)
+                    {
+                        try
+                        {
+                            var img = Snapshot(_window);
+                            using (var d = img.AsPNG())
+                                d.Save(Path.Combine(dir, name + "-tap" + taken + ".png"), true);
+                        }
+                        catch { }
+
+                        if (vc.PresentedViewController != null)
+                            vc.DismissViewController(false, null);
+                        else if (nav.ViewControllers.Length > 1)
+                            nav.PopViewController(false);
+
+                        await Task.Delay(900);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                SafeWrite(Path.Combine(dir, "audit-errors.txt"), name + " (taps): " + ex.Message);
             }
         }
 
