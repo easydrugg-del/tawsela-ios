@@ -74,7 +74,7 @@ namespace Tawsela.iOS.Screens
                     else if (index == 2)
                         ChangeStatus(d);
                     else if (index == 3)
-                        ChangeLocation(d.UserId);
+                        ChangeLocation(d.UserId, d.Governorate, d.City);
                     else if (index == 4)
                         Ui.Confirm("حظر السائق", "حظر " + d.FullName + "؟", "حظر",
                             () => Run(() => Api.BlockDriver(d.UserId), "تم الحظر"));
@@ -98,20 +98,32 @@ namespace Tawsela.iOS.Screens
             });
         }
 
-        /// <summary>تغيير محافظة/مدينة المستخدم (بديل Api.SetUserLocation).</summary>
-        private void ChangeLocation(int userId)
+        /// <summary>تغيير محافظة/مدينة المستخدم (بديل Api.SetUserLocation) مع تعليم القيمة الحالية.</summary>
+        private void ChangeLocation(int userId, string currentGov, string currentCity)
         {
             var govs = EgyptPlaces.Governorates();
-            Ui.Choose("المحافظة", govs, gi =>
+            var govNames = MarkCurrent(govs, currentGov);
+
+            Ui.Choose("المحافظة", govNames, gi =>
             {
                 var gov = govs[gi];
                 var cities = EgyptPlaces.CitiesOf(gov);
+                if (cities.Count == 0) { Ui.Toast("لا توجد مدن لهذه المحافظة"); return; }
 
-                Ui.Choose("المدينة", cities, ci =>
+                var cityNames = MarkCurrent(cities, gov == currentGov ? currentCity : null);
+                Ui.Choose("المدينة", cityNames, ci =>
                 {
                     Run(() => Api.SetUserLocation(userId, gov, cities[ci]), "تم تحديث الموقع");
                 });
             });
+        }
+
+        /// <summary>قائمة مع علامة ✓ على القيمة الحالية (نفس ما يعرضه Spinner في أندرويد).</summary>
+        private static List<string> MarkCurrent(List<string> items, string current)
+        {
+            var list = new List<string>();
+            foreach (var i in items) list.Add(i == current ? "✓ " + i : i);
+            return list;
         }
 
         private void Run(Action action, string success)
@@ -192,12 +204,16 @@ namespace Tawsela.iOS.Screens
                         if (index == 0)
                         {
                             var govs = EgyptPlaces.Governorates();
-                            Ui.Choose("المحافظة", govs, gi =>
+                            var govNames = MarkCurrent(govs, c.Governorate);
+
+                            Ui.Choose("المحافظة", govNames, gi =>
                             {
                                 var gov = govs[gi];
                                 var cities = EgyptPlaces.CitiesOf(gov);
+                                if (cities.Count == 0) { Ui.Toast("لا توجد مدن لهذه المحافظة"); return; }
 
-                                Ui.Choose("المدينة", cities, ci =>
+                                var cityNames = MarkCurrent(cities, gov == c.Governorate ? c.City : null);
+                                Ui.Choose("المدينة", cityNames, ci =>
                                 {
                                     var progress = Ui.ShowProgress("جارٍ الحفظ…");
                                     Ui.Run(() => Api.SetUserLocation(c.UserId, gov, cities[ci]), () =>
@@ -249,6 +265,14 @@ namespace Tawsela.iOS.Screens
             }));
 
             return row;
+        }
+
+        /// <summary>قائمة مع علامة ✓ على القيمة الحالية (مثل Spinner أندرويد).</summary>
+        private static List<string> MarkCurrent(List<string> items, string current)
+        {
+            var list = new List<string>();
+            foreach (var i in items) list.Add(i == current ? "✓ " + i : i);
+            return list;
         }
     }
 
