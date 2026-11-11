@@ -75,7 +75,7 @@ jobs:
           xcrun simctl launch "$UDID" com.tawsela.app --shots || true
 
           DATA=""
-          for i in $(seq 1 500); do
+          for i in $(seq 1 220); do
             DATA=$(xcrun simctl get_app_container "$UDID" com.tawsela.app data 2>/dev/null || true)
             if [ -n "$DATA" ] && [ -f "$DATA/Documents/shots/done.txt" ]; then
               echo "done after $((i*3))s"

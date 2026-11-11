@@ -31,6 +31,21 @@ namespace Tawsela.iOS
             }
         }
 
+        /// <summary>تفعيل فحص الأزرار مع اللقطات (--taps) — يطيل الوقت.</summary>
+        public static bool TapsEnabled
+        {
+            get
+            {
+                try
+                {
+                    foreach (var a in NSProcessInfo.ProcessInfo.Arguments)
+                        if (a == "--taps") return true;
+                }
+                catch { }
+                return false;
+            }
+        }
+
         public static string Dir
         {
             get
@@ -212,8 +227,8 @@ namespace Tawsela.iOS
                 // فحص الشاشة (نصوص أخطاء، أزرار من غير أوامر، عدد الصفوف)
                 Audit(dir, name, vc);
 
-                // تجربة الأزرار الآمنة (فتح/إغلاق/عرض/تحديث)
-                await TapSafe(dir, name, nav, vc);
+                // ملاحظة: فحص الأزرار (TapSafe) يُشغَّل في وضع منفصل --taps حتى لا يطيل جمع اللقطات
+                if (TapsEnabled) await TapSafe(dir, name, nav, vc);
             }
             catch (Exception ex)
             {
