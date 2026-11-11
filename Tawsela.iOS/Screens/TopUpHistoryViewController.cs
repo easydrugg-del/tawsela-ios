@@ -86,7 +86,7 @@ namespace Tawsela.iOS.Screens
 
             // تاريخ + مَن اعتمد الطلب (بديل ConfirmedBy/ConfirmedAt في أندرويد)
             var by = Row.Str(t, "ConfirmedBy");
-            var at = Row.Str(t, "ConfirmedAt");
+            var at = Row.Date(t, "ConfirmedAt");
             var footer = Row.Date(t, "CreatedAt");
 
             if (confirmed && (!string.IsNullOrEmpty(by) || !string.IsNullOrEmpty(at)))

@@ -13,6 +13,10 @@ on:
         description: '.NET SDK'
         required: false
         default: '10.0.x'
+      taps:
+        description: 'فحص الأزرار الآمنة (--taps)'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write
@@ -72,10 +76,13 @@ jobs:
           xcrun simctl privacy "$UDID" grant photos com.tawsela.app || true
           xcrun simctl privacy "$UDID" grant notifications com.tawsela.app || true
 
-          xcrun simctl launch "$UDID" com.tawsela.app --shots || true
+          # --taps = فحص الأزرار الآمنة (اختياري ويطيل الوقت)
+          ARGS="--shots"
+          if [ "${{ inputs.taps }}" = "true" ]; then ARGS="$ARGS --taps"; fi
+          xcrun simctl launch "$UDID" com.tawsela.app $ARGS || true
 
           DATA=""
-          for i in $(seq 1 220); do
+          for i in $(seq 1 500); do
             DATA=$(xcrun simctl get_app_container "$UDID" com.tawsela.app data 2>/dev/null || true)
             if [ -n "$DATA" ] && [ -f "$DATA/Documents/shots/done.txt" ]; then
               echo "done after $((i*3))s"

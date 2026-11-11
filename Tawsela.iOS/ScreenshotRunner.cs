@@ -247,8 +247,39 @@ namespace Tawsela.iOS
 
         private static readonly string[] ErrorTokens =
         {
-            "تعذر", "خطأ", "فشل", "غير متاح", "حدث خطأ", "لم يتم", "مشكلة في"
+            "تعذر", "خطا", "فشل", "غير متاح", "لم يتم", "مشكله في", "غير مصرح",
+            "لا يمكن", "غير صحيح", "مرفوض", "حدث خطا", "الطلب غير", "منتهي الصلاحيه"
         };
+
+        /// <summary>إزالة التشكيل حتى يطابق «تعذّر» مع «تعذر».</summary>
+        private static string Normalize(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+
+            var chars = new char[text.Length];
+            var n = 0;
+            foreach (var ch in text)
+            {
+                if ((ch >= '\u0610' && ch <= '\u061A') ||
+                    (ch >= '\u064B' && ch <= '\u065F') ||
+                    ch == '\u0670' ||
+                    (ch >= '\u06D6' && ch <= '\u06ED') ||
+                    ch == '\u0640')
+                    continue;
+                chars[n++] = ch;
+            }
+
+            return new string(chars, 0, n).Replace('أ', 'ا').Replace('إ', 'ا').Replace('آ', 'ا')
+                .Replace('ى', 'ي').Replace('ة', 'ه').ToLowerInvariant();
+        }
+
+        private static bool LooksLikeError(string text)
+        {
+            var normalized = Normalize(text);
+            foreach (var token in ErrorTokens)
+                if (normalized.IndexOf(token, StringComparison.Ordinal) >= 0) return true;
+            return false;
+        }
 
         private static void WalkViews(UIView view, AuditInfo info)
         {
@@ -259,15 +290,8 @@ namespace Tawsela.iOS
             if (label != null && !string.IsNullOrEmpty(label.Text))
             {
                 info.Labels++;
-                foreach (var token in ErrorTokens)
-                {
-                    if (label.Text.IndexOf(token, StringComparison.Ordinal) >= 0 &&
-                        info.Errors.Count < 6)
-                    {
-                        info.Errors.Add(label.Text.Trim().Replace("\n", " "));
-                        break;
-                    }
-                }
+                if (LooksLikeError(label.Text) && info.Errors.Count < 6)
+                    info.Errors.Add(label.Text.Trim().Replace("\n", " "));
             }
 
             var field = view as UITextField;

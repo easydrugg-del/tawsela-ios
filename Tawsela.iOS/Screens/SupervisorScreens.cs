@@ -502,8 +502,8 @@ namespace Tawsela.iOS.Screens
 
                     NSLayoutConstraint.Create(edit, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, card, NSLayoutAttribute.CenterY, 1, 0),
                     NSLayoutConstraint.Create(edit, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -10),
-                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 62),
-                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 32),
+                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 72),
+                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 34),
                 });
 
                 _areasBox.AddArrangedSubview(card);
@@ -609,13 +609,13 @@ namespace Tawsela.iOS.Screens
                     NSLayoutConstraint.Create(label, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, account, NSLayoutAttribute.Leading, 1, -8),
 
                     NSLayoutConstraint.Create(account, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, card, NSLayoutAttribute.CenterY, 1, 0),
-                    NSLayoutConstraint.Create(account, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 58),
-                    NSLayoutConstraint.Create(account, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 32),
+                    NSLayoutConstraint.Create(account, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 66),
+                    NSLayoutConstraint.Create(account, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 34),
                     NSLayoutConstraint.Create(account, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, edit, NSLayoutAttribute.Leading, 1, -6),
 
                     NSLayoutConstraint.Create(edit, NSLayoutAttribute.CenterY, NSLayoutRelation.Equal, card, NSLayoutAttribute.CenterY, 1, 0),
-                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 58),
-                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 32),
+                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Width, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 66),
+                    NSLayoutConstraint.Create(edit, NSLayoutAttribute.Height, NSLayoutRelation.Equal, null, NSLayoutAttribute.NoAttribute, 1, 34),
                     NSLayoutConstraint.Create(edit, NSLayoutAttribute.Trailing, NSLayoutRelation.Equal, card, NSLayoutAttribute.Trailing, 1, -10),
                 });
 
@@ -747,6 +747,12 @@ namespace Tawsela.iOS.Screens
             b.SetTitle(title, UIControlState.Normal);
             b.SetTitleColor(Theme.Primary, UIControlState.Normal);
             b.TitleLabel.Font = Theme.FontBold(14);
+            // منع كسر العنوان على سطرين داخل الأزرار الصغيرة (تعديل/حساب)
+            b.TitleLabel.Lines = 1;
+            b.TitleLabel.LineBreakMode = UILineBreakMode.Clip;
+            b.TitleLabel.AdjustsFontSizeToFitWidth = true;
+            b.TitleLabel.MinimumScaleFactor = 0.75f;
+            b.ContentEdgeInsets = new UIEdgeInsets(0, 6, 0, 6);
             b.BackgroundColor = Theme.Surface;
             b.Layer.CornerRadius = 8f;
             b.Layer.BorderWidth = 1f;

@@ -132,7 +132,7 @@ namespace Tawsela.iOS
             return v;
         }
 
-        /// <summary>عنوان قسم (بديل TextView عريض).</summary>
+        /// <summary>عنوان قسم (بديل TextView عريض) — يلتف على أكثر من سطر بدل البتر.</summary>
         public static UILabel SectionTitle(string text, float size = 16f)
         {
             return new UILabel
@@ -141,6 +141,8 @@ namespace Tawsela.iOS
                 Font = Theme.FontBold(size),
                 TextColor = Theme.TextPrimary,
                 TextAlignment = UITextAlignment.Right,
+                Lines = 0,
+                LineBreakMode = UILineBreakMode.WordWrap,
                 TranslatesAutoresizingMaskIntoConstraints = false
             };
         }

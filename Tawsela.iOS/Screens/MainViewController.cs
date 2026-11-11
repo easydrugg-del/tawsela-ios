@@ -717,7 +717,9 @@ namespace Tawsela.iOS.Screens
         /// <summary>زر عريض بأيقونة أسفل الشاشة (بديل btnProfile/btnSettings).</summary>
         private UIControl IconFullButton(string title, string icon, UIColor bg, Action onTap)
         {
-            return Controls.IconButton(title, icon, bg);
+            var b = Controls.IconButton(title, icon, bg);
+            if (onTap != null) b.TouchUpInside += (s, e) => onTap();
+            return b;
         }
 
         /// <summary>سائقون مفضلون مع الاتصال (بديل ShowFavorites في أندرويد).</summary>

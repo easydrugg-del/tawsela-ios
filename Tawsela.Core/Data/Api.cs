@@ -687,11 +687,17 @@ namespace Tawsela.Data
             return list;
         }
 
-        /// <summary>حركات محفظة سائق معين (للإدارة) — يتطلب endpoint الخادم الجديد.</summary>
+        /// <summary>
+        /// حركات محفظة سائق: نفسه = /api/wallet/txns (مسموح للسائق)،
+        /// وسائق آخر من لوحة الإدارة = /api/admin/wallets/txns.
+        /// </summary>
         public static List<WalletTxn> DriverTxns(int userId)
         {
             var list = new List<WalletTxn>();
-            foreach (var r in Rows(Get("/api/admin/wallets/txns" + Qs(new Dictionary<string, string> { { "userId", userId.ToString() } }))))
+            var path = (userId <= 0 || userId == Session.UserId)
+                ? "/api/wallet/txns"
+                : "/api/admin/wallets/txns" + Qs(new Dictionary<string, string> { { "userId", userId.ToString() } });
+            foreach (var r in Rows(Get(path)))
                 list.Add(WalletTxn.FromRow(r));
             return list;
         }
